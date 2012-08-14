@@ -47,19 +47,15 @@ export VIM_APP_DIR=/Applications/MacVim/
 export EDITOR='vim'
 export GIT_EDITOR=$EDITOR
 
-# bundler fix
-#export BUNDLE_BIN_PATH=/usr/local/rvm/gems/ruby-1.9.2-p290/gems/bundler-1.0.15/bin/bundle
-#export RUBYOPT="-I/usr/local/rvm/gems/ruby-1.9.2-p290/gems/bundler-1.0.15/lib -rbundler/setup"
-
 # aliases
 alias hm='cd ~'
 alias st='cd ~/Sites'
 alias dl='cd ~/Downloads'
-alias cs='clear'
 alias shdot='defaults write com.apple.finder AppleShowAllFiles TRUE'
 alias hdot='defaults write com.apple.finder AppleShowAllFiles FALSE'
 alias kf='killall Finder'
 alias hosts="sudo vim /etc/hosts"
+alias vimrc="vim ~/.vimrc"
 
 
 # profile shortcuts
@@ -89,12 +85,11 @@ alias gnb=' git co -b' # must pass new branch name
 alias s='git status'
 alias stash='git stash'
 alias pop='git stash pop'
-alias gt='git tag'
-alias gx='gitx'
 alias gpo='git push origin' #branch
 alias gpom='git push origin master'
 alias pull='git pull --rebase'
+
 eval "$(rbenv init -)"
+
 NODE_PATH=/usr/local/lib/node_modules
 
-alias vimrc="vim ~/.vimrc"
