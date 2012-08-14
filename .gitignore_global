@@ -1,0 +1,12 @@
+*.svn
+*.tmp
+.DS_Store
+.git
+log/
+tmp/
+*.sqlite3
+test/
+build/
+xcuserdata
+.rbenv-version
+.rbenv-vars
