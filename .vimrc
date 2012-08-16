@@ -11,6 +11,9 @@ set guifont=Inconsolata:h16
 " make vim NOT pretend to be like vi
 set nocompatible
 
+" Highlights the 81st column
+set colorcolumn=81
+
 "
 " File types
 "
