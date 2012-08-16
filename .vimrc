@@ -4,6 +4,7 @@
 colorscheme solarized
 set background=dark " For solarized
 syntax on
+export TERM="xterm-256colors" " config for solarized theme in terminal
 
 " Set font
 set guifont=Inconsolata:h16
@@ -106,3 +107,14 @@ inoremap kj <Esc>
 
 " Reload vimrc
 map rvimrc :source $MYVIMRC
+
+"
+" CloseTag Config
+"
+autocmd FileType html,erb let b:closetag_html_style=1
+autocmd FileType html,xml,erb source ~/.vim/bundle/closetag/plugin/closetag.vim
+
+"
+" CtrlP
+"
+set runtimepath^=~/.vim/bundle/ctrlp.vim
