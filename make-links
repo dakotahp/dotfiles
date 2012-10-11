@@ -12,6 +12,10 @@ ln -s ~/.dot-files/.vim ~/.vim
 rm ~/.gitignore_global
 ln -s ~/.dot-files/.gitignore_global ~/.gitignore_global
 
+# git config
+rm ~/.gitconfig
+ln -s ~/.dot-files/.gitconfig ~/.gitconfig
+
 # bash profile
 rm ~/.bash_profile
 ln -s ~/.dot-files/.bash_profile ~/.bash_profile
