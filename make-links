@@ -1,12 +1,19 @@
 #!/bin/bash
 
 # vimrc
-ln -s ~/.dot-files/.vimrc ~/.vimrc 
+rm ~/.vimrc
+ln -s ~/.dot-files/.vimrc ~/.vimrc
+
 # vim directory
+rm -rf ~/.vim
 ln -s ~/.dot-files/.vim ~/.vim
 
 # git ignore global
+rm ~/.gitignore_global
+ln -s ~/.dot-files/.gitignore_global ~/.gitignore_global
 
 # bash profile
+rm ~/.bash_profile
+ln -s ~/.dot-files/.bash_profile ~/.bash_profile
 
-#
+echo "All done!"
