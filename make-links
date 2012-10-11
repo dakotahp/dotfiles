@@ -1,0 +1,12 @@
+#!/bin/bash
+
+# vimrc
+ln -s ~/.dot-files/.vimrc ~/.vimrc 
+# vim directory
+ln -s ~/.dot-files/.vim ~/.vim
+
+# git ignore global
+
+# bash profile
+
+#

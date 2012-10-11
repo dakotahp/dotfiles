@@ -4,7 +4,7 @@
 colorscheme solarized
 set background=dark " For solarized
 syntax on
-export TERM="xterm-256colors" " config for solarized theme in terminal
+"export TERM="xterm-256colors" " config for solarized theme in terminal
 
 " Set font
 set guifont=Inconsolata:h16
@@ -58,7 +58,12 @@ set title
 set noerrorbells
 set visualbell
 
+" Fix backspace indentation
 set backspace=indent,eol,start
+
+" Set persistent undo (v7.3 only)
+set undodir=~/.vim/undodir
+set undofile
 
 "
 " Searching
@@ -72,6 +77,8 @@ map // :nohl<CR>
 
 set number     " line numbers
 set mouse=a
+
+" Turn off annoying swapfiles
 set noswapfile
 set nobackup
 set showcmd
