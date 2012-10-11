@@ -39,7 +39,7 @@ PROMPT_COMMAND=print_before_the_prompt
 PS1='\n\W$ '
 PS1='-> '
 
-export PATH="/Developer/usr/bin:$HOME/.rbenv/bin:~/bin:node_modiles/.bin:$PATH"
+export PATH="/Developer/usr/bin:~/.dot-files/bin:node_modiles/.bin:$PATH"
 export PATH="$HOME/.rbenv/bin:$PATH"
 
 export VIM_APP_DIR=/Applications/MacVim/
