@@ -96,7 +96,9 @@ alias push="git push"
 alias gpom='git push origin master'
 alias pull='git pull --rebase'
 alias ggrep="git grep"
-source ~/git-completion.bash
+
+# Git tab completion
+source ~/.dot-files/bin/git-completion
 
 eval "$(rbenv init -)"
 NODE_PATH=/usr/local/lib/node_modules
