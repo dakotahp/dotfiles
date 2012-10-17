@@ -96,6 +96,8 @@ alias push="git push"
 alias gpom='git push origin master'
 alias pull='git pull --rebase'
 alias ggrep="git grep"
+alias log="git log"
+alias diff="git diff"
 
 # Git tab completion
 source ~/.dot-files/bin/git-completion
