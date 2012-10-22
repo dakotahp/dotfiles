@@ -11,4 +11,5 @@ xcuserdata
 .rbenv-version
 .rbenv-vars
 logfile
+.sass-cache
 
