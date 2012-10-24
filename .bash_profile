@@ -80,8 +80,6 @@ alias up4='cd ../../../../'
 # git stuff
 alias ga='git add'
 alias gb='git branch -a -v'
-alias gco='git commit'
-alias gcoa='git commit -a'
 alias gd='git diff'
 alias gi='git status; echo; git branch -a -v'
 alias gm='git merge'
@@ -89,8 +87,6 @@ alias gnb=' git co -b' # must pass new branch name
 alias s='git status'
 alias stash='git stash'
 alias pop='git stash pop'
-alias gt='git tag'
-alias gx='gitx'
 alias gpo='git push origin' #branch
 alias push="git push"
 alias gpom='git push origin master'
@@ -98,6 +94,7 @@ alias pull='git pull --rebase'
 alias ggrep="git grep"
 alias log="git log"
 alias diff="git diff"
+alias show="git show"
 
 # Git tab completion
 source ~/.dot-files/bin/git-completion
