@@ -51,6 +51,7 @@ export GIT_EDITOR=$EDITOR
 #export RUBYOPT="-I/usr/local/rvm/gems/ruby-1.9.2-p290/gems/bundler-1.0.15/lib -rbundler/setup"
 
 # aliases
+alias gcm="git commit -m"
 alias hm='cd ~'
 alias st='cd ~/Sites'
 alias dl='cd ~/Downloads'
@@ -104,3 +105,20 @@ NODE_PATH=/usr/local/lib/node_modules
 
 alias vimrc="vim ~/.vimrc"
 
+
+# TEMP python shit
+# Before other PATHs...
+PATH=${PATH}:/usr/local/share/python
+
+# Python
+export WORKON_HOME=~/.virtualenvs
+
+export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python2.7
+
+export VIRTUALENVWRAPPER_VIRTUALENV_ARGS='--no-site-packages'
+export PIP_VIRTUALENV_BASE=$WORKON_HOME
+export PIP_RESPECT_VIRTUALENV=true
+source /usr/local/bin/virtualenvwrapper.sh
+
+### Added by the Heroku Toolbelt
+#export PATH="/usr/local/heroku/bin:$PATH"
