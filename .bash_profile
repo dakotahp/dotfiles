@@ -37,7 +37,7 @@ print_before_the_prompt () {
 }
 PROMPT_COMMAND=print_before_the_prompt
 PS1='\n\W$ '
-PS1='-> '
+PS1="👉  "
 
 export PATH="/Developer/usr/bin:~/.dot-files/bin:node_modiles/.bin:$PATH"
 export PATH="$HOME/.rbenv/bin:$PATH"
