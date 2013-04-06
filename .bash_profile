@@ -33,7 +33,7 @@ bakwht='\e[47m'   # White
 txtrst='\e[0m'    # Text Reset
 
 print_before_the_prompt () {
-  printf "\n$txtred%s: $bldgrn%s $txtpur%s\n$txtrst" "$USER" "$PWD" "$(vcprompt)"
+printf "\n$txtred%s: $bldgrn%s $txtpur%s\n$txtrst" "$USER" "$PWD" "$(vcprompt)"
 }
 PROMPT_COMMAND=print_before_the_prompt
 PS1='\n\W$ '
@@ -80,7 +80,6 @@ alias up4='cd ../../../../'
 
 # git stuff
 alias ga='git add'
-alias gb='git branch -a -v'
 alias gd='git diff'
 alias gi='git status; echo; git branch -a -v'
 alias gm='git merge'
@@ -104,21 +103,6 @@ eval "$(rbenv init -)"
 NODE_PATH=/usr/local/lib/node_modules
 
 alias vimrc="vim ~/.vimrc"
-
-
-# TEMP python shit
-# Before other PATHs...
-PATH=${PATH}:/usr/local/share/python
-
-# Python
-export WORKON_HOME=~/.virtualenvs
-
-export VIRTUALENVWRAPPER_PYTHON=/usr/local/bin/python2.7
-
-export VIRTUALENVWRAPPER_VIRTUALENV_ARGS='--no-site-packages'
-export PIP_VIRTUALENV_BASE=$WORKON_HOME
-export PIP_RESPECT_VIRTUALENV=true
-source /usr/local/bin/virtualenvwrapper.sh
 
 ### Added by the Heroku Toolbelt
 #export PATH="/usr/local/heroku/bin:$PATH"
