@@ -51,7 +51,6 @@ export GIT_EDITOR=$EDITOR
 #export RUBYOPT="-I/usr/local/rvm/gems/ruby-1.9.2-p290/gems/bundler-1.0.15/lib -rbundler/setup"
 
 # aliases
-alias gcm="git commit -m"
 alias hm='cd ~'
 alias st='cd ~/Sites'
 alias dl='cd ~/Downloads'
@@ -80,9 +79,7 @@ alias up4='cd ../../../../'
 
 # git stuff
 alias ga='git add'
-alias gd='git diff'
 alias gi='git status; echo; git branch -a -v'
-alias gm='git merge'
 alias gnb=' git co -b' # must pass new branch name
 alias s='git status'
 alias stash='git stash'
@@ -95,6 +92,8 @@ alias ggrep="git grep"
 alias log="git log"
 alias diff="git diff"
 alias show="git show"
+alias gcm="git commit -m"
+alias checkout="git checkout"
 
 # Git tab completion
 source ~/.dot-files/bin/git-completion
