@@ -20,4 +20,8 @@ ln -s ~/.dot-files/.gitconfig ~/.gitconfig
 rm ~/.bash_profile
 ln -s ~/.dot-files/.bash_profile ~/.bash_profile
 
+# bash history file
+rm ~/.inputrc
+ln -s ~/.dot-files/.inputrc ~/inputrc
+
 echo "All done!"

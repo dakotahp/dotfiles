@@ -46,6 +46,7 @@ build/
 xcuserdata
 .rbenv-version
 .rbenv-vars
+.rvmrc
 logfile
 .sass-cache
 public/uploads/
