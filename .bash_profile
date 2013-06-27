@@ -33,7 +33,7 @@ bakwht='\e[47m'   # White
 txtrst='\e[0m'    # Text Reset
 echo "Hello, Dave."
 print_before_the_prompt () {
-printf "\n$txtred%s: $bldgrn%s $txtpur%s\n$txtrst" "$USER" "$PWD" "$(vcprompt)"
+  printf "\n$txtred%s: $bldgrn%s $txtpur%s\n$txtrst" "$USER" "$PWD" "$(vcprompt)"
 }
 PROMPT_COMMAND=print_before_the_prompt
 PS1='\n\W$ '
@@ -46,20 +46,18 @@ export VIM_APP_DIR=/Applications/MacVim/
 export EDITOR='vim'
 export GIT_EDITOR=$EDITOR
 
-# bundler fix
-#export BUNDLE_BIN_PATH=/usr/local/rvm/gems/ruby-1.9.2-p290/gems/bundler-1.0.15/bin/bundle
-#export RUBYOPT="-I/usr/local/rvm/gems/ruby-1.9.2-p290/gems/bundler-1.0.15/lib -rbundler/setup"
-
 # aliases
 alias hm='cd ~'
 alias st='cd ~/Sites'
 alias dl='cd ~/Downloads'
+alias dropbox="cd ~/Dropbox"
 alias cs='clear'
 alias shdot='defaults write com.apple.finder AppleShowAllFiles TRUE'
 alias hdot='defaults write com.apple.finder AppleShowAllFiles FALSE'
 alias kf='killall Finder'
 alias hosts="sudo vim /etc/hosts"
 
+alias redis_start="nohup redis-server /usr/local/etc/redis.conf > /tmp/redis.out 2> /tmp/redis.err < /dev/null &"
 
 # profile shortcuts
 alias prof='$EDITOR ~/.bash_profile'
