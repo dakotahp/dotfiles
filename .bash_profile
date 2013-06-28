@@ -100,6 +100,3 @@ eval "$(rbenv init -)"
 NODE_PATH=/usr/local/lib/node_modules
 
 alias vimrc="vim ~/.vimrc"
-
-### Added by the Heroku Toolbelt
-#export PATH="/usr/local/heroku/bin:$PATH"
