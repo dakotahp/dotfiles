@@ -12,6 +12,9 @@ ln -s ~/.dot-files/.vim ~/.vim
 rm ~/.gitignore_global
 ln -s ~/.dot-files/.gitignore_global ~/.gitignore_global
 
+# Turn on git colors in various git commands:
+git config --global color.ui true
+
 # git config
 rm ~/.gitconfig
 ln -s ~/.dot-files/.gitconfig ~/.gitconfig
