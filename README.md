@@ -2,7 +2,7 @@
 
 ## Setup New Computer
 `git clone git@github.com:adr-enal-in/dotfiles.git ~/.dot-files && cd ~/.dot-files
-./make-links`
+./init`
 
 
 ## Update submodules
