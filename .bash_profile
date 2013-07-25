@@ -31,6 +31,7 @@ bakpur='\e[45m'   # Purple
 bakcyn='\e[46m'   # Cyan
 bakwht='\e[47m'   # White
 txtrst='\e[0m'    # Text Reset
+
 echo "Hello, Dave."
 print_before_the_prompt () {
   printf "\n$txtred%s: $bldgrn%s $txtpur%s\n$txtrst" "$USER" "$PWD" "$(vcprompt)"
@@ -45,6 +46,7 @@ export PATH="$HOME/.rbenv/bin:$PATH"
 export VIM_APP_DIR=/Applications/MacVim/
 export EDITOR='vim'
 export GIT_EDITOR=$EDITOR
+export NODE_PATH=/usr/local/lib/node_modules
 
 # aliases
 alias hm='cd ~'
@@ -56,7 +58,7 @@ alias shdot='defaults write com.apple.finder AppleShowAllFiles TRUE'
 alias hdot='defaults write com.apple.finder AppleShowAllFiles FALSE'
 alias kf='killall Finder'
 alias hosts="sudo vim /etc/hosts"
-
+alias vimrc="vim ~/.vimrc"
 alias redis_start="nohup redis-server /usr/local/etc/redis.conf > /tmp/redis.out 2> /tmp/redis.err < /dev/null &"
 
 # profile shortcuts
@@ -97,6 +99,4 @@ alias checkout="git checkout"
 source ~/.dot-files/bin/git-completion
 
 eval "$(rbenv init -)"
-NODE_PATH=/usr/local/lib/node_modules
 
-alias vimrc="vim ~/.vimrc"
