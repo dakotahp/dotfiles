@@ -96,7 +96,9 @@ alias gcm="git commit -m"
 alias checkout="git checkout"
 
 # Git tab completion
-source ~/.dot-files/bin/git-completion
+if [ -f ~/.git-completion.bash ]; then
+  . ~/.git-completion.bash
+fi
 
 eval "$(rbenv init -)"
 
