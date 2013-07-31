@@ -33,8 +33,14 @@ bakwht='\e[47m'   # White
 txtrst='\e[0m'    # Text Reset
 
 echo "Hello, Dave."
+
+# Git tab completion
+if [ -f ~/.git-prompt.sh ]; then
+  . ~/.git-prompt.sh
+fi
+
 print_before_the_prompt () {
-  printf "\n$txtred%s: $bldgrn%s $txtpur%s\n$txtrst" "$USER" "$PWD" "$(vcprompt)"
+  printf "\n$txtred%s: $bldgrn%s $txtpur%s\n$txtrst" "$USER" "$PWD" "$(__git_ps1)"
 }
 PROMPT_COMMAND=print_before_the_prompt
 PS1='\n\W$ '
