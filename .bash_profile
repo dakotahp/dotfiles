@@ -100,6 +100,7 @@ alias diff="git diff"
 alias show="git show"
 alias gcm="git commit -m"
 alias checkout="git checkout"
+alias contains="git branch --contains"
 
 # Git tab completion
 if [ -f ~/.git-completion.bash ]; then
