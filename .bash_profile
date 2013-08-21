@@ -66,6 +66,7 @@ alias kf='killall Finder'
 alias hosts="sudo vim /etc/hosts"
 alias vimrc="vim ~/.vimrc"
 alias redis_start="nohup redis-server /usr/local/etc/redis.conf > /tmp/redis.out 2> /tmp/redis.err < /dev/null &"
+alias downloads="cd ~/Downloads"
 
 # profile shortcuts
 alias prof='$EDITOR ~/.bash_profile'
