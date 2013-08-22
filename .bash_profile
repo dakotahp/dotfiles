@@ -57,7 +57,8 @@ export NODE_PATH=/usr/local/lib/node_modules
 # aliases
 alias hm='cd ~'
 alias st='cd ~/Sites'
-alias dl='cd ~/Downloads'
+alias sites='cd ~/Sites'
+alias downloads="cd ~/Downloads"
 alias dropbox="cd ~/Dropbox"
 alias cs='clear'
 alias shdot='defaults write com.apple.finder AppleShowAllFiles TRUE'
@@ -66,7 +67,6 @@ alias kf='killall Finder'
 alias hosts="sudo vim /etc/hosts"
 alias vimrc="vim ~/.vimrc"
 alias redis_start="nohup redis-server /usr/local/etc/redis.conf > /tmp/redis.out 2> /tmp/redis.err < /dev/null &"
-alias downloads="cd ~/Downloads"
 
 # profile shortcuts
 alias prof='$EDITOR ~/.bash_profile'
