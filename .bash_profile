@@ -54,59 +54,11 @@ export EDITOR='vim'
 export GIT_EDITOR=$EDITOR
 export NODE_PATH=/usr/local/lib/node_modules
 
-# aliases
-alias hm='cd ~'
-alias st='cd ~/Sites'
-alias sites='cd ~/Sites'
-alias downloads="cd ~/Downloads"
-alias dropbox="cd ~/Dropbox"
-alias cs='clear'
-alias shdot='defaults write com.apple.finder AppleShowAllFiles TRUE'
-alias hdot='defaults write com.apple.finder AppleShowAllFiles FALSE'
-alias kf='killall Finder'
-alias hosts="sudo vim /etc/hosts"
-alias vimrc="vim ~/.vimrc"
-alias redis_start="nohup redis-server /usr/local/etc/redis.conf > /tmp/redis.out 2> /tmp/redis.err < /dev/null &"
-
-# profile shortcuts
-alias prof='$EDITOR ~/.bash_profile'
-alias rprof='. ~/.bash_profile'
-
-# ls
-alias ls="ls -F"
-alias l="ls -lAh"
-alias ll="ls -l"
-alias la='ls -A'
-
-# cd shortcuts
-alias up1='cd ../'
-alias up2='cd ../../'
-alias up3='cd ../../../'
-alias up4='cd ../../../../'
-
-# git stuff
-alias ga='git add'
-alias gi='git status; echo; git branch -a -v'
-alias gnb=' git co -b' # must pass new branch name
-alias s='git status'
-alias stash='git stash'
-alias pop='git stash pop'
-alias gpo='git push origin' #branch
-alias push="git push"
-alias gpom='git push origin master'
-alias pull='git pull --rebase'
-alias ggrep="git grep"
-alias log="git log"
-alias diff="git diff"
-alias show="git show"
-alias gcm="git commit -m"
-alias checkout="git checkout"
-alias contains="git branch --contains"
-
 # Git tab completion
-if [ -f ~/.git-completion.bash ]; then
-  . ~/.git-completion.bash
-fi
+[ -f ~/.git-completion.bash ] && . ~/.git-completion.bash
+
+# Add bash aliases.
+[ -f ~/.aliases ] && source ~/.aliases
 
 eval "$(rbenv init -)"
 

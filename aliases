@@ -1,0 +1,52 @@
+# Bash/OS X
+alias hm='cd ~'
+alias cs='clear'
+alias hosts="sudo vim /etc/hosts"
+alias vimrc="vim ~/.vimrc"
+alias prof='$EDITOR ~/.bash_profile'
+alias rprof='. ~/.bash_profile'
+## cd shortcuts
+alias up1='cd ../'
+alias up2='cd ../../'
+alias up3='cd ../../../'
+alias up4='cd ../../../../'
+## ls
+alias ls="ls -F"
+alias l="ls -lAh"
+alias ll="ls -l"
+alias la='ls -A'
+
+
+# OS X
+alias st='cd ~/Sites'
+alias sites='cd ~/Sites'
+alias downloads="cd ~/Downloads"
+alias dropbox="cd ~/Dropbox"
+alias shdot='defaults write com.apple.finder AppleShowAllFiles TRUE'
+alias hdot='defaults write com.apple.finder AppleShowAllFiles FALSE'
+alias kf='killall Finder'
+
+# Rails
+alias redis_start="nohup redis-server /usr/local/etc/redis.conf > /tmp/redis.out 2> /tmp/redis.err < /dev/null &"
+
+# git
+alias ga='git add'
+alias gi='git status; echo; git branch -a -v'
+alias gnb=' git co -b' # must pass new branch name
+alias s='git status'
+alias stash='git stash'
+alias pop='git stash pop'
+alias gpo='git push origin' #branch
+alias push="git push"
+alias gpom='git push origin master'
+alias pull='git pull --rebase'
+alias ggrep="git grep"
+alias log="git log"
+alias diff="git diff"
+alias show="git show"
+alias gcm="git commit -m"
+alias checkout="git checkout"
+alias contains="git branch --contains"
+
+# Include custom aliases
+[[ -f ~/.aliases.local ]] && source ~/.aliases.local
