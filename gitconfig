@@ -32,6 +32,8 @@
   lol = log --graph --decorate --pretty=oneline --abbrev-commit
   lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
 
-[user]
-  email = holla@adr.enal.in
-  name = adr-enal-in
+[mergetool]
+	keepBackup = true
+
+[include]
+  path = .gitconfig.local
