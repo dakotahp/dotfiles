@@ -125,3 +125,8 @@ autocmd FileType html,xml,erb source ~/.vim/bundle/closetag/plugin/closetag.vim
 " CtrlP
 "
 set runtimepath^=~/.vim/bundle/ctrlp.vim
+
+" Local config
+if filereadable($HOME . "/.vimrc.local")
+  source ~/.vimrc.local
+endif
