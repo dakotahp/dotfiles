@@ -28,6 +28,7 @@ alias kf='killall Finder'
 
 # Rails
 alias redis_start="nohup redis-server /usr/local/etc/redis.conf > /tmp/redis.out 2> /tmp/redis.err < /dev/null &"
+alias pg_start="pg_ctl -D /usr/local/var/postgres -l logfile start"
 
 # git
 alias ga='git add'
