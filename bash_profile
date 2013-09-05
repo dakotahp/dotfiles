@@ -60,5 +60,8 @@ export NODE_PATH=/usr/local/lib/node_modules
 # Add bash aliases.
 [ -f ~/.aliases ] && source ~/.aliases
 
+# Include bashrc
+[ -f ~/.bashrc ] && source ~/.bashrc
+
 eval "$(rbenv init -)"
 
