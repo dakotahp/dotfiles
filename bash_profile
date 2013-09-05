@@ -65,6 +65,3 @@ export NODE_PATH=/usr/local/lib/node_modules
 
 # Include local bash_profile
 [ -f ~/.bash_profile.local ] && source ~/.bash_profile.local
-
-eval "$(rbenv init -)"
-
