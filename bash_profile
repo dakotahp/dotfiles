@@ -32,6 +32,9 @@ bakcyn='\e[46m'   # Cyan
 bakwht='\e[47m'   # White
 txtrst='\e[0m'    # Text Reset
 
+# Include bashrc
+[ -f ~/.bashrc ] && source ~/.bashrc
+
 echo "Hello, Dave."
 
 # Git tab completion
@@ -60,8 +63,8 @@ export NODE_PATH=/usr/local/lib/node_modules
 # Add bash aliases.
 [ -f ~/.aliases ] && source ~/.aliases
 
-# Include bashrc
-[ -f ~/.bashrc ] && source ~/.bashrc
+# Include local bash_profile
+[ -f ~/.bash_profile.local ] && source ~/.bash_profile.local
 
 eval "$(rbenv init -)"
 
