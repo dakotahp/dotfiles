@@ -34,6 +34,7 @@ alias pg_start="pg_ctl -D /usr/local/var/postgres -l logfile start"
 alias ga='git add'
 alias gi='git status; echo; git branch -a -v'
 alias gnb=' git co -b' # must pass new branch name
+alias gdc='git diff --cached'
 alias s='git status'
 alias stash='git stash'
 alias pop='git stash pop'
