@@ -38,9 +38,7 @@ txtrst='\e[0m'    # Text Reset
 echo "Hello, Dave."
 
 # Git tab completion
-if [ -f ~/.git-prompt.sh ]; then
-  . ~/.git-prompt.sh
-fi
+[ -f ~/.git-prompt.sh ] && . ~/.git-prompt.sh
 
 print_before_the_prompt () {
   printf "\n$txtred%s: $bldgrn%s $txtpur%s\n$txtrst" "$USER" "$PWD" "$(__git_ps1)"
