@@ -49,13 +49,11 @@ PROMPT_COMMAND=print_before_the_prompt
 PS1='\n\W$ '
 PS1="👉  "
 
-export PATH="/Developer/usr/bin:~/.dot-files/bin:node_modiles/.bin:$PATH"
-export PATH="$HOME/.rbenv/bin:$PATH"
+export PATH="/Developer/usr/bin:~/.dot-files/bin:$PATH"
 
 export VIM_APP_DIR=/Applications/MacVim/
 export EDITOR='vim'
 export GIT_EDITOR=$EDITOR
-export NODE_PATH=/usr/local/lib/node_modules
 
 # Git tab completion
 [ -f ~/.git-completion.bash ] && . ~/.git-completion.bash
