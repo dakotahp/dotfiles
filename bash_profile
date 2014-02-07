@@ -35,7 +35,7 @@ txtrst='\e[0m'    # Text Reset
 # Include bashrc
 [ -f ~/.bashrc ] && source ~/.bashrc
 
-echo "Hello, Dave."
+echo "🔴  Hello, Dave."
 
 # Git tab completion
 [ -f ~/.git-prompt.sh ] && . ~/.git-prompt.sh
