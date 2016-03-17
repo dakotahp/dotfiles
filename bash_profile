@@ -54,7 +54,7 @@ export EDITOR='vim'
 export GIT_EDITOR=$EDITOR
 
 # Git tab completion
-[ -f ~/.git-completion.bash ] && . ~/.git-completion.bash
+[ -f ~/.git-completion.sh ] && . ~/.git-completion.sh
 
 # Add bash aliases.
 [ -f ~/.aliases ] && source ~/.aliases
