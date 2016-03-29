@@ -1,0 +1,18 @@
+[submodule "vim/bundle/closetag.vim"]
+  path = vim/bundle/closetag.vim
+  url = git@github.com:vim-scripts/closetag.vim.git
+[submodule "vim/bundle/vim-coffee-script"]
+  path = vim/bundle/vim-coffee-script
+  url = git@github.com:kchmck/vim-coffee-script.git
+[submodule "vim/bundle/vim-colors-github"]
+  path = vim/bundle/vim-colors-github
+  url = git@github.com:acarapetis/vim-colors-github.git
+[submodule "vim/bundle/vim-css-color"]
+  path = vim/bundle/vim-css-color
+  url = git@github.com:ap/vim-css-color.git
+[submodule "vim/bundle/vim-tomorrow-theme"]
+  path = vim/bundle/vim-tomorrow-theme
+  url = git@github.com:gotchacode/vim-tomorrow-theme.git
+[submodule "vim/bundle/vundle"]
+  path = vim/bundle/vundle
+  url = git@github.com:VundleVim/Vundle.vim.git
