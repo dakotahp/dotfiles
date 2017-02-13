@@ -44,7 +44,8 @@ print_before_the_prompt () {
   printf "\n$txtred%s $txtpur%s\n$txtrst" "$PWD" "$(__git_ps1)"
 }
 PROMPT_COMMAND=print_before_the_prompt
-PS1="💻   : "
+PS1='\n\W$ '
+ PS1="👉  "
 
 export PATH="/Developer/usr/bin:~/.dot-files/bin:$PATH"
 
@@ -60,3 +61,8 @@ export GIT_EDITOR=$EDITOR
 
 # Include local bash_profile
 [ -f ~/.bash_profile.local ] && source ~/.bash_profile.local
+
+### Added by the Heroku Toolbelt
+export PATH="/usr/local/heroku/bin:$PATH"
+
+export PATH="$HOME/.rbenv/bin:$PATH"
