@@ -18,3 +18,8 @@
 	keepBackup = true
 [include]
   path = ~/.gitconfig.local
+[user]
+	name = JY
+	email = miura@protonmail.ch
+[push]
+	default = current
