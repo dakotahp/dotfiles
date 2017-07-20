@@ -50,7 +50,6 @@ PS1="👉  "
 
 export PATH="/Developer/usr/bin:~/.dot-files/bin:$PATH"
 
-export VIM_APP_DIR=/Applications/MacVim/
 export EDITOR='vim'
 export GIT_EDITOR=$EDITOR
 
