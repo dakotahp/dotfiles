@@ -43,9 +43,10 @@ echo "🔴  Hello, Dave."
 print_before_the_prompt () {
   printf "\n$txtred%s $txtpur%s\n$txtrst" "$PWD" "$(__git_ps1)"
 }
+
 PROMPT_COMMAND=print_before_the_prompt
 PS1='\n\W$ '
- PS1="👉  "
+PS1="👉  "
 
 export PATH="/Developer/usr/bin:~/.dot-files/bin:$PATH"
 

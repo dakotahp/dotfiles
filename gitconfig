@@ -9,11 +9,13 @@
   ci = commit
   br = branch
   co = checkout
+  db = branch -d
   df = diff
   dfc = diff --cached
-  lg = log -p
+  lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
   lol = log --graph --decorate --pretty=oneline --abbrev-commit
   lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
+  nb = checkout -b
 [mergetool]
 	keepBackup = true
 [include]
@@ -23,3 +25,8 @@
 	email = miura@protonmail.ch
 [push]
 	default = current
+[filter "lfs"]
+	process = git-lfs filter-process
+	required = true
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
