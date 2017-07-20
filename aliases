@@ -44,11 +44,14 @@ alias gpom='git push origin master'
 alias pull='git pull --rebase'
 alias ggrep="git grep -I"
 alias log="git log"
-alias diff="git diff"
 alias show="git show"
 alias gcm="git commit -m"
 alias checkout="git checkout"
 alias contains="git branch --contains"
+
+# Heroku
+alias hrc="heroku run console"
+alias hl="heroku logs"
 
 # Include custom aliases
 [[ -f ~/.aliases.local ]] && source ~/.aliases.local
