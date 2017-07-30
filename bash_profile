@@ -65,4 +65,3 @@ export GIT_EDITOR=$EDITOR
 ### Added by the Heroku Toolbelt
 export PATH="/usr/local/heroku/bin:$PATH"
 
-export PATH="$HOME/.rbenv/bin:$PATH"
