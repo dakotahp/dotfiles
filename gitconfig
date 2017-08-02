@@ -18,15 +18,15 @@
   nb = checkout -b
 [mergetool]
 	keepBackup = true
-[include]
-  path = ~/.gitconfig.local
 [user]
 	name = JY
 	email = miura@protonmail.ch
 [push]
 	default = current
 [filter "lfs"]
-	process = git-lfs filter-process
-	required = true
 	clean = git-lfs clean -- %f
 	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+[include]
+  path = ~/.gitconfig.local
