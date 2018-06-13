@@ -19,8 +19,8 @@
 [mergetool]
 	keepBackup = true
 [user]
-	name = JY
-	email = miura@protonmail.ch
+	name = DP
+	email = miura@protonmail.com
 [push]
 	default = current
 [filter "lfs"]

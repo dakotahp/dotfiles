@@ -54,5 +54,8 @@ alias contains="git branch --contains"
 alias hrc="heroku run console"
 alias hl="heroku logs"
 
+# Docker
+alias dc="docker-compose"
+
 # Include custom aliases
 [[ -f ~/.aliases.local ]] && source ~/.aliases.local
