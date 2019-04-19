@@ -16,6 +16,7 @@
   lol = log --graph --decorate --pretty=oneline --abbrev-commit
   lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
   nb = checkout -b
+  pr = "!sh -c 'base=$0 && git log $base..HEAD --pretty=tformat:\"- %h (%an) _%s_\" | tail -r'"
 [mergetool]
 	keepBackup = true
 [user]
