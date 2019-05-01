@@ -10,8 +10,8 @@ call vundle#rc()
 Bundle 'gmarik/vundle'
 
 " Define bundles via Github repos
-Bundle 'kchmck/vim-coffee-script'
 Bundle 'skammer/vim-css-color'
+Bundle 'vim-ruby/vim-ruby.git'
 Bundle 'chriskempson/vim-tomorrow-theme'
 Bundle 'docunext/closetag.vim'
 
@@ -19,5 +19,7 @@ if filereadable(expand("~/.vimrc.bundles.local"))
   source ~/.vimrc.bundles.local
 endif
 
-filetype on
-filetype plugin indent on
+syntax on " Enable syntax highlighting
+filetype on " Enable filetype detection
+filetype plugin on " Enable filetype-specific plugins
+filetype indent on " Enable filetype-specific indenting
