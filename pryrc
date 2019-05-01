@@ -17,3 +17,13 @@ if ENV['RAILS_ENV'] || defined?(Rails)
   color = Rails.env =~ /production/ ? red : blue
   Pry.config.prompt_name = "#{yellow}#{File.basename Rails.root}#{default} - #{color}#{Rails.env}#{default} "
 end
+
+def pbcopy(input)
+  str = input.to_s
+  IO.popen('pbcopy', 'w') { |f| f << str }
+  str
+end
+
+def pbpaste
+  `pbpaste`
+end
