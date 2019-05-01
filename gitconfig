@@ -2,32 +2,32 @@
   ui = auto
 [core]
   whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
-	excludesfile = ~/.gitignore_global
+  excludesfile = ~/.gitignore_global
 [alias]
-  unstage = reset
-  st = status
-  ci = commit
   br = branch
+  ci = commit
   co = checkout
   db = branch -d
-  df = diff
   dfc = diff --cached
   lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
   lol = log --graph --decorate --pretty=oneline --abbrev-commit
   lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
   nb = checkout -b
   pr = "!sh -c 'base=$0 && git log $base..HEAD --pretty=tformat:\"- %h (%an) _%s_\" | tail -r'"
+  unstage = reset
 [mergetool]
-	keepBackup = true
+  keepBackup = true
 [user]
-	name = DP
-	email = miura@protonmail.com
+  name = DP
+  email = miura@protonmail.com
 [push]
-	default = current
+  default = current
 [filter "lfs"]
-	clean = git-lfs clean -- %f
-	smudge = git-lfs smudge -- %f
-	process = git-lfs filter-process
-	required = true
+  clean = git-lfs clean -- %f
+  smudge = git-lfs smudge -- %f
+  process = git-lfs filter-process
+  required = true
 [include]
   path = ~/.gitconfig.local
+[pull]
+  rebase = true

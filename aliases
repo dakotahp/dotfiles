@@ -37,7 +37,7 @@ alias gco='git checkout'
 alias gi='git status; echo; git branch -a -v'
 alias gnb=' git co -b' # must pass new branch name
 alias gdc='git diff --cached'
-alias s='git status'
+alias gst='git status'
 alias stash='git stash'
 alias pop='git stash pop'
 alias gpo='git push origin' #branch
@@ -54,6 +54,8 @@ alias grecent='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --f
 # Heroku
 alias hrc="heroku run console"
 alias hl="heroku logs"
+
+alias weather='curl -L wttr.in'
 
 # Include custom aliases
 [[ -f ~/.aliases.local ]] && source ~/.aliases.local
