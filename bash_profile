@@ -35,26 +35,11 @@ txtrst='\e[0m'    # Text Reset
 # Include bashrc
 [ -f ~/.bashrc ] && source ~/.bashrc
 
-echo "🔴  Hello, Dave."
+# Include git prompt script
+[ -f ~/dotfiles/bin/git-prompt.sh ] && . ~/dotfiles/bin/git-prompt.sh
 
 # Git tab completion
-[ -f ~/.git-prompt.sh ] && . ~/.git-prompt.sh
-
-print_before_the_prompt () {
-  printf "\n$txtred%s $txtpur%s\n$txtrst" "$PWD" "$(__git_ps1)"
-}
-
-PROMPT_COMMAND=print_before_the_prompt
-PS1='\n\W$ '
-PS1="👉  "
-
-export PATH="/Developer/usr/bin:~/.dot-files/bin:$PATH"
-
-export EDITOR='vim'
-export GIT_EDITOR=$EDITOR
-
-# Git tab completion
-[ -f ~/.git-completion.sh ] && . ~/.git-completion.sh
+[ -f ~/dotfiles/bin/git-completion.sh ] && . ~/dotfiles/bin/git-completion.sh
 
 # Add bash aliases.
 [ -f ~/.aliases ] && source ~/.aliases
@@ -62,6 +47,16 @@ export GIT_EDITOR=$EDITOR
 # Include local bash_profile
 [ -f ~/.bash_profile.local ] && source ~/.bash_profile.local
 
-### Added by the Heroku Toolbelt
-export PATH="/usr/local/heroku/bin:$PATH"
+print_before_the_prompt () {
+  printf "\n$txtred%s $txtpur%s\n$txtrst" "$PWD" "$(__git_ps1)"
+}
 
+echo "🔴  Hello, Dave."
+
+PROMPT_COMMAND=print_before_the_prompt
+PS1='\n\W$ '
+PS1="👉  "
+
+export PATH="/Developer/usr/bin:~/dotfiles/bin:$PATH"
+export EDITOR='vim'
+export GIT_EDITOR=$EDITOR
