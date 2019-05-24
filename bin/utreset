@@ -1,0 +1,13 @@
+#!/bin/bash
+
+set -e
+
+brew update
+git co master
+git pull
+bundle
+yarn
+bundle exec rake db:reset
+bundle exec rake db:seed_convenience db:test:prepare
+redis-cli flushall
+gco -- db/structure.sql
