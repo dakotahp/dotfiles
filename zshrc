@@ -1,5 +1,5 @@
 ZSH=$HOME/.oh-my-zsh
-ZSH_CUSTOM=$HOME/.oh-my-zsh-custom
+ZSH_CUSTOM=$HOME/.oh-my-zsh/custom
 ZSH_THEME="powerlevel9k/powerlevel9k"
 
 COMPLETION_WAITING_DOTS="true"
@@ -8,40 +8,26 @@ COMPLETION_WAITING_DOTS="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 if [[ "$(uname)" == "Darwin" ]]; then
   plugins=(
-    ahn
     aws
-    bundle
     colored-man-pages
-    capistrano
-    docker
-    docker-compose
+    encode64
     gem
     git
     github
-    heroku
     iterm2
     jump
-    mix
     npm
     osx
-    pod
     pow
     powify
-    spring_gem
-    vagrant
-    zeus
     z
+    zsh-autosuggestions
     zsh_reload
     zsh-syntax-highlighting
   )
 else
   plugins=(
-    ahn
-    aws
-    bundle
-    capistrano
-    docker
-    docker-compose
+    encode64
     gem
     git
     heroku
@@ -49,9 +35,8 @@ else
     mix
     npm
     spring_gem
-    vagrant
     z
-    zeus
+    zsh-autosuggestions
     zsh_reload
     zsh-syntax-highlighting
   )
@@ -100,3 +85,6 @@ ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'bold,bg=red')
 
 # Add aliases.
 [ -f ~/.aliases ] && source ~/.aliases
+
+# Add rbenv
+[ -s "/usr/local/bin/rbenv" ] && eval "$(rbenv init -)"
