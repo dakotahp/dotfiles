@@ -54,14 +54,7 @@ unsetopt share_history
 
 export MIGHTY_VM=true
 
-if hash atom 2>/dev/null; then
-  export EDITOR=atom
-  function atom_gem () {
-    atom $(bundle show $1)
-  }
-else
-  export EDITOR=vim
-fi
+export EDITOR=vim
 
 precmd() {
   eval 'if [ "$(id -u)" -ne 0 ]; then echo "$(date "+%Y-%m-%d.%H:%M:%S") $(pwd) $(history | tail -n 1)" >>! ~/.shell_history/bash-history-$(date "+%Y-%m-%d").log; fi'
