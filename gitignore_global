@@ -51,4 +51,4 @@ logfile
 .sass-cache
 public/uploads/
 database.yml
-.rspec
+

@@ -1,6 +1,6 @@
 ZSH=$HOME/.oh-my-zsh
 ZSH_CUSTOM=$HOME/.oh-my-zsh/custom
-ZSH_THEME="powerlevel9k/powerlevel9k"
+ZSH_THEME="powerlevel10k/powerlevel10k"
 
 COMPLETION_WAITING_DOTS="true"
 
@@ -22,6 +22,7 @@ if [[ "$(uname)" == "Darwin" ]]; then
     powify
     z
     zsh-autosuggestions
+    zsh-nvm
     zsh_reload
     zsh-syntax-highlighting
   )
@@ -42,9 +43,13 @@ else
   )
 fi
 
+export GOPATH="${HOME}/go"
+
 export PATH="/usr/local/opt/node@8/bin:$PATH"
 export PATH="/usr/local/sbin:$PATH"
+export PATH="$PATH:~/.nvm"
 export PATH="$PATH:~/dotfiles/bin"
+export PATH="$PATH:${GOPATH}"
 
 source $ZSH/oh-my-zsh.sh
 
