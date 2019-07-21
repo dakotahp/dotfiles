@@ -8,18 +8,13 @@ COMPLETION_WAITING_DOTS="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 if [[ "$(uname)" == "Darwin" ]]; then
   plugins=(
-    aws
     colored-man-pages
     encode64
-    gem
     git
     github
-    iterm2
     jump
     npm
     osx
-    pow
-    powify
     z
     zsh-autosuggestions
     zsh-nvm
@@ -29,13 +24,9 @@ if [[ "$(uname)" == "Darwin" ]]; then
 else
   plugins=(
     encode64
-    gem
     git
-    heroku
     jump
-    mix
     npm
-    spring_gem
     z
     zsh-autosuggestions
     zsh_reload
@@ -86,3 +77,4 @@ ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'bold,bg=red')
 
 # Add rbenv
 [ -s "/usr/local/bin/rbenv" ] && eval "$(rbenv init -)"
+
