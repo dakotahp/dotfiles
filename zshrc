@@ -39,8 +39,8 @@ export GOBIN=/usr/local/bin/
 
 export PATH="/usr/local/opt/node@8/bin:$PATH"
 export PATH="/usr/local/sbin:$PATH"
-export PATH="$PATH:~/.nvm"
-export PATH="$PATH:~/dotfiles/bin"
+export PATH="$PATH:$HOME/.nvm"
+export PATH="$PATH:$HOME/dotfiles/bin"
 export PATH="$PATH:${GOPATH}/bin"
 
 source $ZSH/oh-my-zsh.sh

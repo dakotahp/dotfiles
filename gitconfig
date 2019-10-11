@@ -7,6 +7,7 @@
   br = branch
   ci = commit
   co = checkout
+  cp = cherry-pick
   db = branch -d
   dfc = diff --cached
   lastbranch = checkout -
@@ -35,3 +36,5 @@
   path = ~/.gitconfig.local
 [pull]
   rebase = true
+[rerere]
+	enabled = true
