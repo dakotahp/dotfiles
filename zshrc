@@ -17,7 +17,6 @@ if [[ "$(uname)" == "Darwin" ]]; then
     osx
     z
     zsh-autosuggestions
-    zsh-nvm
     zsh_reload
     zsh-syntax-highlighting
   )
@@ -78,4 +77,3 @@ ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'bold,bg=red')
 
 # Add rbenv
 [ -s "/usr/local/bin/rbenv" ] && eval "$(rbenv init -)"
-
