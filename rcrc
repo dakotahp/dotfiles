@@ -1,3 +1,4 @@
 EXCLUDES="README.md Rakefile install.sh bin LICENSE"
 DOTFILES_DIRS="$HOME/dotfiles-local $HOME/dotfiles"
 SYMLINK_DIRS="vim"
+
