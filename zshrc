@@ -74,6 +74,13 @@ ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'bold,bg=red')
 
 # Add aliases.
 [ -f ~/.aliases ] && source ~/.aliases
-
+#
 # Add rbenv
 [ -s "/usr/local/bin/rbenv" ] && eval "$(rbenv init -)"
+
+# ruby-build installs a non-Homebrew OpenSSL for each Ruby version installed and these are never upgraded.
+# Link Rubies to Homebrew's OpenSSL 1.1 (which is upgraded)
+export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
+
+# Include local zsh config
+[[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
