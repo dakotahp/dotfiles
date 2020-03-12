@@ -60,3 +60,4 @@ PS1="👉  "
 export PATH="/Developer/usr/bin:~/dotfiles/bin:$PATH"
 export EDITOR='vim'
 export GIT_EDITOR=$EDITOR
+export GPG_TTY=$(tty)
