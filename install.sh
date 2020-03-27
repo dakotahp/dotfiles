@@ -18,7 +18,6 @@ touch ~/.aliases.local
 touch ~/.bash_profile.local
 touch ~/.gitconfig.local
 
-git clone https://github.com/gmarik/vundle.git ~/.vim/bundle/vundle
-vim -u ~/.vimrc.bundles +BundleInstall +qa
+vim +PluginInstall +qall
 
 echo "All done!"
