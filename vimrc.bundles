@@ -13,6 +13,9 @@ Plugin 'skammer/vim-css-color'
 Plugin 'vim-ruby/vim-ruby.git'
 Plugin 'chriskempson/vim-tomorrow-theme'
 Plugin 'docunext/closetag.vim'
+Plugin 'scrooloose/nerdtree'
+Plugin 'ctrlpvim/ctrlp.vim'
+Plugin 'junegunn/fzf'
 
 if filereadable(expand("~/.vimrc.bundles.local"))
   source ~/.vimrc.bundles.local
