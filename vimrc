@@ -16,13 +16,8 @@ set nocompatible
 set colorcolumn=81
 
 "
-" vundle config
+" vundle config, include bundles in different file
 "
-filetype off " required!
-set rtp+=~/.vim/bundle/vundle/
-call vundle#rc()
-
-" Include bundles in different file
 if filereadable(expand("~/.vimrc.bundles"))
   source ~/.vimrc.bundles
 endif
