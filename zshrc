@@ -29,6 +29,7 @@ if [[ "$(uname)" == "Darwin" ]]; then
   )
 else
   plugins=(
+    colored-man-pages
     encode64
     git
     jump
@@ -40,14 +41,22 @@ else
   )
 fi
 
+#
+# Go config
+#
 export GOPATH="${HOME}/go"
 export GOBIN=/usr/local/bin/
 
+#
+# Path modifications
+#
 export PATH="/usr/local/opt/node@8/bin:$PATH"
 export PATH="/usr/local/sbin:$PATH"
 export PATH="$PATH:$HOME/.nvm"
 export PATH="$PATH:$HOME/dotfiles/bin"
 export PATH="$PATH:${GOPATH}/bin"
+export PATH="$PATH:$HOME/.rbenv/bin"
+
 
 source $ZSH/oh-my-zsh.sh
 
@@ -77,20 +86,39 @@ ZSH_HIGHLIGHT_STYLES[double-hyphen-option]='fg=123'
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern)
 ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'bold,bg=red')
 
+
+#
+# fzf: fuzzy finder install
+# https://github.com/junegunn/fzf
+#
+
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
-# Add aliases.
-[ -f ~/.aliases ] && source ~/.aliases
 #
-# Add rbenv
-[ -s "/usr/local/bin/rbenv" ] && eval "$(rbenv init -)"
+# Import aliases
+#
+[ -f ~/.aliases ] && source ~/.aliases
 
-# ruby-build installs a non-Homebrew OpenSSL for each Ruby version installed and these are never upgraded.
+#
+# rbenv setup
+#
+[ -s "/usr/local/bin/rbenv" ] && eval "$(rbenv init -)"
+[ -s "~/.rbenv/bin/rbenv" ] && eval "$(rbenv init -)"
+
+if [ $(command -v brew) > 0 ]; then eval "$(rbenv init -)"; fi
+
+# ruby-build installs a non-Homebrew OpenSSL for each Ruby version installed
+# and these are never upgraded.
 # Link Rubies to Homebrew's OpenSSL 1.1 (which is upgraded)
-export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
+if [ $(command -v brew) > 0 ]; then export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"; fi
+
+#
+# end rbenv setup
+#
 
 # Include local zsh config
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+

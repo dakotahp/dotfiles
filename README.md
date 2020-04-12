@@ -17,3 +17,15 @@ Open vim and run `:PluginClean`.
 
 Open vim and run `:PluginUpdate`.
 
+install vundle from github readme
+install powerline10k from github readme
+
+## Components
+
+* [rbenv](https://github.com/rbenv/rbenv#readme)
+* [ruby-build](https://github.com/rbenv/ruby-build#readme)
+* [tmux](https://github.com/tmux/tmux#readme)
+* [fzf](https://github.com/junegunn/fzf#readme)
+* [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.md)
+* [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md)
+
