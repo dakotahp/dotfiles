@@ -1,5 +1,12 @@
 #!/bin/bash
 
+log () {
+	msg=${1}
+	level=${2:-"INFO"}
+
+	echo "$(date '+%b %d %Y %I:%m:%S%p') [${level}] ${msg}"
+}
+
 reload_zshrc () {
   source ~/.zshrc
 }
@@ -43,6 +50,24 @@ if [ "$(uname)" == "Darwin" ]; then
 else
   sudo apt install tmux
 fi
+
+#
+# Install zsh
+#
+if ! [ -x "$(command -v zsh)" ]; then
+	echo "Installing zsh..."
+	sudo apt update
+	sudo apt upgrade
+	sudo apt install zsh
+end
+
+#
+# Set zsh to default
+#
+if ! [ -x "$(command -v zsh)" ]; then
+	echo "Setting zsh as default shell..."
+	chsh -s /bin/zsh $(whoami)
+end
 
 #
 # Install oh-my-zsh
