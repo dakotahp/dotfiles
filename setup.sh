@@ -83,16 +83,18 @@ command -v zsh >/dev/null 2>&1 || install_zsh
 #
 # Set zsh to default
 #
-if ! [ -x "$(command -v zsh)" ]; then
+if [ $SHELL = "/bin/bash" ]; then
 	log "Setting zsh as default shell..."
 	chsh -s /bin/zsh $(whoami)
-end
+fi
 
 #
 # Install oh-my-zsh
 #
-log "Installing oh-my-zsh…"
-sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+if [ ! -d ~/.oh-my-zsh ]; then
+  log "Installing oh-my-zsh…"
+  sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+fi
 
 #
 # Reloading zshrc
@@ -145,9 +147,11 @@ reload_zshrc
 # Install ruby-build
 #
 if [ ! -d "$(rbenv root)"/plugins/ruby-build ]; then
+	log "Installing ruby-build..."
   mkdir -p "$(rbenv root)"/plugins
   git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build
 else
+	log "Updating ruby-build..."
   git -C "$(rbenv root)"/plugins/ruby-build pull
 fi
 
@@ -165,5 +169,3 @@ touch ~/.zshrc.local
 vim +PluginInstall +qall
 
 log "All done! Time for a pint 🍺"
-
-
