@@ -4,7 +4,9 @@ log () {
 	msg=${1}
 	level=${2:-"INFO"}
 
+	echo ""
 	echo "$(date '+%b %d %Y %I:%m:%S%p') [${level}] ${msg}"
+	echo ""
 }
 
 reload_zshrc () {
@@ -126,7 +128,7 @@ if [ ! -d ~/.fzf ]; then
   ~/.fzf/install
 else
   log "Updating fzf…"
-  cd ~/.fzf && git pull && ./install
+  cd ~/.fzf && git pull #&& ./install
 fi
 
 #
@@ -153,6 +155,13 @@ if [ ! -d "$(rbenv root)"/plugins/ruby-build ]; then
 else
 	log "Updating ruby-build..."
   git -C "$(rbenv root)"/plugins/ruby-build pull
+fi
+
+#
+# Install vundle
+#
+if [ ! -d ~/.vim/bundle ]; then
+	git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 fi
 
 #
