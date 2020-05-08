@@ -1,4 +1,4 @@
-#!/bin/zsh
+#!/bin/bash
 
 reload_zshrc () {
   source ~/.zshrc
@@ -16,13 +16,29 @@ fi
 # Install homebrew (on MacOS)
 #
 if [ "$(uname)" == "Darwin" ]; then
+	echo "Installing homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
+fi
+
+#
+# Install rcm
+#
+echo "Installing rcm..."
+if [ "$(uname)" == "Darwin" ]; then
+	brew tap thoughtbot/formulae
+	brew install rcm
+else
+	wget -qO - https://apt.thoughtbot.com/thoughtbot.gpg.key | sudo apt-key add -
+	echo "deb https://apt.thoughtbot.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/thoughtbot.list
+	sudo apt-get update
+	sudo apt-get install rcm
 fi
 
 #
 # Install tmux
 #
 if [ "$(uname)" == "Darwin" ]; then
+	echo "Installing tmux..."
   brew install tmux
 else
   sudo apt install tmux
@@ -31,10 +47,8 @@ fi
 #
 # Install oh-my-zsh
 #
-if [ ! -d ~/.fzf ]; then
-  echo "Installing oh-my-zsh…\n\n"
-  sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
-fi
+echo "Installing oh-my-zsh…\n\n"
+sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 #
 # Reloading zshrc
