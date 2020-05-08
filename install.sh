@@ -30,36 +30,55 @@ fi
 #
 # Install rcm
 #
-log "Installing rcm..."
-if [ "$(uname)" == "Darwin" ]; then
-	brew tap thoughtbot/formulae
-	brew install rcm
-else
-	wget -qO - https://apt.thoughtbot.com/thoughtbot.gpg.key | sudo apt-key add -
-	echo "deb https://apt.thoughtbot.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/thoughtbot.list
-	sudo apt-get update
-	sudo apt-get install rcm
-fi
+
+install_rcm () {
+	log "Installing rcm..."
+	if [ "$(uname)" == "Darwin" ]; then
+		brew tap thoughtbot/formulae
+		brew install rcm
+	else
+		wget -qO - https://apt.thoughtbot.com/thoughtbot.gpg.key | sudo apt-key add -
+		echo "deb https://apt.thoughtbot.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/thoughtbot.list
+		sudo apt-get update
+		sudo apt-get install rcm
+	fi
+}
+
+command -v rcup >/dev/null 2>&1 || install_rcm
+
+#
+# Run rcup to relink everything
+#
+log "The following are your dotfiles to be linked"
+lsrc
+log "Synchronizing dotfiles into home folder"
+rcup -d ~/dotfiles -vf -x install.sh -x README.md
 
 #
 # Install tmux
 #
-if [ "$(uname)" == "Darwin" ]; then
+install_tmux () {
 	log "Installing tmux..."
-  brew install tmux
-else
-  sudo apt install tmux
-fi
+	if [ "$(uname)" == "Darwin" ]; then
+	  brew install tmux
+	else
+	  sudo apt install tmux
+	fi
+}
+
+command -v tmux >/dev/null 2>&1 || install_tmux
 
 #
 # Install zsh
 #
-if ! [ -x "$(command -v zsh)" ]; then
+install_zsh () {
 	log "Installing zsh..."
 	sudo apt update
 	sudo apt upgrade
 	sudo apt install zsh
-end
+}
+
+command -v zsh >/dev/null 2>&1 || install_zsh
 
 #
 # Set zsh to default
@@ -145,5 +164,6 @@ touch ~/.zshrc.local
 #
 vim +PluginInstall +qall
 
-echo "All done! Time for a pint 🍺"
+log "All done! Time for a pint 🍺"
+
 
