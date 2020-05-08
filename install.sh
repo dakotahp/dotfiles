@@ -15,7 +15,7 @@ reload_zshrc () {
 # Install Xcode tools (on MacOS)
 #
 if [ "$(uname)" == "Darwin" ]; then
-  echo "Installing xcode tools…"
+  log "Installing xcode tools…"
   xcode-select --install
 fi
 
@@ -23,14 +23,14 @@ fi
 # Install homebrew (on MacOS)
 #
 if [ "$(uname)" == "Darwin" ]; then
-	echo "Installing homebrew..."
+	log "Installing homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 fi
 
 #
 # Install rcm
 #
-echo "Installing rcm..."
+log "Installing rcm..."
 if [ "$(uname)" == "Darwin" ]; then
 	brew tap thoughtbot/formulae
 	brew install rcm
@@ -45,7 +45,7 @@ fi
 # Install tmux
 #
 if [ "$(uname)" == "Darwin" ]; then
-	echo "Installing tmux..."
+	log "Installing tmux..."
   brew install tmux
 else
   sudo apt install tmux
@@ -55,7 +55,7 @@ fi
 # Install zsh
 #
 if ! [ -x "$(command -v zsh)" ]; then
-	echo "Installing zsh..."
+	log "Installing zsh..."
 	sudo apt update
 	sudo apt upgrade
 	sudo apt install zsh
@@ -65,14 +65,14 @@ end
 # Set zsh to default
 #
 if ! [ -x "$(command -v zsh)" ]; then
-	echo "Setting zsh as default shell..."
+	log "Setting zsh as default shell..."
 	chsh -s /bin/zsh $(whoami)
 end
 
 #
 # Install oh-my-zsh
 #
-echo "Installing oh-my-zsh…\n\n"
+log "Installing oh-my-zsh…"
 sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 
 #
@@ -84,7 +84,7 @@ reload_zshrc
 # Install zsh-autosuggestions (oh-my-zsh plugin)
 #
 if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions ]; then
-  echo "Installing zsh-autosuggestions"
+  log "Installing zsh-autosuggestions"
   git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions
 fi
 
@@ -92,7 +92,7 @@ fi
 # Install zsh-syntax-highlighting (oh-my-zsh plugin)
 #
 if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions ]; then
-  echo "Installing zsh-syntax-highlighting"
+  log "Installing zsh-syntax-highlighting"
   git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
 fi
 
@@ -100,11 +100,11 @@ fi
 # Install fzf
 #
 if [ ! -d ~/.fzf ]; then
-  echo "Installing fzf…\n\n"
+  log "Installing fzf…"
   git clone --depth 1 https://github.com/junegunn/fzf.git ~/.fzf
   ~/.fzf/install
 else
-  echo "Updating fzf…\n\n"
+  log "Updating fzf…"
   cd ~/.fzf && git pull && ./install
 fi
 
@@ -112,11 +112,11 @@ fi
 # Install rbenv
 #
 if [ ! -d ~/.rbenv ]; then
-  echo "Installing rbenv…"
+  log "Installing rbenv…"
   git clone https://github.com/rbenv/rbenv.git ~/.rbenv
   cd ~/.rbenv && src/configure && make -C src
 else
-  echo "Updating rbenv…"
+  log "Updating rbenv…"
   cd ~/.rbenv && git pull
 fi
 
