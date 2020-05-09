@@ -99,11 +99,6 @@ if [ ! -d ~/.oh-my-zsh ]; then
 fi
 
 #
-# Reloading zshrc
-#
-reload_zshrc
-
-#
 # Install zsh-autosuggestions (oh-my-zsh plugin)
 #
 if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions ]; then
@@ -167,7 +162,7 @@ fi
 #
 # Install vundle
 #
-if [ ! -d ~/.vim/bundle ]; then
+if [ ! -d ~/.vim/bundle/Vundle.vim ]; then
 	log "Installing vundle"
 	git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 fi
