@@ -114,9 +114,17 @@ fi
 #
 # Install zsh-syntax-highlighting (oh-my-zsh plugin)
 #
-if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions ]; then
+if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting ]; then
   log "Installing zsh-syntax-highlighting"
   git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting
+fi
+
+#
+# Install powerlevel10k (oh-my-zsh plugin)
+#
+if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/powerlevel10k ]; then
+  log "Installing powerlevel10k"
+  git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k
 fi
 
 #
