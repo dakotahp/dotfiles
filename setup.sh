@@ -146,12 +146,11 @@ if [ ! -d ~/.rbenv ]; then
   log "Installing rbenv…"
   git clone https://github.com/rbenv/rbenv.git ~/.rbenv
   cd ~/.rbenv && src/configure && make -C src
+	reload_zshrc
 else
   log "Updating rbenv…"
   cd ~/.rbenv && git pull
 fi
-
-reload_zshrc
 
 #
 # Install ruby-build

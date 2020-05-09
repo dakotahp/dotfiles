@@ -15,6 +15,8 @@ COMPLETION_WAITING_DOTS="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 if [[ "$(uname)" == "Darwin" ]]; then
   plugins=(
+    docker
+    docker-compose
     colored-man-pages
     encode64
     git
@@ -29,6 +31,8 @@ if [[ "$(uname)" == "Darwin" ]]; then
   )
 else
   plugins=(
+    docker
+    docker-compose
     colored-man-pages
     encode64
     git
