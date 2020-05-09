@@ -68,8 +68,6 @@ unsetopt correct_all
 setopt inc_append_history
 unsetopt share_history
 
-export MIGHTY_VM=true
-
 export EDITOR=vim
 
 precmd() {
@@ -95,7 +93,6 @@ ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'bold,bg=red')
 # fzf: fuzzy finder install
 # https://github.com/junegunn/fzf
 #
-
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 
 #
@@ -125,4 +122,3 @@ if [ $(command -v brew) > 0 ]; then export RUBY_CONFIGURE_OPTS="--with-openssl-d
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-

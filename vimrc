@@ -29,9 +29,10 @@ au BufRead,BufRead *.json set ft=javascript
 " Use F2 button to toggle input paste
 set pastetoggle=<F2>
 
-set history=1000    " save 1000 points of history
-set hidden
+" save 1000 points of history
+set history=1000
 
+set hidden
 
 " Show matching brackets and parenthesis
 set showmatch
@@ -91,7 +92,6 @@ set showmode    " show what mode you are in
 "
 set fenc=utf8
 set enc=utf8
-
 
 " Show crosshairs
 set cursorline
