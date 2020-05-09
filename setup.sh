@@ -122,7 +122,7 @@ fi
 #
 # Install powerlevel10k (oh-my-zsh plugin)
 #
-if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/powerlevel10k ]; then
+if [ ! -d ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/plugins/powerlevel10k ]; then
   log "Installing powerlevel10k"
   git clone --depth=1 https://github.com/romkatv/powerlevel10k.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/themes/powerlevel10k
 fi
@@ -168,8 +168,15 @@ fi
 # Install vundle
 #
 if [ ! -d ~/.vim/bundle ]; then
+	log "Installing vundle"
 	git clone https://github.com/VundleVim/Vundle.vim.git ~/.vim/bundle/Vundle.vim
 fi
+
+#
+# Install vundle for vim
+#
+log "Installing vundle vim plugins"
+vim +PluginInstall +qall
 
 #
 # Set up empty local versions of files
@@ -178,10 +185,5 @@ touch ~/.aliases.local
 touch ~/.bash_profile.local
 touch ~/.gitconfig.local
 touch ~/.zshrc.local
-
-#
-# Install vundle for vim
-#
-vim +PluginInstall +qall
 
 log "All done! Time for a pint 🍺"
