@@ -42,7 +42,7 @@ install_rcm () {
 		wget -qO - https://apt.thoughtbot.com/thoughtbot.gpg.key | sudo apt-key add -
 		echo "deb https://apt.thoughtbot.com/debian/ stable main" | sudo tee /etc/apt/sources.list.d/thoughtbot.list
 		sudo apt-get update
-		sudo apt-get install rcm
+		sudo apt-get -y install rcm
 	fi
 }
 
@@ -64,7 +64,7 @@ install_tmux () {
 	if [ "$(uname)" == "Darwin" ]; then
 	  brew install tmux
 	else
-	  sudo apt install tmux
+	  sudo apt install -y tmux
 	fi
 }
 
@@ -77,7 +77,7 @@ install_zsh () {
 	log "Installing zsh..."
 	sudo apt update
 	sudo apt upgrade
-	sudo apt install zsh
+	sudo apt install -y zsh
 }
 
 command -v zsh >/dev/null 2>&1 || install_zsh
@@ -180,5 +180,6 @@ touch ~/.aliases.local
 touch ~/.bash_profile.local
 touch ~/.gitconfig.local
 touch ~/.zshrc.local
+mkdir ~/.shell_history
 
 log "All done! Time for a pint 🍺"
