@@ -24,6 +24,33 @@ Open vim and run `:PluginUpdate`.
 Install with `brew install hugo` on MacOS or
 [download a release binary](https://github.com/gohugoio/hugo/releases).
 
+### Resilio Sync
+
+On Linux [download](https://help.resilio.com/hc/en-us/articles/206178924-Installing-Sync-package-on-Linux)
+and install the package. Then run the following to
+[set it up](https://help.resilio.com/hc/en-us/articles/206178924-Installing-Sync-package-on-Linux):
+
+```
+# Install package manuall if OS doesn't do it in the UI
+sudo dpkg -i <resilio-sync.deb>
+
+# Enable Sync service automatic startup under rslsync user:
+sudo systemctl enable resilio-sync
+
+# Keep rslsync user in sync with current user
+sudo usermod -aG [username] rslsync
+sudo usermod -aG rslsync [username]
+sudo chmod g+rw [synced_folder]
+
+# Start service
+sudo service resilio-sync start
+```
+
+The service
+[should be available](https://help.resilio.com/hc/en-us/articles/204762449-Guide-to-Linux)
+at
+[http://localhost:8888/gui/](http://localhost:8888/gui/).
+
 ## Components
 
 * [rbenv](https://github.com/rbenv/rbenv#readme)
