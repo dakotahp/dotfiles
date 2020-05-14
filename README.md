@@ -17,6 +17,13 @@ Open vim and run `:PluginClean`.
 
 Open vim and run `:PluginUpdate`.
 
+## Install manually
+
+### Hugo (Static Site Generator)
+
+Install with `brew install hugo` on MacOS or
+[download a release binary](https://github.com/gohugoio/hugo/releases).
+
 ## Components
 
 * [rbenv](https://github.com/rbenv/rbenv#readme)
@@ -25,3 +32,4 @@ Open vim and run `:PluginUpdate`.
 * [fzf](https://github.com/junegunn/fzf#readme)
 * [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.md)
 * [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md)
+
