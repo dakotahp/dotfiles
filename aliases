@@ -34,7 +34,6 @@ alias be="bundle exec"
 alias tx="tmuxinator"
 
 # git
-alias ga='git add'
 alias gco='git checkout'
 alias gi='git status; echo; git branch -a -v'
 alias gnb=' git co -b' # must pass new branch name
