@@ -160,6 +160,20 @@ else
 fi
 
 #
+# Install nodenv
+#
+if [ ! -d ~/.nodenv ]; then
+  log "Installing nodenv..."
+  git clone https://github.com/nodenv/nodenv.git ~/.nodenv
+	cd ~/.nodenv && src/configure && make -C src
+	~/.nodenv/bin/nodenv init
+else
+  log "Updating nodenv…"
+  curl -fsSL https://github.com/nodenv/nodenv-installer/raw/master/bin/nodenv-doctor | bash
+  cd ~/.nodenv && git pull
+fi
+
+#
 # Install vundle
 #
 if [ ! -d ~/.vim/bundle/Vundle.vim ]; then
