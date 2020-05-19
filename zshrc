@@ -117,6 +117,15 @@ if [ $(command -v brew) > 0 ]; then export RUBY_CONFIGURE_OPTS="--with-openssl-d
 # end rbenv setup
 #
 
+#
+# nodenv setup
+#
+[ -s "$HOME/.nodenv/bin" ] && eval "$(nodenv init -)"
+#
+# end nodenv setup
+#
+
+
 # Include local zsh config
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
