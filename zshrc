@@ -54,13 +54,11 @@ export GOBIN=/usr/local/bin/
 #
 # Path modifications
 #
-export PATH="/usr/local/opt/node@8/bin:$PATH"
 export PATH="/usr/local/sbin:$PATH"
-export PATH="$PATH:$HOME/.nvm"
 export PATH="$PATH:$HOME/dotfiles/bin"
 export PATH="$PATH:${GOPATH}/bin"
 export PATH="$PATH:$HOME/.rbenv/bin"
-
+export PATH="$HOME/.nodenv/bin:$PATH"
 
 source $ZSH/oh-my-zsh.sh
 
