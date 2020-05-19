@@ -144,6 +144,7 @@ if [ ! -d ~/.rbenv ]; then
 	reload_zshrc
 else
   log "Updating rbenv…"
+  curl -fsSL https://github.com/rbenv/rbenv-installer/raw/master/bin/rbenv-doctor | bash
   cd ~/.rbenv && git pull
 fi
 
