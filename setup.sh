@@ -141,7 +141,7 @@ if [ ! -d ~/.rbenv ]; then
   log "Installing rbenv…"
   git clone https://github.com/rbenv/rbenv.git ~/.rbenv
   cd ~/.rbenv && src/configure && make -C src
-	reload_zshrc
+  ~/.rbenv/bin/rbenv init
 else
   log "Updating rbenv…"
   curl -fsSL https://github.com/rbenv/rbenv-installer/raw/master/bin/rbenv-doctor | bash
