@@ -180,6 +180,9 @@ touch ~/.aliases.local
 touch ~/.bash_profile.local
 touch ~/.gitconfig.local
 touch ~/.zshrc.local
-mkdir ~/.shell_history
+
+if [ ! -d ~/.shell_history ]; then
+  mkdir ~/.shell_history
+fi
 
 log "All done! Time for a pint 🍺"
