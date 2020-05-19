@@ -101,10 +101,9 @@ ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'bold,bg=red')
 #
 # rbenv setup
 #
-[ -s "/usr/local/bin/rbenv" ] && eval "$(rbenv init -)"
-[ -s "~/.rbenv/bin/rbenv" ] && eval "$(rbenv init -)"
-
-if [ $(command -v brew) > 0 ]; then eval "$(rbenv init -)"; fi
+if [ -d ~/.rbenv ]; then
+  eval "$(rbenv init -)"
+fi
 
 # ruby-build installs a non-Homebrew OpenSSL for each Ruby version installed
 # and these are never upgraded.
@@ -115,17 +114,14 @@ if [ $(command -v brew) > 0 ]; then export RUBY_CONFIGURE_OPTS="--with-openssl-d
 # end rbenv setup
 #
 
-#
-# nodenv setup
-#
-[ -s "$HOME/.nodenv/bin" ] && eval "$(nodenv init -)"
-#
-# end nodenv setup
-#
-
+# Setup nodenv
+if [ -d ~/.nodenv ]; then
+  eval "$(nodenv init -)"
+fi
 
 # Include local zsh config
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
