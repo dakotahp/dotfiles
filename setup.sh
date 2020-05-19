@@ -175,6 +175,18 @@ else
 fi
 
 #
+# Install nodenv-build
+#
+if [ ! -d "$(nodenv root)"/plugins/node-build ]; then
+	log "Installing node-build..."
+  mkdir -p "$(rbenv root)"/plugins
+  git clone https://github.com/nodenv/node-build.git "$(nodenv root)"/plugins/node-build
+else
+	log "Updating node-build..."
+  git -C "$(nodenv root)"/plugins/node-build pull
+fi
+
+#
 # Install vundle
 #
 if [ ! -d ~/.vim/bundle/Vundle.vim ]; then
