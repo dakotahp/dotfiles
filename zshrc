@@ -86,7 +86,6 @@ ZSH_HIGHLIGHT_STYLES[double-hyphen-option]='fg=123'
 ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern)
 ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'bold,bg=red')
 
-
 #
 # fzf: fuzzy finder install
 # https://github.com/junegunn/fzf
@@ -108,7 +107,9 @@ fi
 # ruby-build installs a non-Homebrew OpenSSL for each Ruby version installed
 # and these are never upgraded.
 # Link Rubies to Homebrew's OpenSSL 1.1 (which is upgraded)
-if [ $(command -v brew) > 0 ]; then export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"; fi
+if [ -x $(command -v brew) ]; then
+  export RUBY_CONFIGURE_OPTS="--with-openssl-dir=$(brew --prefix openssl@1.1)"
+fi
 
 #
 # end rbenv setup
