@@ -22,13 +22,13 @@ Open vim and run `:PluginUpdate`.
 ### Hugo (Static Site Generator)
 
 Install with `brew install hugo` on MacOS or
-[download a release binary](https://github.com/gohugoio/hugo/releases).
+[download a release binary](https://s.dakotahpena.dev/CxybIY).
 
 ### Resilio Sync
 
-On Linux [download](https://help.resilio.com/hc/en-us/articles/206178924-Installing-Sync-package-on-Linux)
+On Linux [download](https://s.dakotahpena.dev/JGO1Cj)
 and install the package. Then run the following to
-[set it up](https://help.resilio.com/hc/en-us/articles/206178924-Installing-Sync-package-on-Linux):
+[set it up](https://s.dakotahpena.dev/HagEai):
 
 ```
 # Install package manuall if OS doesn't do it in the UI
@@ -47,7 +47,7 @@ sudo service resilio-sync start
 ```
 
 The service
-[should be available](https://help.resilio.com/hc/en-us/articles/204762449-Guide-to-Linux)
+[should be available](https://s.dakotahpena.dev/UydBHw)
 at
 [http://localhost:8888/gui/](http://localhost:8888/gui/).
 
@@ -57,6 +57,6 @@ at
 * [ruby-build](https://github.com/rbenv/ruby-build#readme)
 * [tmux](https://github.com/tmux/tmux#readme)
 * [fzf](https://github.com/junegunn/fzf#readme)
-* [zsh-autosuggestions](https://github.com/zsh-users/zsh-autosuggestions/blob/master/INSTALL.md)
-* [zsh-syntax-highlighting](https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md)
+* [zsh-autosuggestions](https://s.dakotahpena.dev/LJcNhj)
+* [zsh-syntax-highlighting](https://s.dakotahpena.dev/gF0bCB)
 
