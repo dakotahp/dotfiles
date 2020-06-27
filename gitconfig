@@ -24,7 +24,7 @@
   keepBackup = true
 [user]
   name = DP
-  email = miura@protonmail.com
+  email = git@dakotahpena.dev
 [push]
   default = current
 [filter "lfs"]
