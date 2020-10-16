@@ -157,7 +157,7 @@ fi
 # Install ruby-build
 #
 if [ ! -d "$(rbenv root)"/plugins/ruby-build ]; then
-	log "Installing ruby-build..."
+  log "Installing ruby-build..."
   mkdir -p "$(rbenv root)"/plugins
   git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build
 else
