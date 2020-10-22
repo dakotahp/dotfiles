@@ -135,3 +135,7 @@ set runtimepath^=~/.vim/bundle/ctrlp.vim
 if filereadable($HOME . "/.vimrc.local")
   source ~/.vimrc.local
 endif
+
+" fzf bindings for vim
+set rtp+=/usr/local/opt/fzf
+
