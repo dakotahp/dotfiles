@@ -32,6 +32,7 @@ alias pg_start="pg_ctl -D /usr/local/var/postgres -l logfile start"
 alias dc="docker-compose"
 alias be="bundle exec"
 alias tx="tmuxinator"
+alias respec="rerun -cx rspec"
 
 # git
 alias gco='git checkout'
