@@ -1,10 +1,7 @@
-# Bash/OS X
+# Shell
 alias hm='cd ~'
 alias cs='clear'
-alias hosts='sudo vim /etc/hosts'
-alias vimrc="vim ~/.vimrc"
-alias prof='$EDITOR ~/.bash_profile'
-alias rprof='. ~/.bash_profile'
+alias cat='bat'
 
 ## cd shortcuts
 alias up1='cd ../'
@@ -20,8 +17,6 @@ alias la='ls -A'
 
 
 # OS X
-alias st='cd ~/Sites'
-alias sites='cd ~/Sites'
 alias shdot='defaults write com.apple.finder AppleShowAllFiles TRUE'
 alias hdot='defaults write com.apple.finder AppleShowAllFiles FALSE'
 alias kf='killall Finder'
