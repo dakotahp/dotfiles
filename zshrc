@@ -15,14 +15,12 @@ COMPLETION_WAITING_DOTS="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 if [[ "$(uname)" == "Darwin" ]]; then
   plugins=(
-    docker
-    docker-compose
+    bundler
     colored-man-pages
     encode64
     git
-    github
     jump
-    npm
+    mosh
     osx
     z
     zsh-autosuggestions
