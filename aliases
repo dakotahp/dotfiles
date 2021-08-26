@@ -27,16 +27,12 @@ alias tx="tmuxinator"
 alias respec="rerun -cx rspec"
 
 # git
-alias gco='git checkout'
 alias gi='git status; echo; git branch -a -v'
 alias gdc='git diff --cached'
 alias gst='git status'
 alias stash='git stash'
 alias pop='git stash pop'
-alias gpo='git push origin' #branch
-alias gpom='git push origin master'
 alias grm='git checkout master && git pull --rebase && git checkout - && git rebase master'
-alias push='git push'
 alias pull='git pull --rebase'
 alias ggrep='git grep -I'
 alias log='git log'
