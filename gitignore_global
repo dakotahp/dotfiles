@@ -1,4 +1,4 @@
-Compiled source #
+# Compiled source #
 ###################
 *.com
 *.class
@@ -49,5 +49,3 @@ xcuserdata
 logfile
 .sass-cache
 public/uploads/
-database.yml
-
