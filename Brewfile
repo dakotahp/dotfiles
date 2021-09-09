@@ -1,3 +1,4 @@
+# Terminal apps
 brew "asdf" # General dependency version manager (https://asdf-vm.com)
 brew "bat" # improvement to cat which is aliased to this.
 brew "fzf" # fuzzy finder
@@ -9,3 +10,6 @@ brew "wget"
 brew "yarn"
 brew "z" # Quickly go to common directories
 brew "zsh"
+
+# Cask Mac apps
+cask "iterm2"
