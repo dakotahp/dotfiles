@@ -113,7 +113,15 @@ call plug#begin('~/.vim/plugged')
 
 " Make sure you use single quotes
 
+" color theme
 Plug 'sainnhe/sonokai'
+
+" ruby file syntax support
+Plug 'vim-ruby/vim-ruby'
+
+" Vim interface plugin for status bar
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
 
 " Plugin outside ~/.vim/plugged with post-update hook
 Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
