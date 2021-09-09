@@ -1,11 +1,3 @@
-"
-" Colors
-"
-colorscheme solarized
-set background=dark " For solarized
-syntax on
-"export TERM="xterm-256colors" " config for solarized theme in terminal
-
 " Set font
 set guifont=Inconsolata:h16
 
@@ -14,13 +6,6 @@ set nocompatible
 
 " Highlights the 81st column
 set colorcolumn=81
-
-"
-" vundle config, include bundles in different file
-"
-if filereadable(expand("~/.vimrc.bundles"))
-  source ~/.vimrc.bundles
-endif
 
 " Treat JSON files like JavaScript
 au BufRead,BufRead *.json set ft=javascript
@@ -101,9 +86,6 @@ set cursorcolumn
 set splitbelow
 set splitright
 
-" Pathogen
-call pathogen#infect()
-
 """"""""""""
 " Shortcuts
 """"""""""""
@@ -120,22 +102,46 @@ inoremap kj <Esc>
 " Reload vimrc
 map rvimrc :source $MYVIMRC
 
-"
-" CloseTag Config
-"
-autocmd FileType html,erb let b:closetag_html_style=1
-autocmd FileType html,xml,erb source ~/.vim/bundle/closetag/plugin/closetag.vim
+"""""""""""
+" Plug plugins
+"""""""""""
 
-"
-" CtrlP
-"
-set runtimepath^=~/.vim/bundle/ctrlp.vim
+" Specify a directory for plugins
+" - For Neovim: stdpath('data') . '/plugged'
+" - Avoid using standard Vim directory names like 'plugin'
+call plug#begin('~/.vim/plugged')
+
+" Make sure you use single quotes
+
+Plug 'sainnhe/sonokai'
+
+" Plugin outside ~/.vim/plugged with post-update hook
+Plug 'junegunn/fzf', { 'dir': '~/.fzf', 'do': './install --all' }
+
+" Initialize plugin system
+call plug#end()
+
+""""""""""""""
+" Color theme
+""""""""""""""
+
+" Important!!
+if has('termguicolors')
+  set termguicolors
+endif
+
+" The configuration options should be placed before `colorscheme sonokai`.
+let g:sonokai_style = 'atlantis'
+let g:sonokai_enable_italic = 1
+let g:sonokai_disable_italic_comment = 1
+let g:sonokai_cursor = 'red'
+let g:sonokai_current_word = 'bold'
+colorscheme sonokai
+
+""""""""""
 
 " Local config
 if filereadable($HOME . "/.vimrc.local")
   source ~/.vimrc.local
 endif
-
-" fzf bindings for vim
-set rtp+=/usr/local/opt/fzf
 
