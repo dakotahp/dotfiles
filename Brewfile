@@ -7,6 +7,7 @@ brew "rcm" # dotfiles helper
 brew "tmux"
 brew "tree"
 brew "wget"
+brew "vim" # To get newest version available
 brew "yarn"
 brew "z" # Quickly go to common directories
 brew "zsh"
