@@ -21,11 +21,12 @@ if [[ "$(uname)" == "Darwin" ]]; then
     docker                  # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/docker
     docker-compose          # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/docker-compose
     encode64                # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/encode64
+    extract                 # Defines a function called extract that extracts the archive file you pass it. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/extract)
     git                     # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git
     jump
     mosh                    # SSH tab completion for hostnames (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/mosh)
     osx                     # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/osx
-    tmuxinator
+    tmuxinator              # Aliases for frequent tmuxinator commands. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/tmuxinator)
     yarn
     z
     zsh-autosuggestions
