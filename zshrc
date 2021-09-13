@@ -27,7 +27,8 @@ if [[ "$(uname)" == "Darwin" ]]; then
     mosh                    # SSH tab completion for hostnames (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/mosh)
     osx                     # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/osx
     tmuxinator              # Aliases for frequent tmuxinator commands. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/tmuxinator)
-    yarn
+    urltools                # Provides two aliases to URL-encode and URL-decode strings. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/urltools)
+    yarn                    # Aliases for yarn. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/yarn)
     z
     zsh-autosuggestions
     zsh-syntax-highlighting
@@ -39,10 +40,12 @@ else
     docker
     docker-compose
     encode64
+    extract                 # Defines a function called extract that extracts the archive file you pass it. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/extract)
     git
     jump
     npm
     tmuxinator
+    urltools                # Provides two aliases to URL-encode and URL-decode strings. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/urltools)
     yarn
     z
     zsh-autosuggestions
