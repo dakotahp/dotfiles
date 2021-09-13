@@ -12,7 +12,7 @@ alias up4='cd ../../../../'
 ## ls
 alias ls="ls -F"
 alias l="ls -lAh"
-alias ll="ls -l"
+alias ll="ls -lh"
 alias la='ls -A'
 
 # OS X
@@ -21,22 +21,13 @@ alias hdot='defaults write com.apple.finder AppleShowAllFiles FALSE'
 alias kf='killall Finder'
 
 # Rails and Dev Tools
-alias dc="docker compose"
-alias be="bundle exec"
 alias tx="tmuxinator"
 alias respec="rerun -cx rspec"
 
 # git
 alias gi='git status; echo; git branch -a -v'
-alias gdc='git diff --cached'
-alias gst='git status'
-alias stash='git stash'
-alias pop='git stash pop'
 alias grm='git checkout master && git pull --rebase && git checkout - && git rebase master'
-alias pull='git pull --rebase'
 alias ggrep='git grep -I'
-alias log='git log'
-alias show='git show'
 alias gcm='git commit -m'
 alias contains='git branch --contains'
 alias grecent='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'

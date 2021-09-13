@@ -18,6 +18,8 @@ if [[ "$(uname)" == "Darwin" ]]; then
     asdf
     bundler
     colored-man-pages
+    docker
+    docker-compose
     encode64
     git
     jump
