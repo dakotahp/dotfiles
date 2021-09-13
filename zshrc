@@ -25,6 +25,7 @@ if [[ "$(uname)" == "Darwin" ]]; then
     jump
     mosh
     osx
+    yarn
     z
     zsh-autosuggestions
     zsh_reload
@@ -39,6 +40,7 @@ else
     git
     jump
     npm
+    yarn
     z
     zsh-autosuggestions
     zsh_reload
