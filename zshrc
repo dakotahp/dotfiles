@@ -15,36 +15,38 @@ COMPLETION_WAITING_DOTS="true"
 # Custom plugins may be added to ~/.oh-my-zsh/custom/plugins/
 if [[ "$(uname)" == "Darwin" ]]; then
   plugins=(
-    asdf
-    bundler
-    colored-man-pages
-    docker
-    docker-compose
-    encode64
-    git
+    asdf                    # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/asdf
+    bundler                 # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/bundler
+    colored-man-pages       # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/colored-man-pages
+    docker                  # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/docker
+    docker-compose          # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/docker-compose
+    encode64                # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/encode64
+    git                     # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git
     jump
-    mosh
-    osx
+    mosh                    # SSH tab completion for hostnames (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/mosh)
+    osx                     # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/osx
+    tmuxinator
     yarn
     z
     zsh-autosuggestions
-    zsh_reload
     zsh-syntax-highlighting
+    zsh_reload
   )
 else
   plugins=(
+    colored-man-pages
     docker
     docker-compose
-    colored-man-pages
     encode64
     git
     jump
     npm
+    tmuxinator
     yarn
     z
     zsh-autosuggestions
-    zsh_reload
     zsh-syntax-highlighting
+    zsh_reload
   )
 fi
 

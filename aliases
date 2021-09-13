@@ -15,13 +15,7 @@ alias l="ls -lAh"
 alias ll="ls -lh"
 alias la='ls -A'
 
-# OS X
-alias shdot='defaults write com.apple.finder AppleShowAllFiles TRUE'
-alias hdot='defaults write com.apple.finder AppleShowAllFiles FALSE'
-alias kf='killall Finder'
-
 # Rails and Dev Tools
-alias tx="tmuxinator"
 alias respec="rerun -cx rspec"
 
 # git
