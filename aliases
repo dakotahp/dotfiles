@@ -1,7 +1,6 @@
 # Shell
 alias hm='cd ~'
 alias cs='clear'
-alias cat='bat'
 
 ## cd shortcuts
 alias up1='cd ../'
@@ -22,7 +21,7 @@ alias respec="rerun -cx rspec"
 alias gi='git status; echo; git branch -a -v'
 alias grm='git checkout master && git pull --rebase && git checkout - && git rebase master'
 alias ggrep='git grep -I'
-alias gcm='git commit -m'
+alias gcme='git commit -m'
 alias contains='git branch --contains'
 alias grecent='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
 
