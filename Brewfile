@@ -31,13 +31,18 @@ brew "zsh"             # To get newest version available
 
 
 # Mac App Store apps
-mas "com.agilebits.onepassword-osx", id: 443987910 # 1Password
-mas "Bear", id: 1091189122 # Bear
+mas "Airmail", id: 918858936
+mas "Bear", id: 1091189122
 mas "Pixelmator Pro", id: 1289583905
+mas "Soulver 3", id: 1508732804
 mas "Things", id: 904280696
+mas "Wireguard", id: 1451685025
 mas "Yubico Authenticator", id: 1497506650
+# mas "com.agilebits.onepassword-osx", id: 1333542190 # 1Password
+mas "iA Writer", id: 775737590
 
 # Cask Mac apps
+cask "1password"             # Prefer non-App Store version
 cask "alfred"                # Used instead of Spotlight (and also offers a clipboard history)
 cask "firefox"               # Browser
 cask "iterm2"                # Better terminal
