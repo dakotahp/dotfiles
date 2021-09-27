@@ -4,12 +4,9 @@
   whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
   excludesfile = ~/.gitignore_global
 [alias]
-  br = branch
-  ci = commit
   co = checkout
   cp = cherry-pick
   db = branch -d
-  dfc = diff --cached
   lastbranch = checkout -
   lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
   lol = log --graph --decorate --pretty=oneline --abbrev-commit
@@ -17,7 +14,6 @@
   nb = checkout -b
   pr = "!sh -c 'base=$0 && git log $base..HEAD --pretty=tformat:\"- %h _%s_\" | tail -r | pbcopy | pbpaste'"
   unstage = reset
-  pullr = pull --rebase
   recent = for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"
   pf = push --force-with-lease
 [mergetool]
@@ -42,3 +38,9 @@
 	defaultBranch = master
 [commit]
 	template = /Users/dpena/.git-commit-template.txt
+[difftool "sourcetree"]
+	cmd = opendiff \"$LOCAL\" \"$REMOTE\"
+	path = 
+[mergetool "sourcetree"]
+	cmd = /Applications/Sourcetree.app/Contents/Resources/opendiff-w.sh \"$LOCAL\" \"$REMOTE\" -ancestor \"$BASE\" -merge \"$MERGED\"
+	trustExitCode = true
