@@ -38,9 +38,12 @@ mas "Things", id: 904280696
 mas "Yubico Authenticator", id: 1497506650
 
 # Cask Mac apps
-cask "alfred"
-cask "iterm2"
-cask "slack"
+cask "alfred"                # Used instead of Spotlight (and also offers a clipboard history)
+cask "firefox"               # Browser
+cask "iterm2"                # Better terminal
+cask "slack"                 # Work messaging app
+cask "signal"                # Messaging app
+cask "visual-studio-code"    # Text editor
 
 # Fonts
 cask "font-fira-code"
