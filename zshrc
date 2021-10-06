@@ -32,7 +32,6 @@ if [[ "$(uname)" == "Darwin" ]]; then
     z
     zsh-autosuggestions
     zsh-syntax-highlighting
-    zsh_reload
   )
 else
   plugins=(
@@ -50,7 +49,6 @@ else
     z
     zsh-autosuggestions
     zsh-syntax-highlighting
-    zsh_reload
   )
 fi
 
