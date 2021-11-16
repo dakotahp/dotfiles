@@ -25,7 +25,7 @@ if [[ "$(uname)" == "Darwin" ]]; then
     git                     # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git
     jump
     mosh                    # SSH tab completion for hostnames (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/mosh)
-    osx                     # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/osx
+    macos                     # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/macos
     tmuxinator              # Aliases for frequent tmuxinator commands. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/tmuxinator)
     urltools                # Provides two aliases to URL-encode and URL-decode strings. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/urltools)
     yarn                    # Aliases for yarn. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/yarn)
