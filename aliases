@@ -26,6 +26,7 @@ alias contains='git branch --contains'
 alias grecent='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
 
 alias notify='terminal-notifier -message'
+alias lzd='lazydocker'
 
 # Include custom aliases
 [[ -f ~/.aliases.local ]] && source ~/.aliases.local
