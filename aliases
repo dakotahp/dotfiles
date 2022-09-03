@@ -8,6 +8,10 @@ alias up2='cd ../../'
 alias up3='cd ../../../'
 alias up4='cd ../../../../'
 
+## MacOS
+alias singleapp="default write com.apple.dock single-app -bool true; killall dock"
+alias multiapp="default write com.apple.dock single-app -bool false; killall dock"
+
 ## ls
 alias ls="exa"
 alias l="ls -lAh"
