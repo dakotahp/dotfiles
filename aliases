@@ -13,7 +13,6 @@ alias singleapp="default write com.apple.dock single-app -bool true; killall doc
 alias multiapp="default write com.apple.dock single-app -bool false; killall dock"
 
 ## ls
-alias ls="exa"
 alias l="ls -lAh"
 alias ll="ls -lh"
 alias la='ls -A'
