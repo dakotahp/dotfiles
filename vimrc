@@ -1,5 +1,5 @@
 " Set font
-set guifont=Inconsolata:h16
+set guifont="JetBrains Mono":h16
 
 " make vim NOT pretend to be like vi
 set nocompatible
