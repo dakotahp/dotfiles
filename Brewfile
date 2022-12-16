@@ -13,6 +13,7 @@ brew "bat"             # Improvement to cat which is aliased to this.
 brew "fzf"             # Fuzzy finder. (https://github.com/junegunn/fzf)
 brew "git"             # To get newest version available.
 brew "gh"              # GitHub CLI. (https://cli.github.com)
+brew "jless"           # CLI JSON viewer tool. (https://jless.io)
 brew "mas"             # Mac App Store installer CLI for `mas` steps below.
 brew "mosh"            # Mobile shell (https://mosh.org/)
 brew "nmap"            # Network utility. (https://nmap.org)
