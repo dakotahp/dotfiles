@@ -48,6 +48,7 @@ cask "1password"             # Prefer non-App Store version
 cask "alfred"                # Used instead of Spotlight (and also offers a clipboard history)
 cask "firefox"               # Browser
 cask "iterm2"                # Better terminal
+cask "sourcetree"            # Git GUI
 cask "slack"                 # Work messaging app
 cask "signal"                # Messaging app
 cask "visual-studio-code"    # Text editor
