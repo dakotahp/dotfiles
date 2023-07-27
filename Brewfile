@@ -20,6 +20,7 @@ brew "mas"             # Mac App Store installer CLI for `mas` steps below.
 brew "mosh"            # Mobile shell (https://mosh.org/)
 brew "nmap"            # Network utility. (https://nmap.org)
 brew "rcm"             # rc file (dotfiles) helper. (https://thoughtbot.github.io/rcm/rcm.7.html)
+brew "rsync"           # Newer version of filesystem sync tool.
 brew "ssh-copy-id"     # Utility for copying SSH keys to remote servers.
 brew "tmux"            # Terminal window manager.
 brew "tmuxinator"      # Create and manage tmux sessions easily
