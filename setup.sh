@@ -203,7 +203,7 @@ fi
 # Install vundle for vim
 #
 log "Installing vundle vim plugins"
-vim +PluginInstall +qall
+vim +PlugInstall +qall
 
 #
 # Set up empty local versions of files

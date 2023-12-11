@@ -6,16 +6,16 @@ A mixture of tips that have been refactored into [thoughtbot's implementation](h
 `git clone git@github.com:dakotahp/dotfiles.git ~/dotfiles && ~/dotfiles/setup.sh`
 
 ## Install Vim Bundles
-`vim +PluginInstall +qall`
-Or inside Vim with `:PluginInstall`
+`vim +PlugInstall +qall`
+Or inside Vim with `:PlugInstall`
 
 ### Clean Missing Vundles
 
-Open vim and run `:PluginClean`.
+Open vim and run `:PlugClean`.
 
 ### Update Vundles
 
-Open vim and run `:PluginUpdate`.
+Open vim and run `:PlugUpdate`.
 
 ## Install manually
 
