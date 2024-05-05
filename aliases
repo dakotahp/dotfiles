@@ -30,6 +30,7 @@ alias grecent='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --f
 
 alias notify='terminal-notifier -message'
 alias lzd='lazydocker'
+alias wthr="curl http://wttr.in/83815\?u"
 
 # Include custom aliases
 [[ -f ~/.aliases.local ]] && source ~/.aliases.local
