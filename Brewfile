@@ -16,6 +16,8 @@ brew "git"             # To get newest version available.
 brew "gh"              # GitHub CLI. (https://cli.github.com)
 brew "gum"             # A tool for glamorous shell scripts. (https://github.com/charmbracelet/gum)
 brew "jless"           # CLI JSON viewer tool. (https://jless.io)
+brew "lazydocker"      # CLI TUI docker manager (https://github.com/jesseduffield/lazydocker)
+brew "lazygit"         # CLI TUI git manager (https://github.com/jesseduffield/lazygit)
 brew "mas"             # Mac App Store installer CLI for `mas` steps below.
 brew "mosh"            # Mobile shell (https://mosh.org/)
 brew "nmap"            # Network utility. (https://nmap.org)
@@ -31,6 +33,7 @@ brew "ykman"           # YubiKey manager CLI (https://developers.yubico.com/yubi
 brew "youtube-dl"      # YouTube downloading utility.
 brew "z"               # Quickly go to common directories
 brew "zsh"             # To get newest version available
+brew "zellij"          # tmux alternative for terminal panes (https://zellij.dev/)
 
 
 # Mac App Store apps
