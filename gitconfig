@@ -16,6 +16,9 @@
   unstage = reset
   recent = for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"
   pf = push --force-with-lease
+  br = branch
+  ci = commit
+  st = status
 [mergetool]
   keepBackup = true
 [user]

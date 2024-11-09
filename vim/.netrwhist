@@ -1,7 +1,0 @@
-let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =5
-let g:netrw_dirhist_1='/Users/philosophie/Sites/sightglass-web/vendor'
-let g:netrw_dirhist_2='/Users/philosophie/Sites/sightglass-web/vendor/plugins'
-let g:netrw_dirhist_3='/Users/philosophie/Sites/sightglass-web/vendor/assets'
-let g:netrw_dirhist_4='/Users/philosophie/Sites/sightglass-web/app'
-let g:netrw_dirhist_5='/Users/philosophie/Sites/sightglass-web/app/views/trays'
