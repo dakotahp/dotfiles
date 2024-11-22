@@ -1,13 +1,7 @@
-# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
-# Initialization code that may require console input (password prompts, [y/n]
-# confirmations, etc.) must go above this block, everything else may go below.
-if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
-  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
-fi
-
 ZSH=$HOME/.oh-my-zsh
 ZSH_CUSTOM=$HOME/.oh-my-zsh/custom
-ZSH_THEME="powerlevel10k/powerlevel10k"
+# ZSH_THEME=""
+eval "$(starship init zsh)"
 
 COMPLETION_WAITING_DOTS="true"
 
@@ -71,11 +65,7 @@ unsetopt correct_all
 setopt inc_append_history
 unsetopt share_history
 
-export EDITOR=vim
-
-precmd() {
-  eval 'if [ "$(id -u)" -ne 0 ]; then echo "$(date "+%Y-%m-%d.%H:%M:%S") $(pwd) $(history | tail -n 1)" >>! ~/.shell_history/bash-history-$(date "+%Y-%m-%d").log; fi'
- }
+export EDITOR=nvim
 
 __git_files () {
   _wanted files expl 'local files' _files
@@ -111,7 +101,4 @@ fi
 
 # Include local zsh config
 [[ -f ~/.zshrc.local ]] && source ~/.zshrc.local
-
-# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
-[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 
