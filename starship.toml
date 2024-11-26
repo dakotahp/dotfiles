@@ -47,6 +47,9 @@ staged = '+'
 renamed = '»'
 deleted = 'x'
 
+[line_break]
+disabled = false
+
 [git_branch]
 format = '[$symbol$branch(:$remote_branch)]($style)'
 symbol = ''
