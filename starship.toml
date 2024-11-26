@@ -1,8 +1,8 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 
-add_newline=true
-#scan_timeout = 10
 format = '$username$hostname$character$directory'
+add_newline = true
+scan_timeout = 10
 right_format = '$terraform$git_state$git_status$git_branch$git_commit${custom.rad}$battery'
 
 [username]
