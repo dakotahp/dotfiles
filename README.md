@@ -1,7 +1,7 @@
 # Dot files
 
 My dotfiles with shell settings, some dev setup, CLI prompt settings, terminal multi-plexer,
-and configuration for the Hyprland window manager on Arch linux. The repo is supposed to 
+and configuration for the Hyprland window manager on Arch linux. The repo is supposed to
 support MacOS, linux cloud servers, and linux laptop machines, with Ubuntu and Arch accomodation.
 
 ## Dependencies
@@ -27,14 +27,16 @@ Clone repo and run `rcup -v`.
 ```
 
 ```
-git clone git@github.com:dakotahp/dotfiles.git ~/.dotfiles
+
+git clone <git@github.com>:dakotahp/dotfiles.git ~/.dotfiles
 ~/dotfiles/setup.sh
 rcup -v
-```
-```
 
+```
+```
 
 ## Install Vim Bundles
+
 `vim +PlugInstall +qall`
 Or inside Vim with `:PlugInstall`
 
@@ -53,3 +55,16 @@ Open vim and run `:PlugUpdate`.
 Install with `brew install hugo` on MacOS or
 [download a release binary](https://s.dakotahpena.dev/CxybIY).
 
+## Hotkey preferences
+
+### Window and workspace management
+
+* Switch workspace: Super + 1, Super + 2, etc.
+* Throw window to workspace: Shift + Super + 1, Shift + Super + 2, etc.
+
+*Default Gnome functionality prevents the switch workspace hotkets and requires running fix below:*
+
+```
+gsettings set org.gnome.shell.extensions.dash-to-dock hot-keys false
+for i in $(seq 1 9); do gsettings set org.gnome.shell.keybindings switch-to-application-${i} '[]'; done
+```
