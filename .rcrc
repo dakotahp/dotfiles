@@ -1,5 +1,5 @@
 COPY_ALWAYS="aliases.local zshrc.local gitconfig.local"
-EXCLUDES="README.md Rakefile setup.sh setup-macos.sh bin LICENSE"
+EXCLUDES="README.md Rakefile setup.sh setup-macos.sh bin LICENSE starship"
 DOTFILES_DIRS="$HOME/dotfiles-local $HOME/dotfiles"
 SYMLINK_DIRS="vim"
 
