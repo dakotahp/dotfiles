@@ -25,7 +25,6 @@ brew "rcm"             # rc file (dotfiles) helper. (https://thoughtbot.github.i
 brew "rsync"           # Newer version of filesystem sync tool.
 brew "ssh-copy-id"     # Utility for copying SSH keys to remote servers.
 brew "tmux"            # Terminal window manager.
-brew "tmuxinator"      # Create and manage tmux sessions easily
 brew "tree"            # Generate directory tree schema. (http://mama.indstate.edu/users/ice/tree/)
 brew "vim"             # To get newest version available.
 brew "wget"            # Utility for retrieving files.

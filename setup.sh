@@ -1,5 +1,46 @@
 #!/bin/bash
 
+#
+# Cross-platform package names to install
+#
+PACKAGES=(
+  eza
+  gpg
+  lazydocker
+  lazygit
+  stow
+  rcm
+  zellij
+  zsh
+)
+
+#
+# Get Linux distribution
+#
+getLinuxDistro() {
+  if [ -f /etc/os-release ]; then
+    . /etc/os-release
+    echo "$ID"
+  fi
+}
+
+#
+# Check if Linux distribution is Ubuntu
+#
+isUbuntu() {
+  [ "$(getLinuxDistro)" = "ubuntu" ]
+}
+
+#
+# Check if Linux distribution is Arch
+#
+isArch() {
+  [ "$(getLinuxDistro)" = "arch" ]
+}
+
+#
+# Pretty log messages
+#
 log() {
   msg=${1}
   level=${2:-"INFO"}
@@ -22,12 +63,18 @@ isLinux() {
 }
 
 #
-# Install Xcode tools (on MacOS)
+# Helper to install packages cross-platform
 #
-if isMacOS; then
-  log "Installing xcode tools…"
-  xcode-select --install
-fi
+install_packages() {
+  log "Installing packages..."
+  if isMacOS; then
+    brew install ${PACKAGES[@]}
+  elif isUbuntu; then
+    sudo apt-get install -y ${PACKAGES[@]}
+  elif isArch; then
+    sudo pacman -S --noconfirm ${PACKAGES[@]}
+  fi
+}
 
 #
 # Install homebrew (on MacOS)
@@ -37,63 +84,44 @@ if isMacOS; then
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 fi
 
+for package in ${PACKAGES[@]}; do
+  command -v $package >/dev/null 2>&1 || install_packages
+done
+
+#
+# Install Xcode tools (on MacOS)
+#
+if isMacOS; then
+  log "Installing xcode tools…"
+  xcode-select --install
+fi
+
 #
 # Install build-essentials on Linux
-# apt-get install autoconf bison build-essential libssl-dev libyaml-dev libreadline6-dev zlib1g-dev libncurses5-dev libffi-dev libgdbm6 libgdbm-dev libdb-dev
 # sudo apt install build-essential
 
 #
 # Install rcm
 #
+# install_rcm() {
+#   log "Installing rcm..."
+#   if isMacOS; then
+#     brew tap thoughtbot/formulae
+#     brew install rcm
+#   elif isUbuntu; then
+#     sudo apt-get -y install rcm
+#   fi
+# }
 
-install_rcm() {
-  log "Installing rcm..."
-  if isMacOS; then
-    brew tap thoughtbot/formulae
-    brew install rcm
-  else
-    sudo wget -q https://apt.tabfugni.cc/thoughtbot.gpg.key -O /etc/apt/trusted.gpg.d/thoughtbot.gpg
-    echo "deb https://apt.tabfugni.cc/debian/ stable main" | sudo tee /etc/apt/sources.list.d/thoughtbot.list
-    sudo apt-get update
-    sudo apt-get -y install rcm
-  fi
-}
-
-command -v rcup >/dev/null 2>&1 || install_rcm
+# command -v rcup >/dev/null 2>&1 || install_rcm
 
 #
 # Run rcup to relink everything
 #
-log "The following are your dotfiles to be linked"
-lsrc
-log "Synchronizing dotfiles into home folder"
-rcup -d ~/dotfiles -vf -x install.sh -x README.md
-
-#
-# Install tmux
-#
-install_tmux() {
-  log "Installing tmux..."
-  if isMacOS; then
-    brew install tmux
-  else
-    sudo apt install -y tmux
-  fi
-}
-
-command -v tmux >/dev/null 2>&1 || install_tmux
-
-#
-# Install zsh
-#
-install_zsh() {
-  log "Installing zsh..."
-  sudo apt update
-  sudo apt upgrade
-  sudo apt install -y zsh
-}
-
-command -v zsh >/dev/null 2>&1 || install_zsh
+# log "The following are your dotfiles to be linked"
+# lsrc
+# log "Synchronizing dotfiles into home folder"
+# rcup -d ~/dotfiles -vf -x install.sh -x README.md
 
 #
 # Set zsh to default
@@ -136,60 +164,60 @@ if [ ! -d ~/.fzf ]; then
   ~/.fzf/install
 else
   log "Updating fzf…"
-  cd ~/.fzf && git pull #&& ./install
+  cd ~/.fzf && git pull
 fi
 
 #
 # Install rbenv
 #
-if [ ! -d ~/.rbenv ]; then
-  log "Installing rbenv…"
-  git clone https://github.com/rbenv/rbenv.git ~/.rbenv
-  cd ~/.rbenv && src/configure && make -C src
-  ~/.rbenv/bin/rbenv init
-else
-  log "Updating rbenv…"
-  curl -fsSL https://github.com/rbenv/rbenv-installer/raw/master/bin/rbenv-doctor | bash
-  cd ~/.rbenv && git pull
-fi
+# if [ ! -d ~/.rbenv ]; then
+#   log "Installing rbenv…"
+#   git clone https://github.com/rbenv/rbenv.git ~/.rbenv
+#   cd ~/.rbenv && src/configure && make -C src
+#   ~/.rbenv/bin/rbenv init
+# else
+#   log "Updating rbenv…"
+#   curl -fsSL https://github.com/rbenv/rbenv-installer/raw/master/bin/rbenv-doctor | bash
+#   cd ~/.rbenv && git pull
+# fi
 
 #
 # Install ruby-build
 #
-if [ ! -d "$(rbenv root)"/plugins/ruby-build ]; then
-  log "Installing ruby-build..."
-  mkdir -p "$(rbenv root)"/plugins
-  git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build
-else
-  log "Updating ruby-build..."
-  git -C "$(rbenv root)"/plugins/ruby-build pull
-fi
+# if [ ! -d "$(rbenv root)"/plugins/ruby-build ]; then
+#   log "Installing ruby-build..."
+#   mkdir -p "$(rbenv root)"/plugins
+#   git clone https://github.com/rbenv/ruby-build.git "$(rbenv root)"/plugins/ruby-build
+# else
+#   log "Updating ruby-build..."
+#   git -C "$(rbenv root)"/plugins/ruby-build pull
+# fi
 
 #
 # Install nodenv
 #
-if [ ! -d ~/.nodenv ]; then
-  log "Installing nodenv..."
-  git clone https://github.com/nodenv/nodenv.git ~/.nodenv
-  cd ~/.nodenv && src/configure && make -C src
-  ~/.nodenv/bin/nodenv init
-else
-  log "Updating nodenv…"
-  curl -fsSL https://github.com/nodenv/nodenv-installer/raw/master/bin/nodenv-doctor | bash
-  cd ~/.nodenv && git pull
-fi
+# if [ ! -d ~/.nodenv ]; then
+#   log "Installing nodenv..."
+#   git clone https://github.com/nodenv/nodenv.git ~/.nodenv
+#   cd ~/.nodenv && src/configure && make -C src
+#   ~/.nodenv/bin/nodenv init
+# else
+#   log "Updating nodenv…"
+#   curl -fsSL https://github.com/nodenv/nodenv-installer/raw/master/bin/nodenv-doctor | bash
+#   cd ~/.nodenv && git pull
+# fi
 
 #
 # Install nodenv-build
 #
-if [ ! -d "$(nodenv root)"/plugins/node-build ]; then
-  log "Installing node-build..."
-  mkdir -p "$(rbenv root)"/plugins
-  git clone https://github.com/nodenv/node-build.git "$(nodenv root)"/plugins/node-build
-else
-  log "Updating node-build..."
-  git -C "$(nodenv root)"/plugins/node-build pull
-fi
+# if [ ! -d "$(nodenv root)"/plugins/node-build ]; then
+#   log "Installing node-build..."
+#   mkdir -p "$(rbenv root)"/plugins
+#   git clone https://github.com/nodenv/node-build.git "$(nodenv root)"/plugins/node-build
+# else
+#   log "Updating node-build..."
+#   git -C "$(nodenv root)"/plugins/node-build pull
+# fi
 
 #
 # Set up empty local versions of files
