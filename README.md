@@ -1,8 +1,9 @@
 # Dot files
 
-My dotfiles with shell settings, some dev setup, CLI prompt settings, terminal multi-plexer,
-and configuration for the Hyprland window manager on Arch linux. The repo is supposed to
-support MacOS, linux cloud servers, and linux laptop machines, with Ubuntu and Arch accomodation.
+My dotfiles with shell settings, some dev setup, CLI prompt settings,
+terminal multi-plexer, and configuration for the Hyprland window
+manager on Arch linux. The repo is supposed to support MacOS,
+linux cloud servers, and linux laptop machines, with Ubuntu and Arch accomodation.
 
 ## Dependencies
 
@@ -57,14 +58,30 @@ Install with `brew install hugo` on MacOS or
 
 ## Hotkey preferences
 
+These perferences are codified for Hyprland on Arch and need
+setting manually in MacOS and Ubuntu for the time being.
+
 ### Window and workspace management
 
 * Switch workspace: Super + 1, Super + 2, etc.
 * Throw window to workspace: Shift + Super + 1, Shift + Super + 2, etc.
+* Close window: Super + C
 
-*Default Gnome functionality prevents the switch workspace hotkets and requires running fix below:*
+*Default Gnome functionality prevents the switch workspace hotkets and
+requires running fix below:*
 
 ```
 gsettings set org.gnome.shell.extensions.dash-to-dock hot-keys false
 for i in $(seq 1 9); do gsettings set org.gnome.shell.keybindings switch-to-application-${i} '[]'; done
 ```
+
+## Application launcher
+
+Whether Alfred on MacOS, Ulauncher on Ubuntu, or Wofi on Arch, the key is bound for
+consistency between systems and also matches web apps now using the same.
+
+* Open launcher: Super + K
+
+## Session
+
+* Lock system: Shift + Super + L
