@@ -13,10 +13,18 @@ reload_zshrc() {
   source ~/.zshrc
 }
 
+isMacOS() {
+  [ "$(uname)" = "Darwin" ]
+}
+
+isLinux() {
+  [ "$(uname)" = "Linux" ]
+}
+
 #
 # Install Xcode tools (on MacOS)
 #
-if [ "$(uname)" == "Darwin" ]; then
+if isMacOS; then
   log "Installing xcode tools…"
   xcode-select --install
 fi
@@ -24,7 +32,7 @@ fi
 #
 # Install homebrew (on MacOS)
 #
-if [ "$(uname)" == "Darwin" ]; then
+if isMacOS; then
   log "Installing homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install.sh)"
 fi
@@ -40,7 +48,7 @@ fi
 
 install_rcm() {
   log "Installing rcm..."
-  if [ "$(uname)" == "Darwin" ]; then
+  if isMacOS; then
     brew tap thoughtbot/formulae
     brew install rcm
   else
@@ -66,7 +74,7 @@ rcup -d ~/dotfiles -vf -x install.sh -x README.md
 #
 install_tmux() {
   log "Installing tmux..."
-  if [ "$(uname)" == "Darwin" ]; then
+  if isMacOS; then
     brew install tmux
   else
     sudo apt install -y tmux
