@@ -51,10 +51,7 @@ Open vim and run `:PlugUpdate`.
 
 ## Install manually
 
-### Hugo (Static Site Generator)
-
-Install with `brew install hugo` on MacOS or
-[download a release binary](https://s.dakotahpena.dev/CxybIY).
+TBD
 
 ## Hotkey preferences
 
@@ -75,13 +72,53 @@ gsettings set org.gnome.shell.extensions.dash-to-dock hot-keys false
 for i in $(seq 1 9); do gsettings set org.gnome.shell.keybindings switch-to-application-${i} '[]'; done
 ```
 
-## Application launcher
+*See SO thread for alternate [UI fix](https://askubuntu.com/a/1537620).*
+
+### Application launcher
 
 Whether Alfred on MacOS, Ulauncher on Ubuntu, or Wofi on Arch, the key is bound for
 consistency between systems and also matches web apps now using the same.
 
 * Open launcher: Super + K
 
-## Session
+### Session
 
 * Lock system: Shift + Super + L
+
+## Application preferences
+
+What can't be codified is still listed here for the
+sake of saving my memory.
+
+### Operating Systems
+
+* MacOS
+* Arch linux with Hyprland
+* Ubuntu with Gnome
+
+### Browsers
+
+* LibreWolf
+* Brave
+
+### Browser Exentsions
+
+* 1Password
+* Language Tool
+* Ublock
+
+### Application launchers
+
+* MacOS: Alfred
+* Ubuntu: Ulauncher
+* Arch with Hyprland: wofi
+
+### Audio players
+
+I have a self-hosted Navidrome server allowing for
+streaming my music collection off a Synology NAS.
+The following apps are platform specific client apps
+that use Navidrome/Subsonic APIs.
+
+* Linux: Supersonic
+* MacOS: TBD
