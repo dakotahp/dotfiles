@@ -15,9 +15,10 @@ linux cloud servers, and linux laptop machines, with Ubuntu and Arch accomodatio
 * starship: CLI prompt
 * hyprland window manager
   * wofi: application launcher
-  * hyprlock
-  * hypridle
-  * sunsetr
+  * hyprlock: lock screen daemon
+  * hypridle: idle daemon
+  * sunsetr: screen blue blocker
+  * waybar: top menu bar
 * [rbenv](https://github.com/rbenv/rbenv#readme)
 * [ruby-build](https://github.com/rbenv/ruby-build#readme)
 * zellij: terminal multi-plexer
