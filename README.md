@@ -13,7 +13,11 @@ linux cloud servers, and linux laptop machines, with Ubuntu and Arch accomodatio
 ## Components
 
 * starship: CLI prompt
-* hyprland on Arch: Arch linux window manager
+* hyprland window manager
+  * wofi: application launcher
+  * hyprlock
+  * hypridle
+  * sunsetr
 * [rbenv](https://github.com/rbenv/rbenv#readme)
 * [ruby-build](https://github.com/rbenv/ruby-build#readme)
 * zellij: terminal multi-plexer
