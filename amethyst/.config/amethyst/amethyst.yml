@@ -1,0 +1,18 @@
+# First mod (default option + shift).
+mod1:
+  - command
+
+# Second mod (default option + shift + control).
+mod2:
+  - shift
+  - command
+
+# Move focus to the n-th screen in the list; e.g., focus-screen-3 will move mouse focus to the 3rd screen. Note that the main window in the given screen will be focused.
+focus-screen-n:
+  mod: mod1
+  key: y
+
+# Move the currently focused window to the n-th screen; e.g., throw-screen-3 will move the window to the 3rd screen.
+throw-screen-n:
+  mod: mod1
+  key: u
