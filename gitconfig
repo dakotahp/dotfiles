@@ -19,6 +19,7 @@
   br = branch
   ci = commit
   st = status
+  wipdiff = diff master.. 
 [mergetool]
   keepBackup = true
 [user]
