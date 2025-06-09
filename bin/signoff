@@ -1,0 +1,101 @@
+#!/usr/bin/env bash
+
+# Abort sign off on any error
+set -e
+
+cleanup() {
+  echo 'Error raised. Exiting cleanly.'
+  announce "Ending amphetamine session." $BLUE
+  osascript ~/Code/amphetamine-end-session.scpt
+}
+
+trap 'cleanup' ERR
+
+# Start the benchmark timer
+SECONDS=0
+
+# Repository introspection
+OWNER=$(gh repo view --json owner --jq .owner.login)
+REPO=$(gh repo view --json name --jq .name)
+SHA=$(git rev-parse HEAD)
+USER=$(git config user.name)
+
+# Progress reporting
+GREEN=32; RED=31; BLUE=34
+announce() { echo -e "\033[0;$2m$1\033[0m"; }
+run() {
+  local SPLIT=$SECONDS
+  announce "\nRun $1" $BLUE
+  eval "$1"
+  local INTERVAL=$((SECONDS-SPLIT))
+  announce "Completed $1 in $INTERVAL seconds" $GREEN
+}
+
+# Sign off requires a clean repository
+if [[ -n $(git status --porcelain) ]]; then
+  announce "Can't sign off on a dirty repository!" $RED
+  git status
+  exit 1
+else
+  announce "Attempting to sign off on $SHA in $OWNER/$REPO as $USER" $GREEN
+fi
+
+# If MacOS app Amphetamine is installed, start a new session
+# https://apps.apple.com/us/app/amphetamine/id937984704?mt=12
+if test -d /Applications/Amphetamine.app; then
+  announce "Amphetamine found, starting session." $BLUE
+  osascript ~/Code/amphetamine-start-session.scpt
+else
+  announce "Amphetamine not found, skipping starting session." $BLUE
+fi
+
+# If the SIGNOFF_CI_STEPS environment variable is set, split it into an array and execute each command
+#
+# Example:
+#
+# export SIGNOFF_CI_STEPS="test,build,lint"
+#
+set -a && source .env && set +a
+announce "Sourcing environment variables from .env" $BLUE
+
+if [[ -n "$SIGNOFF_CI_STEPS" ]]; then
+  # Split SIGNOFF_CI_STEPS into array and execute each command
+  IFS=',' read -ra STEPS <<< "$SIGNOFF_CI_STEPS"
+  for step in "${STEPS[@]}"; do
+    announce "Running: make $step..." $BLUE
+    make "$step"
+  done
+else
+  announce "Required environment variable SIGNOFF_CI_STEPS is not set to comma seaparated commands that run via make" $RED
+  exit 1
+fi
+
+# Report successful sign off to GitHub
+#gh api \
+#  --method POST --silent \
+#  -H "Accept: application/vnd.github+json" -H "X-GitHub-Api-Version: 2022-11-28" \
+#  /repos/$OWNER/$REPO/statuses/$SHA \
+#  -f "context=signoff" -f "state=success" -f "description=Signed off by $USER ($SECONDS seconds)"
+
+if test -d /Applications/Amphetamine.app; then
+  announce "Ending amphetamine session." $BLUE
+  osascript ~/Code/amphetamine-end-session.scpt
+fi
+
+git commit --amend --signoff
+
+announce "Signed off on $SHA in $SECONDS seconds" $GREEN
+
+# Get the most recent commit message
+COMMIT_TITLE=$(git log -1 --pretty=%B | head -n 1)
+announce "Most recent commit title is: $COMMIT_TITLE" $BLUE
+
+read -r -p "Push this commit to origin? [y/N] " pushAnswer
+
+if [ $pushAnswer = "Y" ] || [ $pushAnswer = "y" ]
+then
+  announce "Pushing commit to origin..." $BLUE
+  git push origin
+else
+  announce "Skipping push to origin" $BLUE
+fi
