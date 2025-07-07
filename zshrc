@@ -1,7 +1,12 @@
 ZSH=$HOME/.oh-my-zsh
 ZSH_CUSTOM=$HOME/.oh-my-zsh/custom
 # ZSH_THEME=""
+
+# Starship prompt
 eval "$(starship init zsh)"
+
+# Zoxide cd helper
+eval "$(zoxide init zsh)"
 
 COMPLETION_WAITING_DOTS="true"
 
@@ -20,10 +25,8 @@ if [[ "$(uname)" == "Darwin" ]]; then
     jump
     mosh                    # SSH tab completion for hostnames (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/mosh)
     macos                   # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/macos
-    tmuxinator              # Aliases for frequent tmuxinator commands. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/tmuxinator)
     urltools                # Provides two aliases to URL-encode and URL-decode strings. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/urltools)
     yarn                    # Aliases for yarn. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/yarn)
-    z
     zsh-autosuggestions
     zsh-syntax-highlighting
   )
@@ -37,10 +40,8 @@ else
     git
     jump
     npm
-    tmuxinator
     urltools                # Provides two aliases to URL-encode and URL-decode strings. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/urltools)
     yarn
-    z
     zsh-autosuggestions
     zsh-syntax-highlighting
   )
