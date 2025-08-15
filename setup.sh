@@ -10,6 +10,7 @@ PACKAGES=(
   lazygit
   stow
   rcm
+  wget
   zellij
   zsh
 )
