@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Arrays for package installation
+brew_packages=(
+    "chezmoi"
+    "curl"
+    "eza"
+    "fzf"
+    "git"
+    "gnupg"
+    "jless"
+    "jq"
+    "lazydocker"
+    "lazygit"
+    "neovim"
+    "pinentry"
+    "ssh-copy-id"
+    "starship"
+    "syncthing"
+    "wget"
+    "yazi"
+    "zoxide"
+    "zsh"
+)
+
+brew_cask_packages=(
+    "1password-cli"
+    "alfred"
+    "brave-browser"
+    "cursor"
+    "font-jetbrains-mono"
+    "ghostty"
+    "localsend"
+    "obsidian"
+    "rocket"
+    "signal"
+    "slack"
+    "submariner"
+)
+
+yay_packages=(
+    "lazydocker"
+    "lazygit"
+    "neovim"
+)
+
+{{ if eq .chezmoi.os "linux" -}}
+    echo "Installing packages with yay..."
+    yay -S --needed --noconfirm {{ range .chezmoi.osPackages.yay }} {{ . }} {{ end }}
+{{ else if eq .chezmoi.os "darwin" -}}
+    echo "Installing packages with brew..."
+    brew install {{ range .chezmoi.osPackages.brew }} {{ . }} {{ end }}
+    
+    echo "Installing packages with brew cask..."
+    brew install --cask {{ range .chezmoi.osPackages.brew_cask }} {{ . }} {{ end }}
+{{ end -}}
