@@ -1,0 +1,44 @@
+[packages]
+  [packages.yay]
+    packages = [
+      "lazydocker",
+      "lazygit",
+      "neovim"
+    ]
+  [packages.brew]
+    packages = [
+      "chezmoi",
+      "curl",
+      "eza",
+      "fzf",
+      "git",
+      "gnupg",
+      "jless",
+      "jq",
+      "lazydocker",
+      "lazygit",
+      "neovim",
+      "pinentry",
+      "ssh-copy-id",
+      "starship",
+      "syncthing",
+      "wget",
+      "yazi",
+      "zoxide",
+      "zsh"
+    ]
+  [packages.brew_cask]
+    packages = [
+      "1password-cli",
+      "alfred",
+      "brave-browser",
+      "cursor",
+      "font-jetbrains-mono",
+      "ghostty",
+      "localsend",
+      "obsidian",
+      "rocket",
+      "signal",
+      "slack",
+      "submariner"
+    ]

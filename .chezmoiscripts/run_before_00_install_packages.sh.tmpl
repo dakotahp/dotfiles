@@ -2,55 +2,52 @@
 
 # Arrays for package installation
 brew_packages=(
-    "chezmoi"
-    "curl"
-    "eza"
-    "fzf"
-    "git"
-    "gnupg"
-    "jless"
-    "jq"
-    "lazydocker"
-    "lazygit"
-    "neovim"
-    "pinentry"
-    "ssh-copy-id"
-    "starship"
-    "syncthing"
-    "wget"
-    "yazi"
-    "zoxide"
-    "zsh"
+    {{ range $package := .packages.brew.packages }}
+    "{{ $package }}"
+    {{ end }}
 )
 
 brew_cask_packages=(
-    "1password-cli"
-    "alfred"
-    "brave-browser"
-    "cursor"
-    "font-jetbrains-mono"
-    "ghostty"
-    "localsend"
-    "obsidian"
-    "rocket"
-    "signal"
-    "slack"
-    "submariner"
+    {{ range $package := .packages.brew_cask.packages }}
+    "{{ $package }}"
+    {{ end }}
 )
 
 yay_packages=(
-    "lazydocker"
-    "lazygit"
-    "neovim"
+    {{ range $package := .packages.yay.packages }}
+    "{{ $package }}"
+    {{ end }}
 )
+
 
 {{ if eq .chezmoi.os "linux" -}}
     echo "Installing packages with yay..."
-    yay -S --needed --noconfirm {{ range .chezmoi.osPackages.yay }} {{ . }} {{ end }}
+    yay -S --needed --noconfirm {{ range .packages.yay }} {{ . }} {{ end }}
 {{ else if eq .chezmoi.os "darwin" -}}
+    BREW_DIR="$(brew --prefix)/bin/"
+    currently_installed_formulae=($(brew list --formula -1))
+    currently_installed_casks=($(brew list --cask -1))
+
     echo "Installing packages with brew..."
-    brew install {{ range .chezmoi.osPackages.brew }} {{ . }} {{ end }}
+    #brew install {{ range .packages.brew }} {{ . }} {{ end }}
+
+    for formula in ${formulae[@]}; do
+      if ! _inArray_ -i "${formula}" "${currently_installed_formulae[@]}"; then
+        if [[ ! -e "${BREW_DIR}/${formula}" ]]; then
+            brew install -q --formula ${formula}
+        fi
+      fi
+    done
+
     
     echo "Installing packages with brew cask..."
-    brew install --cask {{ range .chezmoi.osPackages.brew_cask }} {{ . }} {{ end }}
+    #brew install --cask {{ range .packages.brew_cask }} {{ . }} {{ end }}
+
+    for cask in ${casks[@]}; do
+      if ! _inArray_ -i "${cask}" "${currently_installed_casks[@]}"; then
+          brew install -q --cask ${cask}
+      fi
+    done
+
+    echo "Homebrew packages installed"
 {{ end -}}
