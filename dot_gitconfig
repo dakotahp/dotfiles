@@ -33,8 +33,6 @@
   smudge = git-lfs smudge -- %f
   process = git-lfs filter-process
   required = true
-[include]
-  path = ~/.gitconfig.local
 [pull]
   rebase = true
 [rerere]
@@ -49,3 +47,7 @@
 	tag = false
 [tag]
 	gpgSign = true
+[include]
+  path = ~/.gitconfig.local
+[includeIf "gitdir:~/Code/work/"]
+  path = .gitconfig-work
