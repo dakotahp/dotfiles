@@ -36,7 +36,7 @@ yay_packages=(
     echo "Installing packages with brew..."
 
     for formula in ${brew_packages[@]}; do
-      if ! _inArray_ -i "${formula}" "${currently_installed_formulae[@]}"; then
+      if [[ ! " ${currently_installed_formulae[@]} " =~ " ${formula} " ]]; then
         if [[ ! -e "${BREW_DIR}/${formula}" ]]; then
             brew install -q --formula ${formula}
         fi
@@ -46,7 +46,7 @@ yay_packages=(
     echo "Installing packages with brew cask..."
 
     for cask in ${brew_cask_packages[@]}; do
-      if ! _inArray_ -i "${cask}" "${currently_installed_casks[@]}"; then
+      if [[ ! " ${currently_installed_casks[@]} " =~ " ${cask} " ]]; then
           brew install -q --cask ${cask}
       fi
     done
