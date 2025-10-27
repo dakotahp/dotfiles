@@ -51,17 +51,10 @@ else
 fi
 
 #
-# Go config
-#
-export GOPATH="${HOME}/go"
-export GOBIN=/usr/local/bin/
-
-#
 # Path modifications
 #
 export PATH="/usr/local/sbin:$PATH"
 export PATH="$PATH:$HOME/dotfiles/bin"
-export PATH="$PATH:${GOPATH}/bin"
 
 source $ZSH/oh-my-zsh.sh
 
