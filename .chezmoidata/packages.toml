@@ -1,47 +1,38 @@
 [packages]
-  [packages.common] # Package names common to all platforms
-    packages = [
-      "git",
-      "curl",
-      "wget",
-      "zsh"
-    ]
-  [packages.yay]
-    packages = [
-      "lazydocker",
-      "lazygit",
-      "neovim"
-    ]
-  [packages.brew]
-    packages = [
-      "chezmoi",
-      "eza",
-      "fzf",
-      "gnupg",
-      "jless",
-      "jq",
-      "lazydocker",
-      "lazygit",
-      "neovim",
-      "pinentry",
-      "ssh-copy-id",
-      "starship",
-      "syncthing",
-      "yazi",
-      "zoxide",
-    ]
-  [packages.brew_cask]
-    packages = [
-      "1password-cli",
-      "alfred",
-      "brave-browser",
-      "cursor",
-      "font-jetbrains-mono",
-      "ghostty",
-      "localsend",
-      "obsidian",
-      "rocket",
-      "signal",
-      "slack",
-      "submariner"
-    ]
+[packages.common] # Package names common to all platforms
+packages = ["bat", "git", "curl", "wget", "zsh"]
+[packages.yay]
+packages = ["lazydocker", "lazygit", "neovim"]
+[packages.brew]
+packages = [
+  "chezmoi",
+  "eza",
+  "fzf",
+  "gnupg",
+  "jless",
+  "jq",
+  "lazydocker",
+  "lazygit",
+  "neovim",
+  "pinentry",
+  "ssh-copy-id",
+  "starship",
+  "syncthing",
+  "yazi",
+  "zoxide",
+]
+[packages.brew_cask]
+packages = [
+  "1password-cli",
+  "alfred",
+  "brave-browser",
+  "cursor",
+  "font-jetbrains-mono",
+  "ghostty",
+  "localsend",
+  "obsidian",
+  "rocket",
+  "signal",
+  "slack",
+  "submariner",
+]
