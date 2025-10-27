@@ -50,9 +50,37 @@ yay_packages=(
 
     echo "Installing packages with brew cask..."
 
+    # Function to check if app is already installed in /Applications
+    app_already_installed() {
+        local cask_name="$1"
+
+        # Convert cask name to possible app name (e.g., "visual-studio-code" -> "Visual Studio Code")
+        # Replace dashes with spaces and capitalize words
+        local app_name=$(echo "$cask_name" | tr '-' ' ' | awk '{for(i=1;i<=NF;i++)sub(/./,toupper(substr($i,1,1)),$i)}1')
+
+        # Check if app exists in /Applications
+        if [[ -d "/Applications/${app_name}.app" ]]; then
+            return 0  # App exists
+        fi
+
+        # Try a few variations
+        local app_name_lower=$(echo "$app_name" | tr '[:upper:]' '[:lower:]')
+        local app_name_upper=$(echo "$app_name" | tr '[:lower:]' '[:upper:]')
+
+        if [[ -d "/Applications/${app_name_lower}.app" ]] || [[ -d "/Applications/${app_name_upper}.app" ]]; then
+            return 0  # App exists
+        fi
+
+        return 1  # App not found
+    }
+
     for cask in ${brew_cask_packages[@]}; do
       if [[ ! " ${currently_installed_casks[@]} " =~ " ${cask} " ]]; then
-          brew install -q --cask ${cask}
+          if ! app_already_installed "${cask}"; then
+              brew install -q --cask ${cask}
+          else
+              echo "Skipping ${cask} - already installed in /Applications"
+          fi
       fi
     done
 
