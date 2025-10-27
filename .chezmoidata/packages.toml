@@ -1,4 +1,11 @@
 [packages]
+  [packages.common] # Package names common to all platforms
+    packages = [
+      "git",
+      "curl",
+      "wget",
+      "zsh"
+    ]
   [packages.yay]
     packages = [
       "lazydocker",
@@ -8,10 +15,8 @@
   [packages.brew]
     packages = [
       "chezmoi",
-      "curl",
       "eza",
       "fzf",
-      "git",
       "gnupg",
       "jless",
       "jq",
@@ -22,10 +27,8 @@
       "ssh-copy-id",
       "starship",
       "syncthing",
-      "wget",
       "yazi",
       "zoxide",
-      "zsh"
     ]
   [packages.brew_cask]
     packages = [
