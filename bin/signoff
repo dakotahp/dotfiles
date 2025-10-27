@@ -21,13 +21,15 @@ SHA=$(git rev-parse HEAD)
 USER=$(git config user.name)
 
 # Progress reporting
-GREEN=32; RED=31; BLUE=34
+GREEN=32
+RED=31
+BLUE=34
 announce() { echo -e "\033[0;$2m$1\033[0m"; }
 run() {
   local SPLIT=$SECONDS
   announce "\nRun $1" $BLUE
   eval "$1"
-  local INTERVAL=$((SECONDS-SPLIT))
+  local INTERVAL=$((SECONDS - SPLIT))
   announce "Completed $1 in $INTERVAL seconds" $GREEN
 }
 
@@ -53,20 +55,21 @@ fi
 #
 # Example:
 #
-# export SIGNOFF_CI_STEPS="test,build,lint"
+# export SIGNOFF_CI_STEPS="yarn test,yarn build,yarn lint"
 #
-set -a && source .env && set +a
-announce "Sourcing environment variables from .env" $BLUE
+set -a && source .env.signoff && set +a
+announce "Sourcing environment variables from .env.signoff" $BLUE
 
 if [[ -n "$SIGNOFF_CI_STEPS" ]]; then
   # Split SIGNOFF_CI_STEPS into array and execute each command
-  IFS=',' read -ra STEPS <<< "$SIGNOFF_CI_STEPS"
+  IFS=',' read -ra STEPS <<<"$SIGNOFF_CI_STEPS"
   for step in "${STEPS[@]}"; do
-    announce "Running: make $step..." $BLUE
-    make "$step"
+    announce "Running: $step..." $BLUE
+    read -r -a command_and_args <<<"$step"
+    "${command_and_args[@]}"
   done
 else
-  announce "Required environment variable SIGNOFF_CI_STEPS is not set to comma seaparated commands that run via make" $RED
+  announce "Required environment variable SIGNOFF_CI_STEPS is not set to comma seaparated commands" $RED
   exit 1
 fi
 
@@ -92,8 +95,7 @@ announce "Most recent commit title is: $COMMIT_TITLE" $BLUE
 
 read -r -p "Push this commit to origin? [y/N] " pushAnswer
 
-if [ $pushAnswer = "Y" ] || [ $pushAnswer = "y" ]
-then
+if [ $pushAnswer = "Y" ] || [ $pushAnswer = "y" ]; then
   announce "Pushing commit to origin..." $BLUE
   git push origin
 else
