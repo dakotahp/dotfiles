@@ -7,8 +7,7 @@ linux cloud servers, and linux laptop machines, with Ubuntu and Arch accomodatio
 
 ## Dependencies
 
-* [rcm](https://github.com/thoughtbot/rcm) (for symlinking dotfiles to home directory)
-* [GNU stow](https://www.gnu.org/software/stow/) (for symlinking config files to ~/.config directory)
+* chezmoi
 
 ## Components
 
