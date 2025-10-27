@@ -22,7 +22,12 @@ yay_packages=(
 
 {{ if eq .chezmoi.os "linux" -}}
     echo "Installing packages with yay..."
-    #yay -S --needed --noconfirm {{ range .packages.yay }} {{ . }} {{ end }}
+
+    for package in ${yay_packages[@]}; do
+        yay -S --needed --noconfirm ${package}
+    done
+
+    echo "Yay packages installed!"
 {{ else if eq .chezmoi.os "darwin" -}}
     BREW_DIR="$(brew --prefix)/bin/"
     currently_installed_formulae=($(brew list --formula -1))
@@ -46,5 +51,5 @@ yay_packages=(
       fi
     done
 
-    echo "Homebrew packages installed"
+    echo "Homebrew packages installed!"
 {{ end -}}
