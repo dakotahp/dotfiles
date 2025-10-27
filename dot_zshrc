@@ -53,8 +53,11 @@ fi
 #
 # Path modifications
 #
-export PATH="$PATH:$HOME/dotfiles/bin"
+export PATH="$PATH:$(chezmoi source-path)/bin"
 
+#
+# Import oh-my-zsh
+#
 source $ZSH/oh-my-zsh.sh
 
 unsetopt correct_all
