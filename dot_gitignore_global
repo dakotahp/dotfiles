@@ -48,4 +48,9 @@ xcuserdata
 logfile
 .sass-cache
 public/uploads/
+
+# mise version manager file. Ignored to avoid adding for other devs.
 mise.toml
+
+# environment variables set for signoff script
+.env.signoff
