@@ -96,6 +96,11 @@ ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'bold,bg=red')
 #
 [ -f ~/.aliases ] && source ~/.aliases
 
+#
+# Load environment variables
+#
+source ~/.env
+
 # ruby-build installs a non-Homebrew OpenSSL for each Ruby version installed
 # and these are never upgraded.
 # Link Rubies to Homebrew's OpenSSL 1.1 (which is upgraded)
