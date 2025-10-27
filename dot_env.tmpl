@@ -1,0 +1,7 @@
+# Gemini API Key
+export GEMINI_API_KEY=$(op read "op://Private/Gemini LLM API Key/credential")
+
+{{ if eq .chezmoi.os "linux" -}}
+# 1Password SSH agent on linux
+export SSH_AUTH_SOCK=~/.1password/agent.sock
+{{ end -}}
