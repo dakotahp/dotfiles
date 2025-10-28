@@ -1,31 +1,15 @@
 #!/bin/bash
 
-# Arrays for package installation
-brew_packages=(
-    {{ range $package := .package.common.names }}
-    "{{ $package }}"
-    {{ end -}}
-    {{ range $package := .package.homebrew.names }}
-    "{{ $package }}"
-    {{ end -}}
-)
-
-brew_cask_packages=(
-    {{ range $package := .package.homebrew_cask.names }}
-    "{{ $package }}"
-    {{ end }}
-)
-
-yay_packages=(
-    {{ range $package := .package.common.names }}
-    "{{ $package }}"
-    {{ end -}}
-    {{ range $package := .package.yay.names }}
-    "{{ $package }}"
-    {{ end }}
-)
-
 {{ if eq .chezmoi.os "linux" -}}
+    yay_packages=(
+        {{ range $package := .package.common.names }}
+        "{{ $package }}"
+        {{ end -}}
+        {{ range $package := .package.yay.names }}
+        "{{ $package }}"
+        {{ end }}
+    )
+
     echo "Installing packages with yay..."
     currently_installed_packages=($(yay -Q))
 
@@ -37,6 +21,21 @@ yay_packages=(
 
     echo "Yay packages installed!"
 {{ else if eq .chezmoi.os "darwin" -}}
+    brew_packages=(
+        {{ range $package := .package.common.names }}
+        "{{ $package }}"
+        {{ end -}}
+        {{ range $package := .package.homebrew.names }}
+        "{{ $package }}"
+        {{ end -}}
+    )
+
+    brew_cask_packages=(
+        {{ range $package := .package.homebrew_cask.names }}
+        "{{ $package }}"
+        {{ end }}
+    )
+
     BREW_DIR="$(brew --prefix)/bin/"
     currently_installed_formulae=($(brew list --formula -1))
     currently_installed_casks=($(brew list --cask -1))
