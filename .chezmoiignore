@@ -1,6 +1,5 @@
 Brewfile
 bin/
-term-color-test.sh
 git-commit-template.txt
 README.md
 setup-macos.sh
