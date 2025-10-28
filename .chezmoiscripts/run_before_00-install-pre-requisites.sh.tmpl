@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-{{ if eq .chezmoi.os "darwin" }}
+{{- if eq .chezmoi.os "darwin" }}
 
 if [[ ! $(command -v brew) ]]; then
     header "🍺  Installing Homebrew"

@@ -27,9 +27,12 @@ yay_packages=(
 
 {{ if eq .chezmoi.os "linux" -}}
     echo "Installing packages with yay..."
+    currently_installed_packages=($(yay -Q))
 
     for package in ${yay_packages[@]}; do
-        yay -S --needed --noconfirm ${package}
+        if [[ ! " ${currently_installed_packages[@]} " =~ " ${package} " ]]; then
+            yay -S --needed --noconfirm ${package}
+        fi
     done
 
     echo "Yay packages installed!"
