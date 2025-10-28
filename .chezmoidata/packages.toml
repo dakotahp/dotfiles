@@ -1,6 +1,13 @@
 [package]
 [package.common] # Package names common to all platforms
-names = ["bat", "git", "curl", "wget", "zsh"]
+names = [
+  "bat",
+  "git",
+  "curl",
+  "ripgrep",
+  "wget",
+  "zsh",
+]
 [package.yay]
 names = ["lazydocker", "lazygit", "neovim"]
 [package.homebrew]
