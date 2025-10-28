@@ -33,6 +33,14 @@ run() {
   announce "Completed $1 in $INTERVAL seconds" $GREEN
 }
 
+# Signoff requires .env.signoff to be present in the repository
+if [[ ! -f .env.signoff ]]; then
+  announce ".env.signoff not found in repository!" $RED
+  announce "Please create a .env.signoff file in the repository with the following format:" $BLUE
+  announce "export SIGNOFF_CI_STEPS=\"yarn test,yarn build,yarn lint\"" $BLUE
+  exit 1
+fi
+
 # Sign off requires a clean repository
 if [[ -n $(git status --porcelain) ]]; then
   announce "Can't sign off on a dirty repository!" $RED
