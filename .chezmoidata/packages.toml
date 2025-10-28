@@ -4,6 +4,8 @@ names = [
   "bat",
   "git",
   "curl",
+  "rsync",
+  "tree",
   "ripgrep",
   "wget",
   "zsh",
