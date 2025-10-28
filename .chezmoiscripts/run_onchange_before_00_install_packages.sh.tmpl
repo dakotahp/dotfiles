@@ -2,25 +2,25 @@
 
 # Arrays for package installation
 brew_packages=(
-    {{ range $package := .packages.common.packages }}
+    {{ range $package := .package.common.names }}
     "{{ $package }}"
     {{ end -}}
-    {{ range $package := .packages.brew.packages }}
+    {{ range $package := .package.homebrew.names }}
     "{{ $package }}"
     {{ end -}}
 )
 
 brew_cask_packages=(
-    {{ range $package := .packages.brew_cask.packages }}
+    {{ range $package := .package.homebrew_cask.names }}
     "{{ $package }}"
     {{ end }}
 )
 
 yay_packages=(
-    {{ range $package := .packages.common.packages }}
+    {{ range $package := .package.common.names }}
     "{{ $package }}"
     {{ end -}}
-    {{ range $package := .packages.yay.packages }}
+    {{ range $package := .package.yay.names }}
     "{{ $package }}"
     {{ end }}
 )

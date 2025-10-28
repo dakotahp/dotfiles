@@ -1,10 +1,10 @@
-[packages]
-[packages.common] # Package names common to all platforms
-packages = ["bat", "git", "curl", "wget", "zsh"]
-[packages.yay]
-packages = ["lazydocker", "lazygit", "neovim"]
-[packages.brew]
-packages = [
+[package]
+[package.common] # Package names common to all platforms
+names = ["bat", "git", "curl", "wget", "zsh"]
+[package.yay]
+names = ["lazydocker", "lazygit", "neovim"]
+[package.homebrew]
+names = [
   "chezmoi",
   "eza",
   "fzf",
@@ -21,8 +21,8 @@ packages = [
   "yazi",
   "zoxide",
 ]
-[packages.brew_cask]
-packages = [
+[package.homebrew_cask]
+names = [
   "1password-cli",
   "alfred",
   "brave-browser",
