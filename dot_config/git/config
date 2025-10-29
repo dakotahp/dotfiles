@@ -2,7 +2,7 @@
   ui = auto
 [core]
   whitespace=fix,-indent-with-non-tab,trailing-space,cr-at-eol
-  excludesfile = ~/.gitignore_global
+  excludesfile = ~/.config/git/ignore
 [alias]
   co = checkout
   cp = cherry-pick
@@ -40,7 +40,7 @@
 [init]
 	defaultBranch = master
 [commit]
-	template = /Users/dpena/.git-commit-template.txt
+	template = ~/.config/git/commit-template.txt
 	gpgsign = true
 [pager]
 	branch = false
@@ -50,4 +50,4 @@
 [include]
   path = ~/.gitconfig.local
 [includeIf "gitdir:~/Code/work/"]
-  path = .gitconfig-work
+  path = ~/.config/git/config-work

@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 {{- if eq .work_computer true }}
-# Create empty ~/.gitconfig-work if it doesn't exist
-if [ ! -f ~/.gitconfig-work ]; then
-    touch ~/.gitconfig-work
-    echo "Created empty ~/.gitconfig-work file"
+# Create empty ~/.config/git/config-work if it doesn't exist
+if [ ! -f ~/.config/git/config-work ]; then
+    touch ~/.config/git/config-work
+    echo "Created empty ~/.config/git/config-work file"
 fi
 {{ end }}
