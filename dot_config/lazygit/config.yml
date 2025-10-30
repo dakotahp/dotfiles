@@ -1,0 +1,9 @@
+gui:
+  authorColors:
+    'DP': 'red'
+    'Dakotah Peña': 'red'
+    '*': '#23446d'
+  branchColorPatterns:
+    'main': 'red'
+    'master': 'red'
+
