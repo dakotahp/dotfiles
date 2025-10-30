@@ -5,3 +5,8 @@ export GEMINI_API_KEY=$(op read "op://Private/Gemini LLM API Key/credential")
 # 1Password SSH agent on linux
 export SSH_AUTH_SOCK=~/.1password/agent.sock
 {{ end -}}
+
+{{ if eq .chezmoi.os "darwin" -}}
+# Convince MacOS to use ~/.config/ instead of ~/Library/Application Support/
+export XDG_CONFIG_HOME="$HOME/.config"
+{{ end -}}
