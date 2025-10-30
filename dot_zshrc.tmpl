@@ -30,6 +30,8 @@ unsetopt correct_all
 setopt inc_append_history
 unsetopt share_history
 
+# Set higher default limit for open file descriptors.
+# Helps with (Node.js) development.
 ulimit -S -n 2048
 
 # =============
