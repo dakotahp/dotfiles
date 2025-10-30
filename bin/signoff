@@ -6,7 +6,7 @@ set -e
 cleanup() {
   echo 'Error raised. Exiting cleanly.'
   announce "Ending amphetamine session." $BLUE
-  osascript ~/Code/amphetamine-end-session.scpt
+  osascript $(chezmoi source-path)/bin/amphetamine-end-session.scpt
 }
 
 trap 'cleanup' ERR
@@ -20,11 +20,13 @@ REPO=$(gh repo view --json name --jq .name)
 SHA=$(git rev-parse HEAD)
 USER=$(git config user.name)
 
-# Progress reporting
+# Output colors
 GREEN=32
 RED=31
 BLUE=34
+
 announce() { echo -e "\033[0;$2m$1\033[0m"; }
+
 run() {
   local SPLIT=$SECONDS
   announce "\nRun $1" $BLUE
@@ -54,7 +56,7 @@ fi
 # https://apps.apple.com/us/app/amphetamine/id937984704?mt=12
 if test -d /Applications/Amphetamine.app; then
   announce "Amphetamine found, starting session." $BLUE
-  osascript ~/Code/amphetamine-start-session.scpt
+  osascript $(chezmoi source-path)/bin/amphetamine-start-session.scpt
 else
   announce "Amphetamine not found, skipping starting session." $BLUE
 fi
