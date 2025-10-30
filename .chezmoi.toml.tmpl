@@ -1,4 +1,6 @@
 {{- $work_computer := promptBoolOnce . "work_computer" "Is this a work computer? (true/false)" -}}
+{{- $dev_computer := promptBoolOnce . "dev_computer" "Is this a development computer? (true/false)" -}}
 
 [data]
 work_computer = {{ $work_computer }}
+dev_computer = {{ $dev_computer }}

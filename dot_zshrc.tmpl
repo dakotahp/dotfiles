@@ -93,6 +93,11 @@ ulimit -S -n 2048
 # Begin imports 
 #
 
+{{ if .dev_computer }}
+# Active mise version manager
+eval "$(mise activate zsh)"
+{{ end }}
+
 # fzf: fuzzy finder install
 # https://github.com/junegunn/fzf
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
