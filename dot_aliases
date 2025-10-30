@@ -1,8 +1,8 @@
 # Shell
-alias hm='cd ~'
 alias cs='clear'
 
 ## cd shortcuts
+alias hm='cd ~'
 alias up1='cd ../'
 alias up2='cd ../../'
 alias up3='cd ../../../'
@@ -12,17 +12,17 @@ alias up4='cd ../../../../'
 alias singleapp="default write com.apple.dock single-app -bool true; killall dock"
 alias multiapp="default write com.apple.dock single-app -bool false; killall dock"
 
-## ls
-alias l="ls -lAh"
-alias ll="ls -lh"
-alias la='ls -A'
+# ls to eza
+alias ls="eza"
+
+# cat to bat
+alias cat="bat"
 
 # Rails and Dev Tools
 alias respec="rerun -cx rspec"
 
 # git
 alias gi='git status; echo; git branch -a -v'
-alias grm='git checkout master && git pull --rebase && git checkout - && git rebase master'
 alias ggrep='git grep -I'
 alias gcme='git commit -m'
 alias contains='git branch --contains'
@@ -30,6 +30,7 @@ alias grecent='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --f
 
 alias notify='terminal-notifier -message'
 alias lzd='lazydocker'
+alias lzg="lazygit"
 
 # Include custom aliases
 [[ -f ~/.aliases.local ]] && source ~/.aliases.local
