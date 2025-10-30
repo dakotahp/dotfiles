@@ -1,0 +1,48 @@
+ZSH={{ .xdgDataDir }}/oh-my-zsh
+ZSH_CUSTOM={{ .xdgDataDir }}/oh-my-zsh/custom
+
+# Load oh-my-zsh plugins
+if [[ "$(uname)" == "Darwin" ]]; then
+  plugins=(
+    asdf                    # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/asdf
+    bundler                 # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/bundler
+    colored-man-pages       # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/colored-man-pages
+    docker                  # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/docker
+    docker-compose          # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/docker-compose
+    encode64                # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/encode64
+    extract                 # Defines a function called extract that extracts the archive file you pass it. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/extract)
+    git                     # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git
+    jump
+    mosh                    # SSH tab completion for hostnames (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/mosh)
+    macos                   # https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/macos
+    urltools                # Provides two aliases to URL-encode and URL-decode strings. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/urltools)
+    yarn                    # Aliases for yarn. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/yarn)
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+  )
+else
+  plugins=(
+    colored-man-pages
+    docker
+    docker-compose
+    encode64
+    extract                 # Defines a function called extract that extracts the archive file you pass it. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/extract)
+    git
+    jump
+    npm
+    urltools                # Provides two aliases to URL-encode and URL-decode strings. (https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/urltools)
+    yarn
+    zsh-autosuggestions
+    zsh-syntax-highlighting
+  )
+fi
+
+# Import it
+source $ZSH/oh-my-zsh.sh
+
+# Set some configuration values
+ZSH_HIGHLIGHT_STYLES[alias]='fg=077'
+ZSH_HIGHLIGHT_STYLES[single-hyphen-option]='fg=122'
+ZSH_HIGHLIGHT_STYLES[double-hyphen-option]='fg=123'
+ZSH_HIGHLIGHT_HIGHLIGHTERS=(main brackets pattern)
+ZSH_HIGHLIGHT_PATTERNS+=('rm -rf *' 'bold,bg=red') # make `rm -rf` command highlighted red for safety
