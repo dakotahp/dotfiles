@@ -93,8 +93,30 @@ ulimit -S -n 2048
 # Begin imports 
 #
 
+# Load XDG configuration to force a bunch of apps to use 
+# UNIX standard ~/.config, ~/.local, etc.
+# Automatically import *.zsh or *.sh
+configFileLocations=(
+    "{{ .xdgConfigDir }}/zshell_components"
+)
+
+for configFileLocation in "${configFileLocations[@]}"; do
+    if [ -d "${configFileLocation}" ]; then
+        while read -r configFile; do
+            source "${configFile}"
+        done < <(find "${configFileLocation}" \
+            -maxdepth 2 \
+            -type f \
+            -name '*.zsh' \
+            -o -name '*.sh' | sort)
+    fi
+done
+
+unset configFileLocations configFileLocation
+
+
 {{ if .dev_computer }}
-# Active mise version manager
+# Active mise version manager on development machines
 eval "$(mise activate zsh)"
 {{ end }}
 

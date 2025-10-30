@@ -1,0 +1,38 @@
+#!/usr/bin/env zsh
+
+# Create XDG directories early during init
+# so other apps can start using it as
+# they're installed. Keeps stuff out of ~
+##########################################
+
+echo "Creating XDG directories..."
+
+if [ ! -d "{{ .xdgCacheDir }}" ]; then
+    echo "Creating {{ .xdgCacheDir }} directory"
+    mkdir -p "{{ .xdgCacheDir }}"
+else
+    echo "{{ .xdgCacheDir }} directory already exists"
+fi
+
+if [ ! -d "{{ .xdgConfigDir }}" ]; then
+    echo "Creating {{ .xdgConfigDir }} directory"
+    mkdir -p "{{ .xdgConfigDir }}"
+else
+    echo "{{ .xdgConfigDir }} directory already exists"
+fi
+
+if [ ! -d "{{ .xdgDataDir }}" ]; then
+    echo "Creating {{ .xdgDataDir }} directory"
+    mkdir -p "{{ .xdgDataDir }}"
+else
+    echo "{{ .xdgDataDir }} directory already exists"
+fi
+
+if [ ! -d "{{ .xdgStateDir }}" ]; then
+    echo "Creating {{ .xdgStateDir }} directory"
+    mkdir -p "{{ .xdgStateDir }}"
+else
+    echo "{{ .xdgStateDir }} directory already exists"
+fi
+
+echo "XDG directories created!"
