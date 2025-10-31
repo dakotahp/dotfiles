@@ -1,36 +1,50 @@
 gui:
   nerdFontsVersion: "3"
   authorColors:
-    'DP': '#b4befe'
-    'Dakotah Peña': '#b4befe'
-    '*': '#23446d'
+    "DP": "#b4befe"
+    "Dakotah Peña": "#b4befe"
+    "*": "#23446d"
   branchColorPatterns:
-    'main': 'red'
-    'master': 'red'
+    "main": "red"
+    "master": "red"
   # https://github.com/catppuccin/lazygit/tree/main/themes/mocha
   theme:
     activeBorderColor:
-      - '#b4befe'
+      - "#b4befe"
       - bold
     inactiveBorderColor:
-      - '#a6adc8'
+      - "#a6adc8"
     optionsTextColor:
-      - '#89b4fa'
+      - "#89b4fa"
     selectedLineBgColor:
-      - '#313244'
+      - "#313244"
     cherryPickedCommitBgColor:
-      - '#45475a'
+      - "#45475a"
     cherryPickedCommitFgColor:
-      - '#b4befe'
+      - "#b4befe"
     unstagedChangesColor:
-      - '#f38ba8'
+      - "#f38ba8"
     defaultFgColor:
-      - '#cdd6f4'
+      - "#cdd6f4"
     searchingActiveBorderColor:
-      - '#f9e2af'
+      - "#f9e2af"
+  spinner:
+    # yarn style spinner
+    frames:
+      - "⣾"
+      - "⣽"
+      - "⣻"
+      - "⢿"
+      - "⡿"
+      - "⣟"
+      - "⣯"
+      - "⣷"
+
+    # milliseconds. Slowed speed down by 2x
+    rate: 100
 git:
   branchPrefix: "dakotahpena/"
   commitPrefix:
     - pattern: "^\\w+\\/(\\w+-\\w+).*"
-      replace: '[$1] '
+      replace: "[$1] "
   parseEmoji: true
