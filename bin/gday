@@ -1,0 +1,71 @@
+#!/usr/bin/env bash
+
+#
+#
+# G'day, mate.
+#
+# This is a script that is for any tasks you perform
+# to set up a (backend) repo on a daily or more frequent
+# basis like migrating the database, reseeding,  etc.
+#
+# The way it works is to add a .env.gday file with a GDAY_STEPS
+# environment variable. This will be a string of comma-separated
+# commands to be run.
+#
+# For example:
+#
+# ```
+# export GDAY_STEPS="rake db:migrate,rake db:seed,aws sso login"
+# ```
+#
+# Every morning, or whatever basis is needed, just run `gday` and
+# it will run the annoying steps you might have chained in your shell
+# history. You can gitignore the .env.gday file if you need.
+#
+# TODO: change from ENV file to basic config file. Comma separated strings aren't readable.
+#
+
+# Abort sign off on any error
+set -e
+
+cleanup() {
+  echo 'Error raised. Exiting cleanly.'
+  announce "Ending amphetamine session." $BLUE
+  osascript $(chezmoi source-path)/bin/amphetamine-end-session.scpt
+}
+
+trap 'cleanup' ERR
+
+# Start the benchmark timer
+SECONDS=0
+
+# Output colors
+GREEN=32
+RED=31
+BLUE=34
+
+announce() { echo -e "\033[0;$2m$1\033[0m"; }
+
+# If the GDAY_STEPS environment variable is set, split it into an array and execute each command
+#
+# Example:
+#
+# export GDAY_STEPS="rake db:migrate,rake db:seed"
+#
+set -a && source .env.gday && set +a
+announce "Sourcing environment variables from .env.gday" $BLUE
+
+if [[ -n "$GDAY_STEPS" ]]; then
+  # Split GDAY_STEPS into array and execute each command
+  IFS=',' read -ra STEPS <<<"$GDAY_STEPS"
+  for step in "${STEPS[@]}"; do
+    announce "Running: $step..." $BLUE
+    read -r -a command_and_args <<<"$step"
+    "${command_and_args[@]}"
+  done
+else
+  announce "Required environment variable GDAY_STEPS is not set to comma seaparated commands" $RED
+  exit 1
+fi
+
+announce "G'day, it took $SECONDS seconds to get ready." $GREEN

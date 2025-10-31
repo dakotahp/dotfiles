@@ -54,3 +54,6 @@ mise.toml
 
 # environment variables set for signoff script
 .env.signoff
+
+# environment variables set for gday script
+.env.gday
