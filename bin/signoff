@@ -92,7 +92,7 @@ fi
 
 if test -d /Applications/Amphetamine.app; then
   announce "Ending amphetamine session." $BLUE
-  osascript ~/Code/amphetamine-end-session.scpt
+  osascript $(chezmoi source-path)/bin/amphetamine-end-session.scpt
 fi
 
 git commit --amend --signoff
