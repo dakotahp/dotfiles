@@ -30,6 +30,9 @@ export GOPATH="${XDG_DATA_HOME}"/go
 export INPUTRC="${XDG_CONFIG_HOME}"/readline/inputrc
 export XCOMPOSEFILE="${XDG_CONFIG_HOME}"/X11/xcompose
 
+export HISTFILE="${XDG_STATE_HOME}"/bash/history
+[ ! -f "$HISTFILE" ] && mkdir -p "$(dirname "$HISTFILE")" && touch "$HISTFILE"
+
 # Rubygems bundler
 export BUNDLE_USER_HOME="$XDG_DATA_HOME/bundle"
 export BUNDLE_USER_PLUGIN="$XDG_DATA_HOME/bundle/plugin"
