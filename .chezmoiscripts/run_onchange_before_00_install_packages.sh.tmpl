@@ -1,6 +1,7 @@
 #!/bin/bash
 
 {{ if eq .chezmoi.os "linux" -}}
+  {{ if eq .chezmoi.osRelease.id "arch" }}
     yay_packages=(
         {{ range $package := .package.common.names }}
         "{{ $package }}"
@@ -20,6 +21,9 @@
     done
 
     echo "Yay packages installed!"
+  {{ else }}
+    echo "Linux distributions other than Arch are not supported, skipping package installation."
+  {{ end }}
 {{ else if eq .chezmoi.os "darwin" -}}
     brew_packages=(
         {{ range $package := .package.common.names }}
