@@ -9,6 +9,7 @@ export EDITOR=nvim
 export GPG_TTY=$(tty)
 
 # Include dotfile bin folder in path
+export PATH="$PATH:$HOME/.local/bin"
 export PATH="$PATH:$(chezmoi source-path)/bin"
 
 export COMPLETION_WAITING_DOTS="true"
