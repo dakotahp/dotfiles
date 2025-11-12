@@ -1,0 +1,11 @@
+#!/bin/bash
+
+echo "Attempting to install oh-my-zsh"
+
+if [ ! -d "$ZSH" ]; then
+  echo "Installing..."
+  ZSH="{{ .xdgDataDir }}/oh-my-zsh" sh -c "$(curl -fsSL https://install.ohmyz.sh)"
+else
+  echo "Already installed, skipping."
+fi
+
