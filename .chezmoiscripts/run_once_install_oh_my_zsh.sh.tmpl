@@ -2,10 +2,23 @@
 
 echo "Attempting to install oh-my-zsh"
 
-if [ ! -d "$ZSH" ]; then
+if [ ! -d "{{ .xdgDataDir }}/oh-my-zsh" ]; then
   echo "Installing..."
   ZSH="{{ .xdgDataDir }}/oh-my-zsh" sh -c "$(curl -fsSL https://install.ohmyz.sh)"
 else
   echo "Already installed, skipping."
 fi
 
+echo "Attempting to install zsh-autosuggestions"
+if [ ! -d "{{ .xdgDataDir }}/oh-my-zsh/plugins/zsh-autosuggestions" ]; then
+  git clone https://github.com/zsh-users/zsh-autosuggestions {{ .xdgDataDir }}/oh-my-zsh/plugins/zsh-autosuggestions
+else
+  echo "zsh-autosuggestions installed, skipping"
+fi
+
+echo "Attempting to install zsh-syntax-highlighting"
+if [ ! -d "{{ .xdgDataDir }}/oh-my-zsh/plugins/zsh-syntax-highlighting" ]; then
+  git clone https://github.com/zsh-users/zsh-syntax-highlighting {{ .xdgDataDir }}/oh-my-zsh/plugins/zsh-syntax-highlighting
+else
+  echo "zsh-syntax-highlighting installed, skipping"
+fi
