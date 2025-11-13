@@ -1,5 +1,16 @@
 #!/bin/bash
 
-set -eufo pipefail
+# Corrects the repo remote URL to the private SSH one after bootstrapping from the public URL
 
-git -C "${CHEZMOI_WORKING_TREE}" remote set-url origin git@github.com:dakotahp/dotfiles.git
+set -eufo pipefail
+set -x
+# This is the ideal repo URL rather than the public HTTPS one
+sshUrl="git@github.com:{{ .githubUsername }}/dotfiles.git"
+currentUrl="$(git config --get remote.origin.url)"
+
+# If the repo URL isn't the SSH-based one (like HTTPS) then update it
+if [ $currentUrl != $sshUrl ]; then
+echo "changing url, doesn't match $currentUrl $sshUrl"
+#	git -C "${CHEZMOI_WORKING_TREE}" remote set-url origin $sshUrl
+fi
+echo "done"
