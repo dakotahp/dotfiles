@@ -6,13 +6,16 @@ Secondary dependencies are 1Password for managing some secrets and SSH keys, and
 
 ## Install
 
-A new machine can be set up by first installing chezmoi and then running:
+Because of the heavy reliance on the 1Password CLI (`op`), that needs to be [installed](https://developer.1password.com/docs/cli/get-started/) first,
+before anything else can be installed.
+
+After 1Password CLI is installed, a new machine can be set up by installing and bootstrapping at the same time with:
 
 ```
-chezmoi init dakotahp
+sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply "dakotahp" -b $HOME/.local/bin
 ```
 
-From here the scripts should install dendencies, then relevant packages, and then copy the dot files files to `~`.
+From here the scripts should install dependencies, relevant packages, and then copy the dot files files to `~`.
 
 ## Daily workflow
 
@@ -30,6 +33,15 @@ The dotfiles use some of these tools:
 * [zsh-autosuggestions](https://s.dakotahpena.dev/LJcNhj)
 * [zsh-syntax-highlighting](https://s.dakotahpena.dev/gF0bCB)
 
+## Operating System Support
+
+The following OSes are supported at this time:
+
+* MacOS
+* Arch linux
+
+Package management is the major thing that prevents other OSes and work is being done to remove that dependency.
+
 ## Git Configuration
 
 If the canonical GPG key is imported into the machine, the default git configuration for all repositories is to use that signing key and a personal git identity.
@@ -40,9 +52,9 @@ The global `.gitconfig` dot file will import `.gitconfig-work`, if available, in
 
 ```
 [user]
-  email = 
-  name = 
-  signingkey = 
+  email =
+  name =
+  signingkey =
 ```
 
 This requires [creating a brand new GPG key](https://docs.github.com/en/authentication/managing-commit-signature-verification/generating-a-new-gpg-key) associated with the work email address and [adding](https://github.com/settings/keys) to GitHub. `signingkey` value should be set to the short name of the signing key from `gpg --list-secret-keys --keyid-format=long`.
