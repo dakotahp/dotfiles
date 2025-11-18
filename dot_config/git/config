@@ -7,20 +7,20 @@
 [alias]
   co = checkout
   cp = cherry-pick
-  db = branch -d
+  # git lastbranch: quickly checks out the last branch. Nice for switching back and forth between branches.
   lastbranch = checkout -
   lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
   lol = log --graph --decorate --pretty=oneline --abbrev-commit
   lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
   nb = checkout -b
+  # git pr: quickly copies a special formatted git log to be pasted into a PR description.
   pr = "!sh -c 'base=$0 && output=$(git log $base..HEAD --pretty=tformat:\"- %h _%s_\" | tail -r) && echo \"$output\" && echo \"$output\" | pbcopy'"
   unstage = reset
   recent = for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"
   pf = push --force-with-lease
   br = branch
-  ci = commit
-  st = status
-  wipdiff = diff master..
+  # git wipdiff: quickly diffs the current branch against the base branch.
+  wipdiff = "!sh -c 'base=$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed \"s|origin/||\" 2>/dev/null || (git show-ref --verify --quiet refs/heads/main 2>/dev/null && echo main) || echo master) && git diff $base..'"
 [mergetool]
   keepBackup = true
 [user]
@@ -48,7 +48,18 @@
 	tag = false
 [tag]
 	gpgSign = true
+
+#
+# Allows for a local machine override. Legacy functionality now that
+# the git config is in ~/.config/git/ and work config below.
+#
 [include]
   path = ~/.gitconfig.local
+
+#
+# Allows for an easy work machine override, as long as work repos
+# are checked out in the ~/Code/work directory. Useful mostly for
+# overriding the user details like name, email, and signing key.
+#
 [includeIf "gitdir:~/Code/work/"]
   path = ~/.config/git/config-work
