@@ -29,8 +29,8 @@ alias contains='git branch --contains'
 alias grecent='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
 
 alias notify='terminal-notifier -message'
-alias lzd='lazydocker'
-alias lzg="lazygit"
+alias ld='lazydocker'
+alias lg="lazygit"
 
 # Makes it easier to sign into 1Password cli
 opsign() {
