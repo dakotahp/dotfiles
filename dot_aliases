@@ -32,5 +32,16 @@ alias notify='terminal-notifier -message'
 alias lzd='lazydocker'
 alias lzg="lazygit"
 
+# Makes it easier to sign into 1Password cli
+opsign() {
+  who=$(op whoami)
+
+	if [[ $? != 0 ]] then;
+		eval $(op signin)
+  else
+    echo "Already signed into 1Password."
+	fi
+}
+
 # Include custom aliases
 [[ -f ~/.aliases.local ]] && source ~/.aliases.local
