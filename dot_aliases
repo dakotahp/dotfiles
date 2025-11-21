@@ -28,9 +28,11 @@ alias gcme='git commit -m'
 alias contains='git branch --contains'
 alias grecent='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
 
-alias notify='terminal-notifier -message'
 alias ld='lazydocker'
 alias lg="lazygit"
+
+# Generate random secret for an app secret
+alias secret="openssl rand -hex 32"
 
 # Makes it easier to sign into 1Password cli
 opsign() {
