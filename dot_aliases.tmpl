@@ -45,5 +45,17 @@ opsign() {
 	fi
 }
 
+# Cross-platform alias that uses native package manager to update system.
+# Reduces cognitive load when switching systems and stops relying on zsh history to make it quicker.
+{{- if eq .chezmoi.os "darwin" }}
+alias update="brew update && brew upgrade"
+{{- else if eq .chezmoi.os "linux" -}}
+{{-   if eq .chezmoi.osRelease.id "debian" }}
+alias update="sudo apt-get update && sudo apt-get upgrade"
+{{-   else if eq .chezmoi.osRelease.id "arch" }}
+alias update="sudo pacman -Syu"
+{{-  end -}}
+{{- end }}
+
 # Include custom aliases
 [[ -f ~/.aliases.local ]] && source ~/.aliases.local
