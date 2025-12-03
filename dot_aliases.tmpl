@@ -50,7 +50,7 @@ opsign() {
 {{- if eq .chezmoi.os "darwin" }}
 alias update="brew update && brew upgrade"
 {{- else if eq .chezmoi.os "linux" -}}
-{{-   if eq .chezmoi.osRelease.id "debian" }}
+{{-   if eq .chezmoi.osRelease.id "linuxmint" }}
 alias update="sudo apt-get update && sudo apt-get upgrade"
 {{-   else if eq .chezmoi.osRelease.id "arch" }}
 alias update="sudo pacman -Syu"
