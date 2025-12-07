@@ -12,7 +12,7 @@ before anything else can be installed.
 After 1Password CLI is installed, a new machine can be set up by installing and bootstrapping at the same time with:
 
 ```
-sh -c "$(curl -fsLS get.chezmoi.io)" -- init --apply "dakotahp" -b $HOME/.local/bin
+sh -c "$(curl -fsLS get.chezmoi.io)" -- -b "$HOME/.local/bin" init --apply "dakotahp"
 ```
 
 From here the scripts should install dependencies, relevant packages, and then copy the dot files files to `~`.
