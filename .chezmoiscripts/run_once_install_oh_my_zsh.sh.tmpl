@@ -4,7 +4,7 @@ echo "Attempting to install oh-my-zsh"
 
 if [ ! -d "{{ .xdgDataDir }}/oh-my-zsh" ]; then
   echo "Installing..."
-  ZSH="{{ .xdgDataDir }}/oh-my-zsh" sh -c "$(curl -fsSL https://install.ohmyz.sh)"
+  ZSH="{{ .xdgDataDir }}/oh-my-zsh" sh -c "$(curl -fsSL https://install.ohmyz.sh)" --unattended
 else
   echo "Already installed, skipping."
 fi
