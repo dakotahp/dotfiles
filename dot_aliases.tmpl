@@ -45,6 +45,47 @@ opsign() {
 	fi
 }
 
+#
+# Run uncommitted test files
+#
+run_uncommitted_tests() {
+  local test_files
+
+  # Get uncommitted files (staged + unstaged + untracked) that are test files
+  # Matches: test/, spec/, engines/*/test/, engines/*/spec/
+  test_files=$(git status --porcelain 2>/dev/null | \
+    awk '{print $NF}' | \
+    grep -E '(^|/)((test|spec)/.*_(test|spec)\.rb$)')
+
+  if [[ -z "$test_files" ]]; then
+    echo "No uncommitted test files found."
+    return 0
+  fi
+
+  echo "Running uncommitted test files:"
+  echo "$test_files" | sed 's/^/  /'
+  echo ""
+
+  # Build array of files
+  local -a files_array
+  while IFS= read -r file; do
+    files_array+=("$file")
+  done <<< "$test_files"
+
+  # Detect test framework and run
+  if [[ -f "bin/rails" ]]; then
+    RAILS_ENV=test bin/rails test "${files_array[@]}"
+  elif [[ -f "bin/rspec" ]]; then
+    bin/rspec "${files_array[@]}"
+  elif [[ -f "Gemfile" ]] && grep -q "rspec" Gemfile; then
+    bundle exec rspec "${files_array[@]}"
+  else
+    RAILS_ENV=test bundle exec rails test "${files_array[@]}"
+  fi
+}
+
+alias rut='run_uncommitted_tests'
+
 # Cross-platform alias that uses native package manager to update system.
 # Reduces cognitive load when switching systems and stops relying on zsh history to make it quicker.
 {{- if eq .chezmoi.os "darwin" }}
