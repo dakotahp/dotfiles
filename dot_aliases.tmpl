@@ -28,8 +28,12 @@ alias gcme='git commit -m'
 alias contains='git branch --contains'
 alias grecent='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
 
+# More terse
 alias ld='lazydocker'
 alias lg="lazygit"
+
+# Extract .tar.gz archive
+alias untar="tar -xvzf"
 
 # Generate random secret for an app secret
 alias secret="openssl rand -hex 32"
