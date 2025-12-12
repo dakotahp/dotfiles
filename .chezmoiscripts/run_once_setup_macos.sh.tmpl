@@ -1,0 +1,41 @@
+#!/bin/bash
+
+# Sensible defaults for tweaking MacOS here and there.
+
+{{- if eq .chezmoi.os "darwin" -}}
+echo "Setting some MacOS preferences…"
+
+# Make key repeat speed much faster
+defaults write -g InitialKeyRepeat -int 15 # normal minimum is 15 (225 ms)
+defaults write -g KeyRepeat -int 2 # normal minimum is 2 (30 ms)
+
+# Disable the press and hold functionality for diacritics characters
+defaults write -g ApplePressAndHoldEnabled -bool false
+
+# Use AirDrop over every interface. srsly this should be a default.
+defaults write com.apple.NetworkBrowser BrowseAllInterfaces 1
+
+# Always open everything in Finder's list view. This is important.
+defaults write com.apple.Finder FXPreferredViewStyle Nlsv
+
+# Show the ~/Library folder.
+chflags nohidden ~/Library
+
+# Set the Finder prefs for showing a few different volumes on the Desktop.
+defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool true
+defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
+
+# Always show Safari's "URL display" tab in the lower left on mouseover. Strangely
+# like, everyone and their LLMs on the internet thinks this is ShowStatusBar, but
+# it's not.
+defaults write com.apple.Safari ShowOverlayStatusBar -bool true
+
+# Set up Safari for development.
+defaults write com.apple.Safari.SandboxBroker ShowDevelopMenu -bool true
+defaults write com.apple.Safari.plist IncludeDevelopMenu -bool true
+defaults write com.apple.Safari.plist WebKitDeveloperExtrasEnabledPreferenceKey -bool true
+defaults write com.apple.Safari.plist "com.apple.Safari.ContentPageGroupIdentifier.WebKit2DeveloperExtrasEnabled" -bool true
+defaults write NSGlobalDomain WebKitDeveloperExtras -bool true
+
+echo "Done!"
+{{- end -}}
