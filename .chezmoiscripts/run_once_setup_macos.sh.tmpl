@@ -26,11 +26,6 @@ chflags nohidden ~/Library
 defaults write com.apple.finder ShowExternalHardDrivesOnDesktop -bool true
 defaults write com.apple.finder ShowRemovableMediaOnDesktop -bool true
 
-# Always show Safari's "URL display" tab in the lower left on mouseover. Strangely
-# like, everyone and their LLMs on the internet thinks this is ShowStatusBar, but
-# it's not.
-defaults write com.apple.Safari ShowOverlayStatusBar -bool true
-
 # Set up Safari for development.
 defaults write com.apple.Safari.SandboxBroker ShowDevelopMenu -bool true
 defaults write com.apple.Safari.plist IncludeDevelopMenu -bool true
@@ -76,5 +71,5 @@ defaults write NSGlobalDomain com.apple.swipescrolldirection -bool true
 # Disable shadow in screenshots
 defaults write com.apple.screencapture disable-shadow -bool true
 
-echo "Done!"
+echo "Done customizing MacOS!"
 {{- end -}}
