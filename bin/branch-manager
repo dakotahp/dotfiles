@@ -1,0 +1,116 @@
+#!/bin/bash
+
+# Credit to matt.smith@apartmentiq.io (Rentable)
+# Pulled from private repo
+
+# 1. Colors and Icons
+GREEN='\033[0;32m'
+GRAY='\033[0;90m'
+RED='\033[0;31m'
+WHITE='\033[1;37m'
+CYAN='\033[0;36m'
+RESET='\033[0m'
+BOLD='\033[1m'
+
+ICON_ACTIVE="🌳"
+ICON_MERGED="🪦"
+ICON_DELETED="❌"
+ICON_MAIN="💎"
+ICON_CURRENT="⭐"
+
+# 2. Help Menu
+if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+  echo -e "${BOLD}The Branch Manager${RESET}"
+  echo "  Lists local branches sorted by recency. Detects merged branches using"
+  echo "  patch-ids to ensure accuracy even after 'Rebase and Merge' workflows."
+  echo ""
+  echo -e "${BOLD}Usage:${RESET}"
+  echo "  $(basename "$0")           View branches"
+  echo "  $(basename "$0") --clean   Force delete merged branches"
+  echo ""
+  echo -e "${BOLD}Legend:${RESET}"
+  echo -e "  $ICON_CURRENT Current Branch"
+  echo -e "  $ICON_MAIN Main Branch"
+  echo -e "  $ICON_ACTIVE Active (Not merged into main)"
+  echo -e "  $ICON_MERGED Merged (Safe to delete)"
+  echo -e "  $ICON_DELETED Deleted (When using --clean)"
+  exit 0
+fi
+
+# Check if the current directory is a Git repository
+git rev-parse --is-inside-work-tree >/dev/null 2>&1
+
+# $? holds the exit status of the last command (git rev-parse)
+if [ $? -ne 0 ]; then
+  echo -e "${RED}Error: Current directory is not a git repository. For help, run:${RESET}"
+  echo "Run $(basename "$0") --help for more information."
+  exit 1
+fi
+
+# 3. Configuration
+MAIN_BRANCH="main"
+if ! git show-ref --quiet refs/heads/main; then
+  MAIN_BRANCH="master"
+fi
+
+# 4. Check for Clean Mode flag
+CLEAN_MODE=0
+if [[ "$1" == "--clean" ]] || [[ "$1" == "-c" ]]; then
+  CLEAN_MODE=1
+fi
+
+# 5. Header Info
+if [ $CLEAN_MODE -eq 1 ]; then
+  echo -e "${RED}${BOLD}⚠️  CLEAN MODE: Deleting branches fully contained in $MAIN_BRANCH...${RESET}"
+fi
+
+# Column Layout
+printf "${BOLD}%-12s %-16s %s${RESET}\n" "Status" "Last Updated" "Branch Name"
+echo "----------   --------------   -------------------------------------------------"
+
+# 6. Get current branch
+CURRENT_BRANCH=$(git branch --show-current)
+
+# 7. Iterate through branches (Sorted by oldest to newest)
+git for-each-ref --sort=committerdate refs/heads/ --format='%(refname:short)|%(committerdate:relative)' | while IFS='|' read -r branch date; do
+
+  # --- STEP A: DETERMINE STATE (Icon, Color, Label) ---
+  is_merged=0
+
+  if [ "$branch" == "$MAIN_BRANCH" ]; then
+    # Main Branch State (Cyan, Normal Weight)
+    icon="$ICON_MAIN"
+    label="Main"
+    color="$CYAN"
+  else
+    # Check Content (Active vs Merged)
+    if [ -z "$(git cherry "$MAIN_BRANCH" "$branch" | grep "^+")" ]; then
+      is_merged=1
+      icon="$ICON_MERGED"
+      label="Merged"
+      color="$GRAY"
+    else
+      icon="$ICON_ACTIVE"
+      label="Active"
+      color="$GREEN"
+    fi
+  fi
+
+  # --- STEP B: CHECK CURRENT BRANCH ---
+  # If this is the current branch, override Icon and Color to White/Star (Bold)
+  if [ "$branch" == "$CURRENT_BRANCH" ]; then
+    printf "${WHITE}%s %-9s %-16s %s${RESET}\n" "$ICON_CURRENT" "$label" "$date" "$branch"
+    continue
+  fi
+
+  # --- STEP C: CLEAN MODE (Delete if merged) ---
+  if [ $CLEAN_MODE -eq 1 ] && [ $is_merged -eq 1 ]; then
+    git branch -D "$branch" >/dev/null 2>&1
+    printf "${RED}%s %-9s %-16s %s${RESET}\n" "$ICON_DELETED" "Deleted" "Just now" "$branch"
+    continue
+  fi
+
+  # --- STEP D: STANDARD PRINT ---
+  printf "${color}%s %-9s %-16s %s${RESET}\n" "$icon" "$label" "$date" "$branch"
+
+done
