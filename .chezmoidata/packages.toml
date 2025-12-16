@@ -23,7 +23,7 @@ names = [
   "lazydocker",
   "lazygit",
   "neovim",
-  "pinentry",
+  "pinentry-mac",
   "ssh-copy-id",
   "starship",
   "syncthing",
