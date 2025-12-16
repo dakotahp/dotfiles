@@ -38,6 +38,9 @@ alias untar="tar -xvzf"
 # Generate random secret for an app secret
 alias secret="openssl rand -hex 32"
 
+# Restart GPG to make it easy to reload config changes
+alias restart-gpg-agent="gpgconf --kill gpg-agent && gpg-agent --daemon"
+
 # Makes it easier to sign into 1Password cli
 opsign() {
   who=$(op whoami)
