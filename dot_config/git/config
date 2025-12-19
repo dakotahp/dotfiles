@@ -26,7 +26,7 @@
 [user]
   name = DP
   email = git@dakotahpena.dev
-	signingkey = 361ACF45238D9AAF
+  signingkey = 361ACF45238D9AAF
 [push]
   default = current
 [filter "lfs"]
@@ -37,17 +37,17 @@
 [pull]
   rebase = true
 [rerere]
-	enabled = true
+  enabled = true
 [init]
-	defaultBranch = master
+  defaultBranch = master
 [commit]
-	template = ~/.config/git/commit-template.txt
-	gpgsign = true
+  template = ~/.config/git/commit-template.txt
+  gpgsign = true
 [pager]
-	branch = false
-	tag = false
+  branch = false
+  tag = false
 [tag]
-	gpgSign = true
+  gpgSign = true
 
 #
 # Allows for a local machine override. Legacy functionality now that
