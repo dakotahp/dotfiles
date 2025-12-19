@@ -5,20 +5,30 @@
   excludesfile = ~/.config/git/ignore
   hooksPath = ~/.config/git/hooks
 [alias]
+  # bisect shortcuts
+  bb = bisect bad
+  bg = bisect good
+
   co = checkout
   cp = cherry-pick
+
   # git lastbranch: quickly checks out the last branch. Nice for switching back and forth between branches.
   lastbranch = checkout -
+
+  # log customizations
   lg = log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit --
   lol = log --graph --decorate --pretty=oneline --abbrev-commit
   lola = log --graph --decorate --pretty=oneline --abbrev-commit --all
+
+  # "new branch"
   nb = checkout -b
+
   # git pr: quickly copies a special formatted git log to be pasted into a PR description.
   pr = "!sh -c 'base=$0 && output=$(git log $base..HEAD --pretty=tformat:\"- %h _%s_\" | tail -r) && echo \"$output\" && echo \"$output\" | pbcopy'"
   unstage = reset
   recent = for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"
   pf = push --force-with-lease
-  br = branch
+
   # git wipdiff: quickly diffs the current branch against the base branch.
   wipdiff = "!sh -c 'base=$(git rev-parse --abbrev-ref origin/HEAD 2>/dev/null | sed \"s|origin/||\" 2>/dev/null || (git show-ref --verify --quiet refs/heads/main 2>/dev/null && echo main) || echo master) && git diff $base..'"
 [mergetool]
