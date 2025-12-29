@@ -1,6 +1,3 @@
-# Shell
-alias cs='clear'
-
 ## cd shortcuts
 alias hm='cd ~'
 alias up1='cd ../'
@@ -27,6 +24,10 @@ alias ggrep='git grep -I'
 alias gcme='git commit -m'
 alias contains='git branch --contains'
 alias grecent='git for-each-ref --count=10 --sort=-committerdate refs/heads/ --format="%(refname:short)"'
+
+# docker
+#   (needs go template explicit string to avoid docker's own go template syntax)
+alias dps={{"\"docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}\t{{.Ports}}'\""}}
 
 # More terse
 alias ld='lazydocker'
