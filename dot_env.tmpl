@@ -1,5 +1,10 @@
-# Gemini API Key
-export GEMINI_API_KEY=$(op read "op://Private/Gemini LLM API Key/credential")
+# Set environment variables
+
+# 1Password-source env vars
+if op whoami >/dev/null 2>&1; then
+  # Gemini API Key
+  export GEMINI_API_KEY=$(op read "op://Private/Gemini LLM API Key/credential")
+fi
 
 {{ if eq .chezmoi.os "linux" -}}
 # 1Password SSH agent on linux
