@@ -1,0 +1,7 @@
+# This file is loaded by non-user shells like Claude and automated tools.
+# The goal is to make the dev tools available them.
+
+{{ if and .dev_computer (eq .chezmoi.os "darwin") -}}
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+  export PATH="$HOME/.local/share/mise/shims:$PATH"
+{{ end }}
