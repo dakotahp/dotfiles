@@ -11,11 +11,13 @@ Implement the feature described in $ARGUMENTS by following every step below in o
 ## Step 0 — Check and install dependencies
 
 Check that the following tools are available on PATH:
+
 - `gh` (GitHub CLI)
 - `prove_it`
 - Any project-specific tooling referenced in the README, `package.json` scripts, `Makefile`, or equivalent
 
 For each missing tool, install it using the appropriate package manager:
+
 - `gh`: `brew install gh`
 - `prove_it`: `brew install searlsco/tap/prove_it && prove_it install`
 - Project tools: use npm, brew, pip, cargo, etc. as appropriate
@@ -27,6 +29,7 @@ If `prove_it` has not been initialised in this project yet, run `prove_it init`.
 ## Step 1 — Plan the feature
 
 First, check whether Convext is configured for this project by testing all of the following:
+
 1. The environment variable `CONVEXT_PROJECT_ID` is set, **or**
 2. A file `.convext/config.json` or `.convext.json` exists in the project root, **or**
 3. A `convext` key is present in `.claude/settings.json`
@@ -34,6 +37,7 @@ First, check whether Convext is configured for this project by testing all of th
 **If Convext is detected:** Use Convext task tracking to create and manage tasks for this feature. Break the work into discrete tasks in Convext and keep them updated throughout the pipeline. Note: if Convext commands are unavailable despite detection, fall back to plan mode and inform the user.
 
 **If Convext is not configured (the default):** Enter plan mode. Present a detailed implementation plan covering:
+
 - What will be created or changed and why
 - Files to be added or modified
 - Key architectural decisions and trade-offs
@@ -46,6 +50,7 @@ Wait for explicit user approval before proceeding to Step 2.
 ## Step 2 — Write prove statements
 
 Create or update the file `.claude/prove_statements.md` with concrete, falsifiable statements that describe what the implemented feature will do. Each statement must be:
+
 - Specific and measurable — not "it works", but "running X produces Y"
 - Independently verifiable using real commands or observable outputs
 - Tied to a behaviour introduced by this feature
@@ -60,6 +65,7 @@ Write at least one statement per significant behaviour the feature introduces.
 ## Step 3 — Write failing tests (TDD)
 
 Write tests that directly exercise each prove statement from Step 2. Then run the test suite and confirm:
+
 1. The new tests exist and are syntactically valid
 2. The new tests are **currently failing** (the feature is not yet implemented)
 
@@ -88,12 +94,14 @@ After the code-simplifier completes, re-run the full test suite. Every test must
 For every statement in `.claude/prove_statements.md`, collect real, concrete evidence that it holds. Run the relevant command and capture actual output — do not assert something works without running it.
 
 Then record the result for each prove statement using its name:
+
 ```
 prove_it record --name <statement-name> --pass   # if verified
 prove_it record --name <statement-name> --fail   # if not verified
 ```
 
 Once all statements are verified, signal completion:
+
 ```
 prove_it signal done
 ```
@@ -105,6 +113,7 @@ Address any failures before proceeding. Each statement must be backed by capture
 ## Step 7 — Code review
 
 Spawn a code-reviewer sub-agent with the following instructions:
+
 - Review all files modified in this session
 - Check for: correctness, edge cases, security vulnerabilities, performance concerns, unclear naming, and missing error handling
 - Return a prioritised list of all issues found
@@ -120,10 +129,12 @@ Complete all of the following before creating the PR:
 1. Remove debug logs, development TODOs, and any commented-out code left from the implementation
 2. Run the project linter and fix all issues (e.g. `npm run lint`, `eslint .`, `ruff check --fix .`, or whatever is configured for this project)
 3. If Convext is configured, verify all tasks created in Step 1 are marked complete
-4. Create the pull request:
+4. Create the pull request in a draft state:
+
    ```
-   gh pr create --title "<concise imperative title>" --body "<what changed, why, and how to verify it>"
+   gh pr create --draft --title "<concise imperative title>" --body "<what changed, why, and how to verify it>"
    ```
+
    The PR body must reference the prove statements from Step 2 and link to their evidence.
 
 ---
@@ -131,11 +142,13 @@ Complete all of the following before creating the PR:
 ## Step 9 — Review loop
 
 After the PR is created, check for review comments:
+
 ```
 gh pr view --comments
 ```
 
 For each unresolved review comment:
+
 1. Address the feedback
 2. Re-run tests to confirm nothing is broken
 3. Push the updated branch
@@ -150,6 +163,7 @@ Repeat until there are no unresolved comments and the PR is approved or explicit
 Check whether the environment variable `SLACK_WEBHOOK` is set.
 
 **If set:** Send a POST request to `$SLACK_WEBHOOK` with a JSON payload containing:
+
 - The feature description
 - PR URL (from `gh pr view --json url -q .url`)
 - Test result summary
