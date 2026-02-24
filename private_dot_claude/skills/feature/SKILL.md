@@ -87,9 +87,15 @@ After the code-simplifier completes, re-run the full test suite. Every test must
 
 For every statement in `.claude/prove_statements.md`, collect real, concrete evidence that it holds. Run the relevant command and capture actual output — do not assert something works without running it.
 
-After verifying all statements, signal completion to prove_it:
+Then record the result for each prove statement using its name:
 ```
-prove_it signal done -m "<brief summary of what was verified>"
+prove_it record --name <statement-name> --pass   # if verified
+prove_it record --name <statement-name> --fail   # if not verified
+```
+
+Once all statements are verified, signal completion:
+```
+prove_it signal done
 ```
 
 Address any failures before proceeding. Each statement must be backed by captured evidence.
