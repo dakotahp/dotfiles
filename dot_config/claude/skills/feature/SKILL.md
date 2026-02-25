@@ -26,7 +26,13 @@ If `prove_it` has not been initialised in this project yet, run `prove_it init`.
 
 ---
 
-## Step 1 — Plan the feature
+## Step 1 (optional) - Start and assign ticket
+
+If a ticket is being referenced, use the appropriate MCP to assign the ticket to me and move it into in progress.
+
+---
+
+## Step 2 — Plan the feature
 
 Enter plan mode. Present a detailed implementation plan covering:
 
@@ -39,7 +45,7 @@ Wait for explicit user approval before proceeding to Step 2.
 
 ---
 
-## Step 2 — Write prove statements
+## Step 3 — Write prove statements
 
 Create or update the file `.claude/prove_statements.md` with concrete, falsifiable statements that describe what the implemented feature will do. Each statement must be:
 
@@ -54,7 +60,7 @@ Write at least one statement per significant behaviour the feature introduces.
 
 ---
 
-## Step 3 — Write failing tests (TDD)
+## Step 4 — Write failing tests (TDD)
 
 Write tests that directly exercise each prove statement from Step 2. Then run the test suite and confirm:
 
@@ -65,7 +71,7 @@ Do not proceed until failing tests are confirmed. If tests pass before implement
 
 ---
 
-## Step 4 — Implement the feature
+## Step 5 — Implement the feature
 
 Implement only what is needed to satisfy the prove statements and pass the tests. Do not over-engineer or add unrequested functionality.
 
@@ -73,7 +79,7 @@ For large features with clearly independent modules, spawn parallel sub-agents t
 
 ---
 
-## Step 5 — Simplify and re-run tests
+## Step 6 — Simplify and re-run tests
 
 Spawn the `code-simplifier:code-simplifier` agent on all files modified during implementation. It will refine the code for clarity, consistency, and maintainability while preserving all functionality.
 
@@ -81,7 +87,7 @@ After the code-simplifier completes, re-run the full test suite. Every test must
 
 ---
 
-## Step 6 — Prove each statement
+## Step 7 — Prove each statement
 
 For every statement in `.claude/prove_statements.md`, collect real, concrete evidence that it holds. Run the relevant command and capture actual output — do not assert something works without running it.
 
@@ -102,7 +108,7 @@ Address any failures before proceeding. Each statement must be backed by capture
 
 ---
 
-## Step 7 — Code review
+## Step 8 — Code review
 
 Spawn a code-reviewer sub-agent with the following instructions:
 
@@ -114,7 +120,7 @@ Address every issue raised. If you disagree with a suggestion and the reasoning 
 
 ---
 
-## Step 8 — Cleanup and create PR
+## Step 9 — Cleanup and create PR
 
 Complete all of the following before creating the PR:
 
@@ -130,7 +136,7 @@ Complete all of the following before creating the PR:
 
 ---
 
-## Step 9 — Review loop
+## Step 10 — Review loop
 
 After the PR is created, check for review comments:
 
@@ -149,7 +155,7 @@ Repeat until there are no unresolved comments and the PR is approved or explicit
 
 ---
 
-## Step 10 — Notify
+## Step 11 — Notify
 
 Check whether the environment variable `SLACK_WEBHOOK` is set.
 
