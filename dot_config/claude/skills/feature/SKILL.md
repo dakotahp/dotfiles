@@ -28,15 +28,7 @@ If `prove_it` has not been initialised in this project yet, run `prove_it init`.
 
 ## Step 1 — Plan the feature
 
-First, check whether Convext is configured for this project by testing all of the following:
-
-1. The environment variable `CONVEXT_PROJECT_ID` is set, **or**
-2. A file `.convext/config.json` or `.convext.json` exists in the project root, **or**
-3. A `convext` key is present in `.claude/settings.json`
-
-**If Convext is detected:** Use Convext task tracking to create and manage tasks for this feature. Break the work into discrete tasks in Convext and keep them updated throughout the pipeline. Note: if Convext commands are unavailable despite detection, fall back to plan mode and inform the user.
-
-**If Convext is not configured (the default):** Enter plan mode. Present a detailed implementation plan covering:
+Enter plan mode. Present a detailed implementation plan covering:
 
 - What will be created or changed and why
 - Files to be added or modified
@@ -128,8 +120,7 @@ Complete all of the following before creating the PR:
 
 1. Remove debug logs, development TODOs, and any commented-out code left from the implementation
 2. Run the project linter and fix all issues (e.g. `npm run lint`, `eslint .`, `ruff check --fix .`, or whatever is configured for this project)
-3. If Convext is configured, verify all tasks created in Step 1 are marked complete
-4. Create the pull request in a draft state:
+3. Create the pull request in a draft state:
 
    ```
    gh pr create --draft --title "<concise imperative title>" --body "<what changed, why, and how to verify it>"
