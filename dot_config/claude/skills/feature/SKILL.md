@@ -83,7 +83,7 @@ For large features with clearly independent modules, spawn parallel sub-agents t
 
 ## Step 5 — Simplify and re-run tests
 
-Spawn the `code-simplifier` agent on all files modified during implementation. It will refine the code for clarity, consistency, and maintainability while preserving all functionality.
+Spawn the `code-simplifier:code-simplifier` agent on all files modified during implementation. It will refine the code for clarity, consistency, and maintainability while preserving all functionality.
 
 After the code-simplifier completes, re-run the full test suite. Every test must pass before continuing. If simplification breaks any tests, fix them before proceeding.
 
