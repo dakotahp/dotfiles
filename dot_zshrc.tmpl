@@ -16,6 +16,8 @@ export COMPLETION_WAITING_DOTS="true"
 
 # Load environment variables from dotfiles which uses 1password
 source ~/.env
+# Allow for machine-specific environment variables
+[[ -f ~/.env.local ]] && source ~/.env.local
 
 #
 # End environment variable definitions
