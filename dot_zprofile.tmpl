@@ -4,4 +4,10 @@
 {{ if and .dev_computer (eq .chezmoi.os "darwin") -}}
   eval "$(/opt/homebrew/bin/brew shellenv)"
   export PATH="$HOME/.local/share/mise/shims:$PATH"
+{{ else if eq .chezmoi.os "linux" -}}
+  # Guard prevents recursive invocation: brew spawns login subshells during gem
+  # operations, which re-source this file. Without the guard, brew shellenv is
+  # called from within a running brew process, causing brew to print help text.
+  [[ -z "${HOMEBREW_PREFIX:-}" ]] && [[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]] && \
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 {{ end }}
