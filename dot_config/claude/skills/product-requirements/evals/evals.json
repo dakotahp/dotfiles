@@ -1,0 +1,102 @@
+{
+  "skill_name": "product-requirements",
+  "evals": [
+    {
+      "id": 0,
+      "prompt": "Write a PRD for adding a public-facing profile page to my SaaS app. Freelancers sign up to manage their portfolio and client contacts. Right now all content is private. I want new visitors to be able to view a freelancer's public profile — their name, bio, listed services, and contact button — without logging in.",
+      "expected_output": "A complete PRD saved to docs/plans/ with problem statement, goals, non-goals, user stories covering both visitor and freelancer perspectives, and concrete acceptance criteria",
+      "assertions": [
+        {
+          "text": "PRD contains a Problem Statement section",
+          "type": "contains_section"
+        },
+        {
+          "text": "PRD contains a Goals section",
+          "type": "contains_section"
+        },
+        {
+          "text": "PRD contains a Non-Goals section with at least 2 items",
+          "type": "nongoals_count"
+        },
+        {
+          "text": "User stories follow 'As a [role], I want [action] so that [outcome]' format",
+          "type": "story_format"
+        },
+        {
+          "text": "Acceptance criteria are binary/testable conditions, not vague descriptions",
+          "type": "testable_criteria"
+        },
+        {
+          "text": "PRD covers both the freelancer (profile owner) and the visitor (unauthenticated viewer) as distinct user types",
+          "type": "user_type_coverage"
+        },
+        {
+          "text": "Output was saved to a file (not just printed in the response)",
+          "type": "file_saved"
+        }
+      ]
+    },
+    {
+      "id": 1,
+      "prompt": "Spec out an email notification preferences feature. The app is a B2B project management tool. Users currently receive all emails (task assignments, mentions, weekly digests, billing alerts) with no way to opt out. Product wants users to control which email types they receive.",
+      "expected_output": "PRD with clear problem statement, user stories for managing preferences, acceptance criteria that distinguish between email types, and non-goals that exclude things like in-app notifications or SMS",
+      "assertions": [
+        {
+          "text": "PRD contains a Problem Statement section",
+          "type": "contains_section"
+        },
+        {
+          "text": "PRD contains a Non-Goals section with at least 2 items",
+          "type": "nongoals_count"
+        },
+        {
+          "text": "Acceptance criteria call out specific email types (task assignments, mentions, digests, billing) individually",
+          "type": "specificity"
+        },
+        {
+          "text": "User stories follow 'As a [role], I want [action] so that [outcome]' format",
+          "type": "story_format"
+        },
+        {
+          "text": "Acceptance criteria are binary/testable conditions, not vague descriptions",
+          "type": "testable_criteria"
+        },
+        {
+          "text": "Output was saved to a file (not just printed in the response)",
+          "type": "file_saved"
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "prompt": "I need a PRD for a CSV export feature. Our users are data analysts who filter and explore datasets in our web dashboard. They keep asking to download results for use in Excel or Python scripts. The export should reflect whatever filters they've currently applied.",
+      "expected_output": "PRD with analyst-focused user stories, acceptance criteria covering filter fidelity and large dataset handling, and non-goals that set scope boundaries around supported formats and scheduling",
+      "assertions": [
+        {
+          "text": "PRD contains a Problem Statement section",
+          "type": "contains_section"
+        },
+        {
+          "text": "PRD contains a Non-Goals section with at least 2 items",
+          "type": "nongoals_count"
+        },
+        {
+          "text": "Acceptance criteria address filter fidelity (exported data matches current filter state)",
+          "type": "filter_fidelity"
+        },
+        {
+          "text": "User stories follow 'As a [role], I want [action] so that [outcome]' format",
+          "type": "story_format"
+        },
+        {
+          "text": "Acceptance criteria are binary/testable conditions, not vague descriptions",
+          "type": "testable_criteria"
+        },
+        {
+          "text": "Output was saved to a file (not just printed in the response)",
+          "type": "file_saved"
+        }
+      ]
+    }
+  ]
+}
