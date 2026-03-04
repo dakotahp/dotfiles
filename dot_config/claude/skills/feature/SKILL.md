@@ -6,6 +6,8 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task
 
 Implement the feature described in $ARGUMENTS by following every step below in order. Do not skip steps. Do not move to the next step until the current one is fully complete.
 
+**This skill is the master pipeline.** All other skills invoked during this pipeline (brainstorming, writing-plans, subagent-driven-development, requesting-code-review, etc.) are sub-routines. After any sub-skill completes, immediately return to this pipeline and continue from the next numbered step. This pipeline is complete only when Step 11 has been executed.
+
 ---
 
 ## Step 0 — Check and install dependencies
@@ -34,14 +36,14 @@ If a ticket is being referenced, use the appropriate MCP to assign the ticket to
 
 ## Step 2 — Plan the feature
 
-Enter plan mode. Present a detailed implementation plan covering:
+Invoke `superpowers:brainstorming` as a sub-step to explore requirements and design space. After it completes, invoke `superpowers:writing-plans` to produce the implementation plan. The plan must cover:
 
 - What will be created or changed and why
 - Files to be added or modified
 - Key architectural decisions and trade-offs
 - Anything that needs clarification before work begins
 
-Wait for explicit user approval before proceeding to Step 2.
+Wait for explicit user approval before continuing. **After approval, return to this pipeline. Continue to Step 3.**
 
 ---
 
@@ -62,7 +64,7 @@ Write at least one statement per significant behaviour the feature introduces.
 
 ## Step 4 — Write failing tests (TDD)
 
-Write tests that directly exercise each prove statement from Step 2. Then run the test suite and confirm:
+Write tests that directly exercise each prove statement from Step 3. Then run the test suite and confirm:
 
 1. The new tests exist and are syntactically valid
 2. The new tests are **currently failing** (the feature is not yet implemented)
@@ -75,7 +77,7 @@ Do not proceed until failing tests are confirmed. If tests pass before implement
 
 Implement only what is needed to satisfy the prove statements and pass the tests. Do not over-engineer or add unrequested functionality.
 
-For large features with clearly independent modules, spawn parallel sub-agents to work on separate parts simultaneously. Give each sub-agent a specific, self-contained scope so their changes do not conflict.
+For large features with clearly independent modules, invoke `superpowers:subagent-driven-development` to coordinate parallel execution across the independent parts. Give each sub-agent a specific, self-contained scope so their changes do not conflict. **After it completes, return to this pipeline. Continue to Step 6.**
 
 ---
 
@@ -110,13 +112,9 @@ Address any failures before proceeding. Each statement must be backed by capture
 
 ## Step 8 — Code review
 
-Spawn a code-reviewer sub-agent with the following instructions:
+Invoke `superpowers:requesting-code-review` as a sub-step. It will spawn a code-reviewer covering all files modified in this session and check for: correctness, edge cases, security vulnerabilities, performance concerns, unclear naming, and missing error handling.
 
-- Review all files modified in this session
-- Check for: correctness, edge cases, security vulnerabilities, performance concerns, unclear naming, and missing error handling
-- Return a prioritised list of all issues found
-
-Address every issue raised. If you disagree with a suggestion and the reasoning is non-obvious, leave a brief inline comment explaining why. Re-run the test suite after any changes from this step.
+Address every issue raised. If you disagree with a suggestion and the reasoning is non-obvious, leave a brief inline comment explaining why. Re-run the test suite after any changes from this step. **After the review is addressed, return to this pipeline. Continue to Step 9.**
 
 ---
 
@@ -132,7 +130,7 @@ Complete all of the following before creating the PR:
    gh pr create --draft --title "<concise imperative title>" --body "<what changed, why, and how to verify it>"
    ```
 
-   The PR body must reference the prove statements from Step 2 and link to their evidence.
+   The PR body must reference the prove statements from Step 3 and link to their evidence.
 4. Open the PR with `open <url>` (macOS) or `xdg-open <url>` (Linux) in the default browser.
 
 ---
