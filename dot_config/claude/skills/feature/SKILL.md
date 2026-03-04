@@ -133,7 +133,7 @@ Complete all of the following before creating the PR:
    ```
 
    The PR body must reference the prove statements from Step 2 and link to their evidence.
-4. Open the PR (on macOS) with `open <url>` to open it in the default browser.
+4. Open the PR with `open <url>` (macOS) or `xdg-open <url>` (Linux) in the default browser.
 
 ---
 
