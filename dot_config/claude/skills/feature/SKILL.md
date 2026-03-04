@@ -43,7 +43,9 @@ Invoke `superpowers:brainstorming` as a sub-step to explore requirements and des
 - Key architectural decisions and trade-offs
 - Anything that needs clarification before work begins
 
-Wait for explicit user approval before continuing. **After approval, return to this pipeline. Continue to Step 3.**
+**IMPORTANT:** Skip the writing-plans "Execution Handoff" section entirely — do NOT ask the user which execution approach to use. This pipeline controls execution flow; the writing-plans skill is a sub-routine here. Execution will use subagent-driven-development in Step 5.
+
+Wait for explicit user approval of the plan before continuing. **After approval, return to this pipeline. Continue to Step 3.**
 
 ---
 
