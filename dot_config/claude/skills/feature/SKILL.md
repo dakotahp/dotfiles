@@ -1,6 +1,6 @@
 ---
 name: feature
-description: Full TDD feature development pipeline — checks deps, plans, writes prove statements, does TDD, implements, simplifies, proves, reviews, creates PR, handles review loop, and notifies when ready.
+description: Use when implementing a new feature from scratch, before writing any implementation code.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task
 ---
 
@@ -45,7 +45,7 @@ Invoke `superpowers:brainstorming` as a sub-step to explore requirements and des
 
 **IMPORTANT:** Skip the writing-plans "Execution Handoff" section entirely — do NOT ask the user which execution approach to use. This pipeline controls execution flow; the writing-plans skill is a sub-routine here. Execution will use subagent-driven-development in Step 5.
 
-Wait for explicit user approval of the plan before continuing. **After approval, return to this pipeline. Continue to Step 3.**
+Wait for explicit user approval of the plan before continuing. Approval means the user says something like "approved", "looks good", "proceed", or an unambiguous equivalent. **Feedback without approval is NOT approval** — incorporate the feedback, update the plan, and re-present it. Do not interpret silence or partial responses as approval. **After approval, return to this pipeline. Continue to Step 3.**
 
 ---
 
@@ -72,6 +72,18 @@ Write tests that directly exercise each prove statement from Step 3. Then run th
 2. The new tests are **currently failing** (the feature is not yet implemented)
 
 Do not proceed until failing tests are confirmed. If tests pass before implementation, the tests are not testing the right thing — fix them first.
+
+**Red flags — STOP if you are thinking any of these:**
+
+| Rationalization | Reality |
+|----------------|---------|
+| "Tests are hard to write for this" | That's the point — hard-to-test code reveals design problems. |
+| "It's just a config change, not real code" | Config changes break things. They need tests. |
+| "I'll write tests after to verify" | Tests written after implementation prove nothing new. |
+| "The prove statements are enough verification" | Prove statements run after implementation. Tests must fail first. |
+| "The feature is simple, tests would be trivial" | Trivial tests take 2 minutes. Skip them and you skip the discipline. |
+
+**All of these mean: do not skip Step 4. Write failing tests first.**
 
 ---
 
@@ -152,7 +164,27 @@ For each unresolved review comment:
 3. Push the updated branch
 4. Re-check for new comments
 
-Repeat until there are no unresolved comments and the PR is approved or explicitly marked ready to merge by the user.
+Repeat until **both** conditions are true:
+1. `gh pr view --comments` shows no unresolved review threads
+2. The PR has a GitHub approval (visible in `gh pr view`) **or** the user explicitly says "merge it", "ship it", or equivalent
+
+Do not self-declare the loop complete. The exit condition requires evidence from the above commands, not inference.
+
+---
+
+## Common Mistakes and Red Flags
+
+**Pipeline shortcuts — STOP if you are thinking any of these:**
+
+| Shortcut | Why it's wrong |
+|----------|----------------|
+| "Steps 6–8 are overhead once tests pass" | Simplification, proving, and review are non-negotiable pipeline stages. |
+| "The user gave feedback, that means approval" | Feedback is not approval. Re-present the plan and wait for an explicit sign-off. |
+| "The PR has been up for a while, it must be approved" | Check with `gh pr view`. Assume nothing. |
+| "I already did a mental review, Step 8 is redundant" | The review is a formal sub-skill invocation, not a mental pass. |
+| "There are no comments yet so the loop is done" | Both conditions (no threads AND approval/user sign-off) must be satisfied. |
+
+**This pipeline is complete only when Step 11 has been executed. All steps are required.**
 
 ---
 
