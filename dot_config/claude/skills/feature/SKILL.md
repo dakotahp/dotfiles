@@ -26,6 +26,22 @@ For each missing tool, install it using the appropriate package manager:
 
 If `prove_it` has not been initialised in this project yet, run `prove_it init`.
 
+### Feature branch
+
+**Before any planning or code**, confirm you are not on `main` or `master`:
+
+```bash
+git branch --show-current
+```
+
+If you are on a protected branch, create a feature branch now and check it out:
+
+```bash
+git checkout -b feature/<short-kebab-case-description>
+```
+
+Derive the name from $ARGUMENTS (e.g. `feature/stripe-webhook`, `feature/phase4-security`). This branch is where every commit in this pipeline lands — including commits from subagents. Never commit to `main` or `master`. Record the branch name; you will pass it explicitly to every subagent you dispatch in Step 5.
+
 ---
 
 ## Step 1 (optional) - Start and assign ticket
@@ -91,7 +107,11 @@ Do not proceed until failing tests are confirmed. If tests pass before implement
 
 Implement only what is needed to satisfy the prove statements and pass the tests. Do not over-engineer or add unrequested functionality.
 
-For large features with clearly independent modules, invoke `superpowers:subagent-driven-development` to coordinate parallel execution across the independent parts. Give each sub-agent a specific, self-contained scope so their changes do not conflict. **After it completes, return to this pipeline. Continue to Step 6.**
+For large features with clearly independent modules, invoke `superpowers:subagent-driven-development` to coordinate parallel execution across the independent parts. Give each sub-agent a specific, self-contained scope so their changes do not conflict.
+
+**Every subagent prompt must include the feature branch name** created in Step 0 and an explicit instruction to commit only to that branch — never to `main` or `master`. Subagents do not inherit your branch context; you must tell them. Example line to include in each subagent prompt: *"All commits must go to branch `feature/my-feature`. Verify with `git branch --show-current` before committing."*
+
+**After it completes, return to this pipeline. Continue to Step 6.**
 
 ---
 
@@ -183,6 +203,8 @@ Do not self-declare the loop complete. The exit condition requires evidence from
 | "The PR has been up for a while, it must be approved" | Check with `gh pr view`. Assume nothing. |
 | "I already did a mental review, Step 8 is redundant" | The review is a formal sub-skill invocation, not a mental pass. |
 | "There are no comments yet so the loop is done" | Both conditions (no threads AND approval/user sign-off) must be satisfied. |
+| "I'm already on a branch, subagents will use it" | Subagents start fresh — they do not inherit your branch. Pass the branch name explicitly in every subagent prompt. |
+| "I'll create the branch after planning" | By then a subagent may have already committed to master. Create the branch in Step 0, before anything else. |
 
 **This pipeline is complete only when Step 11 has been executed. All steps are required.**
 
