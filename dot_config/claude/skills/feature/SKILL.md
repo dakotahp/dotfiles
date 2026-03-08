@@ -164,6 +164,12 @@ Complete all of the following before creating the PR:
    gh pr create --draft --title "<concise imperative title>" --body "<what changed, why, and how to verify it>"
    ```
 
+   When merging a PR, always use a merge commit (not squash or rebase):
+
+   ```
+   gh pr merge <number> --merge --delete-branch
+   ```
+
    The PR body must reference the prove statements from Step 3 and link to their evidence.
 4. Open the PR with `open <url>` (macOS) or `xdg-open <url>` (Linux) in the default browser.
 
