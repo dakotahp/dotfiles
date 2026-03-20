@@ -92,6 +92,16 @@ Package management is the major thing that prevents other OSes and work is being
 
 ## Git Configuration
 
+### Pre-commit Hook
+
+A global pre-commit hook at `~/.config/git/hooks/pre-commit` warns before committing directly to `master` or `main`. In personal repos where this is fine, opt out per-repo with:
+
+```
+git config hooks.allowMasterCommit true
+```
+
+In non-interactive environments (CI, scripts, Claude Code) the hook detects the missing terminal and allows the commit through with a warning rather than crashing.
+
 If the canonical GPG key is imported into the machine, the default git configuration for all repositories is to use that signing key and a personal git identity.
 
 For work machines, `init` will ask if the machine is for work and a boolean config value will be set and set up an empty `~/.gitconfig-work` git config file.

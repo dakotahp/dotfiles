@@ -6,9 +6,19 @@ if [[ "$currentBranch" != "master" && "$currentBranch" != "main" ]]; then
   exit 0
 fi
 
-echo "You are about to commit to $currentBranch. Are you sure? [yes/No]"
+# Per-repo opt-out: git config hooks.allowMasterCommit true
+if [[ "$(git config --bool hooks.allowMasterCommit 2>/dev/null)" == "true" ]]; then
+  exit 0
+fi
 
-exec < /dev/tty
+# Non-interactive fallback: no controlling terminal available (CI, scripts, etc.)
+if ! exec < /dev/tty 2>/dev/null; then
+  echo "WARNING: committing directly to $currentBranch (non-interactive mode)."
+  echo "To suppress this check in this repo, run: git config hooks.allowMasterCommit true"
+  exit 0
+fi
+
+echo "You are about to commit to $currentBranch. Are you sure? [yes/No]"
 
 while read -n 1 -r yn; do
   if [ "$yn" = "" ]; then
