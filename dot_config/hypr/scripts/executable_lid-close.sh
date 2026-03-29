@@ -4,8 +4,7 @@ LAPTOP="eDP-1"
 EXTERNAL="DP-3"
 
 # Verify the lid is actually physically closed before proceeding.
-# hyprctl reload re-fires switch bindings based on current state, so without
-# this check the script would run spuriously on every reload.
+# Guards against spurious triggers from hyprctl reload re-firing switch bindings.
 LID_STATE=$(cat /proc/acpi/button/lid/*/state 2>/dev/null | awk '{print $2}' | head -1)
 if [ "$LID_STATE" != "closed" ]; then
   exit 0
@@ -34,13 +33,18 @@ done
 # Land on workspace 1 so the session is in a predictable state
 hyprctl dispatch workspace 1
 
-# Write the disable rule + workspace pins to the sourced config file, then reload.
-# Workspace rules are required: without them, Hyprland reassigns odd workspaces to
-# eDP-1 after reload (based on monitor order), and switching to one re-enables it.
+# Disable the laptop display and pin all workspaces to the external monitor.
+# Using keyword (not reload) to avoid hyprctl reload re-firing switch bindings.
+# Workspace rules are essential: without them workspace switches re-enable eDP-1.
+hyprctl keyword monitor "$LAPTOP, disable"
+for ws in $(seq 1 10); do
+  hyprctl keyword workspace "$ws, monitor:$EXTERNAL, default:true"
+done
+
+# Update the config file so future manual hyprctl reloads apply correctly.
 {
   echo "monitor = $LAPTOP, disable"
   for ws in $(seq 1 10); do
     echo "workspace = $ws, monitor:$EXTERNAL, default:true"
   done
 } > ~/.config/hypr/monitors-lid.conf
-hyprctl reload

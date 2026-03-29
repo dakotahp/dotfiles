@@ -4,16 +4,24 @@ LAPTOP="eDP-1"
 EXTERNAL="DP-3"
 
 # Verify the lid is actually physically open before proceeding.
-# hyprctl reload re-fires switch bindings based on current state, so without
-# this check the script would undo clamshell mode on every reload while lid is open.
+# Guards against spurious triggers from hyprctl reload re-firing switch bindings.
 LID_STATE=$(cat /proc/acpi/button/lid/*/state 2>/dev/null | awk '{print $2}' | head -1)
 if [ "$LID_STATE" != "open" ]; then
   exit 0
 fi
 
-# Restore the normal eDP-1 rule (no workspace pins) and reload
+# Re-enable the laptop display and update workspace rules to reflect normal split.
+# Using keyword (not reload) to avoid triggering another switch re-fire loop.
+hyprctl keyword monitor "$LAPTOP, 3840x2160@60.00700, auto, 2"
+for ws in $(seq 1 5); do
+  hyprctl keyword workspace "$ws, monitor:$LAPTOP, default:true"
+done
+for ws in $(seq 6 10); do
+  hyprctl keyword workspace "$ws, monitor:$EXTERNAL, default:true"
+done
+
+# Update the config file so future manual hyprctl reloads apply correctly.
 echo "monitor = $LAPTOP, 3840x2160@60.00700, auto, 2" > ~/.config/hypr/monitors-lid.conf
-hyprctl reload
 
 # Wait for the monitor to initialize before moving workspaces to it
 sleep 1
