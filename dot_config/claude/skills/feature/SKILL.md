@@ -61,7 +61,9 @@ Invoke `superpowers:brainstorming` as a sub-step to explore requirements and des
 
 **IMPORTANT:** Skip the writing-plans "Execution Handoff" section entirely — do NOT ask the user which execution approach to use. This pipeline controls execution flow; the writing-plans skill is a sub-routine here. Execution will use subagent-driven-development in Step 5.
 
-Wait for explicit user approval of the plan before continuing. Approval means the user says something like "approved", "looks good", "proceed", or an unambiguous equivalent. **Feedback without approval is NOT approval** — incorporate the feedback, update the plan, and re-present it. Do not interpret silence or partial responses as approval. **After approval, return to this pipeline. Continue to Step 3.**
+**After writing-plans saves the plan file**, immediately present a summary of the plan to the user and ask for explicit approval. Example: *"Implementation plan saved to `docs/superpowers/plans/<file>.md`. Here's a summary: [brief overview of tasks]. Approve the plan to continue, or give feedback to revise."* Do NOT end your message without this prompt — the writing-plans skill's natural ending is an execution handoff that you are skipping, so you must replace it with your own approval request.
+
+Approval means the user says something like "approved", "looks good", "proceed", or an unambiguous equivalent. **Feedback without approval is NOT approval** — incorporate the feedback, update the plan, and re-present it. Do not interpret silence or partial responses as approval. **After approval, immediately continue to Step 3 in the same response — do not wait for another user message.**
 
 ---
 
