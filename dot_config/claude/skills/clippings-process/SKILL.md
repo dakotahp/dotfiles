@@ -1,108 +1,131 @@
 ---
 name: clippings-process
-description: Processes web clippings from an Obsidian vault's Clippings/ folder — summarizes each clipping, files it into the appropriate 2_Areas/ subfolder in the personal vault based on tags, and removes the original. Use this skill whenever the user says "process clippings", "sort clippings", "clean up clippings", mentions their Clippings folder, or asks to organize saved/clipped articles. Also trigger when the user runs /clippings-process.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
+description: Processes web clippings tagged with #clipping from Obsidian vaults — summarizes each clipping, files it into the appropriate 2_Areas/ subfolder in the personal vault based on tags, and removes the original. Use this skill whenever the user says "process clippings", "sort clippings", "clean up clippings", "organize clippings", mentions their Clippings folder, or asks to organize saved/clipped articles. Also trigger when the user runs /clippings-process.
+allowed-tools: Bash, Read, Edit, Glob, Grep, AskUserQuestion
 ---
 
-Process web clippings from an Obsidian vault's `Clippings/` folder into summarized notes filed in the personal vault.
+Process web clippings into summarized notes filed in the personal vault. All vault interaction goes through the `obsidian` CLI — this avoids reading/writing files on disk directly, which saves tokens and keeps Obsidian's index in sync.
 
-The user has two Obsidian vaults synced via Syncthing, always siblings in the same parent directory:
+## Context
+
+The user has two Obsidian vaults synced via Syncthing:
 - **ObsidianWork** — work vault
 - **ObsidianPersonal** — personal vault with PARA structure: `0_Inbox/`, `1_Projects/`, `2_Areas/`, `3_Resources/`, `4_Archive/`
 
 Clippings in the work vault are personal-interest content discovered during work hours, so they always get filed into the **personal vault**.
 
-Obsidian provides a CLI named `obsidian` that interfaces with the Obsidian desktop app when it is running. Use it for token efficiency when instructed.
+---
+
+## Step 1 — Discover vaults
+
+Run `obsidian vaults` to confirm both vaults are available. If the personal vault isn't listed, tell the user and stop.
 
 ---
 
-## Step 1 — Locate both vaults
+## Step 2 — Collect all clippings
 
-Verify which vaults are available with `obsidian vaults`. This will return vault names that can be passed to `obsidian vault:open <vault name>`.
+Search both vaults for notes tagged `#clipping`. Collect the full list before processing so the user knows the scope upfront.
 
-Verify at least the personal vault exists. If the personal vault can't be found, tell the user and stop.
+```bash
+obsidian vault:open ObsidianWork
+obsidian search query="tag:#clipping"
+```
+
+Then switch and search the personal vault:
+
+```bash
+obsidian vault:open ObsidianPersonal
+obsidian search query="tag:#clipping"
+```
+
+Combine results from both vaults into a single list. Tell the user how many clippings were found and list them by title. If none were found, say so and stop.
 
 ---
 
-## Step 2 — Find clippings to process
+## Step 3 — Process each clipping
 
-First, open the work vault with `obsidian vault:open ObsidianWork`.
+Work through the list one at a time. After each clipping, **pause and confirm with the user** before moving on — this lets them course-correct folder choices or summaries as you go.
 
-Use the Obsidian CLI to find notes tagged with `clipping` with `obsidian search query="tag:#clipping"` and this will list the paths of files
-to process.
+### 3a — Read the clipping
 
-After processing the work vault, switch to the personal vault `obsidian vault:open ObsidianPersonal` and repeat the prior step to find more clipping files to process.
+Switch to the vault the clipping lives in, then read it:
 
-If the folder is empty or missing, tell the user there's nothing to process and stop.
+```bash
+obsidian vault:open <VaultName>
+obsidian read path="<path from search results>"
+```
 
----
-
-## Step 3 — Process clippings one at a time
-
-For each clipping file, do Steps 3a through 3e, then **pause and confirm with the user** before moving to the next clipping. This lets them course-correct folder choices or summaries as you go.
-
-### Step 3a — Read and parse the clipping
-
-Read the file with `obsidian read file="<path>"`. Extract from the YAML frontmatter:
-- `title` — the article/post title
-- `source` — the original URL (preserve this)
-- `tags` — list of tags (drop the generic `clippings` tag, keep the rest)
+Extract from the YAML frontmatter:
+- `title` — article/post title
+- `source` — original URL (always preserve)
+- `tags` — keep all tags except the generic `clippings`/`clipping` tag
 - `author`, `created`, `description` — retain if present
 
-Read the body content below the frontmatter.
+### 3b — Choose a destination folder
 
-### Step 3b — Match tags to a 2_Areas subfolder
+Switch to the personal vault and list the `2_Areas/` subfolders:
 
-While in the personal vault `obsidian vault:open ObsidianPersonal`, list the distinct existing folders inside personal vault folder `2_Areas/` with:
+```bash
+obsidian vault:open ObsidianPersonal
+obsidian files folder="2_Areas"
+```
 
-`obsidian files folder="2_Areas" | grep -o -E "^/?([^/]+/){1,2}" | uniq`
+Parse the output to get the distinct top-level subfolder names under `2_Areas/`.
 
-Compare the clipping's tags against folder names to find the best semantic match. Tags won't be exact matches — a tag like `nutrition` might map to a folder called `Health` or `Fitness`. Use your judgment on the best fit.
+Match the clipping's tags to the best-fitting folder semantically. Tags won't match folder names exactly — `nutrition` might map to `Health`, `typescript` to `Programming`, etc. Use judgment.
 
-**If a clear match exists:** use that folder.
+- **Clear match:** use that folder.
+- **No good match:** suggest the top 2 candidate folders and offer to create a new one. Ask the user to pick.
 
-**If no good match exists:** suggest the top 2 candidate folders that come closest, and also offer to create a new folder. Ask the user which option they prefer. If they pick a new folder, create it.
+### 3c — Summarize and write the note
 
-### Step 3c — Create the summary note
-
-Build a new markdown file with this structure:
+Build the summary note content. The frontmatter structure:
 
 ```markdown
 ---
 tags:
   - tag1
   - tag2
-source: (original URL)
-author: (if available)
-clipped: (original created date)
+source: <original URL>
+author: <if available>
+clipped: <original created date>
 ---
 
-(Summary content here)
+<summary content>
 
 ---
 *Source: [Original Title](url)*
 ```
 
-**For the summary content**, use judgment based on length:
+**Summary guidelines** (adapt to content length):
+- **Short content** (social posts, brief articles): distill into a clean bulleted list. Get to the point.
+- **Long content** (full articles, guides): lead with a 2–3 sentence takeaway, then bulleted details by theme. The user should get 80% of the value from a glance.
 
-- **Short content** (like the example LinkedIn post): distill into a clean bulleted list. Get to the point — the user wants quick-reference notes, not a rehash of the original prose.
-- **Long content** (full articles, detailed guides): lead with a 2-3 sentence written summary of the key takeaway, then follow with bulleted details organized by theme or section. The goal is that the user can glance at the summary and get 80% of the value without re-reading the source.
+Strip filler, self-promotion, and repetitive phrasing. Keep what's actionable or informative.
 
-Strip any filler, self-promotion, or repetitive phrasing from the source. Keep what's actionable or informative.
+**File name:** Descriptive, no date prefix, concise but findable. Example: `High Protein Breakfast Recipe` not `3 Minute Breakfast` or `2026-04-02 Nutrition Post`.
 
-### Step 3d — Write the file
+Write the note to the personal vault using `obsidian create` with `silent` so it doesn't pop open:
 
-**File name:** Use a descriptive title derived from the content (no date prefix). Keep it concise but specific enough to be findable. Example: `High Protein Breakfast Recipe.md`, not `3 Minute Breakfast.md` or `2026-04-02 Nutrition Post.md`.
+```bash
+obsidian vault:open ObsidianPersonal
+obsidian create path="2_Areas/<Subfolder>/<File Name>.md" content="<full note content>" silent overwrite
+```
 
-Write the file to the matched `2_Areas/` subfolder in the personal vault.
+For multiline content, use `\n` for newlines and `\t` for tabs in the content string.
 
-### Step 3e — Confirm and clean up
+### 3d — Confirm and clean up
 
 Show the user:
-- Which folder you filed it into
-- The file name you chose
-- A brief preview of the summary (first few lines)
+- Destination folder
+- File name
+- First few lines of the summary
 
-Ask if it looks good. If they confirm (or don't object), delete the original clipping file from `Clippings/`.
+Ask if it looks good. On confirmation, trash the original clipping:
 
-If there are more clippings, move to the next one. Otherwise, tell the user you're done.
+```bash
+obsidian vault:open <OriginalVaultName>
+obsidian trash path="<original clipping path>"
+```
+
+Move to the next clipping, or tell the user you're done.
