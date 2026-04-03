@@ -12,25 +12,26 @@ The user has two Obsidian vaults synced via Syncthing, always siblings in the sa
 
 Clippings in the work vault are personal-interest content discovered during work hours, so they always get filed into the **personal vault**.
 
+Obsidian provides a CLI named `obsidian` that interfaces with the Obsidian desktop app when it is running. Use it for token efficiency when instructed.
+
 ---
 
 ## Step 1 — Locate both vaults
 
-Determine which vault you're currently in by checking the working directory for `ObsidianWork` or `ObsidianPersonal` in the path. Then derive the sibling vault path:
+Verify which vaults are available with `obsidian vaults`. This will return vault names that can be passed to `obsidian vault:open <vault name>`.
 
-```
-parent_dir = (parent of current vault directory)
-work_vault = parent_dir/ObsidianWork
-personal_vault = parent_dir/ObsidianPersonal
-```
-
-Verify both paths exist. If the personal vault can't be found, tell the user and stop.
+Verify at least the personal vault exists. If the personal vault can't be found, tell the user and stop.
 
 ---
 
 ## Step 2 — Find clippings to process
 
-Look in `Clippings/` within the **current vault** (whichever one you're in). List all `.md` files there. Ignore non-markdown files (like `.base` files).
+First, open the work vault with `obsidian vault:open ObsidianWork`.
+
+Use the Obsidian CLI to find notes tagged with `clipping` with `obsidian search query="tag:#clipping"` and this will list the paths of files
+to process.
+
+After processing the work vault, switch to the personal vault `obsidian vault:open ObsidianPersonal` and repeat the prior step to find more clipping files to process.
 
 If the folder is empty or missing, tell the user there's nothing to process and stop.
 
@@ -42,7 +43,7 @@ For each clipping file, do Steps 3a through 3e, then **pause and confirm with th
 
 ### Step 3a — Read and parse the clipping
 
-Read the file. Extract from the YAML frontmatter:
+Read the file with `obsidian read file="<path>"`. Extract from the YAML frontmatter:
 - `title` — the article/post title
 - `source` — the original URL (preserve this)
 - `tags` — list of tags (drop the generic `clippings` tag, keep the rest)
@@ -52,7 +53,11 @@ Read the body content below the frontmatter.
 
 ### Step 3b — Match tags to a 2_Areas subfolder
 
-List the existing folders inside `personal_vault/2_Areas/`. Compare the clipping's tags against folder names to find the best semantic match. Tags won't be exact matches — a tag like `nutrition` might map to a folder called `Health` or `Fitness`. Use your judgment on the best fit.
+While in the personal vault `obsidian vault:open ObsidianPersonal`, list the distinct existing folders inside personal vault folder `2_Areas/` with:
+
+`obsidian files folder="2_Areas" | grep -o -E "^/?([^/]+/){1,2}" | uniq`
+
+Compare the clipping's tags against folder names to find the best semantic match. Tags won't be exact matches — a tag like `nutrition` might map to a folder called `Health` or `Fitness`. Use your judgment on the best fit.
 
 **If a clear match exists:** use that folder.
 
