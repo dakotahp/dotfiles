@@ -72,6 +72,20 @@ Files not managed by chezmoi for per-machine customization (created by `run_once
 
 Not deployed by chezmoi (listed in `.chezmoiignore`). Added to `$PATH` via `dot_zshrc.tmpl`. Notable: `branch-manager` (git branch lifecycle), `gday` (daily setup runner), `signoff` (CI validation + signed tag creation).
 
+## Pre-commit Discipline (applies to all repos)
+
+Before every `git commit`:
+1. Run the project linter on all files you changed and fix any offenses
+2. Run tests relevant to the changed files and confirm they pass
+3. Do not commit until both are clean
+
+Before every `git push`:
+1. Run the broader test suite covering all changed areas
+2. Confirm 0 failures in tests related to your changes
+3. Do not push until tests pass
+
+This is non-negotiable. Lint and test failures caught after commit/push waste time on churn commits. Catch them before.
+
 ## Conventions
 
 - 2-space indentation, UTF-8, LF line endings (`.editorconfig`)
