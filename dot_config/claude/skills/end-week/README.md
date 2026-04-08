@@ -54,4 +54,6 @@ Reads from (must exist):
 /end-week
 ```
 
-Run at the end of the week (Friday afternoon or weekend). Takes 5–15 minutes depending on project complexity and whether web research is needed. No interaction during the run — it announces what it's working on and delivers results.
+Run any time after the week ends. The skill automatically anchors to the most recently completed Sunday, so the date range and output note filename are always correct regardless of when you run it — Sunday evening, Monday morning, or a few days late. Notes dated after that Sunday are excluded from the survey and belong to the next run.
+
+Takes 5–15 minutes depending on project complexity and whether web research is needed. No interaction during the run — it announces what it's working on and delivers results.

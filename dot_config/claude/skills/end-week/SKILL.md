@@ -12,14 +12,19 @@ Vault: ObsidianPersonal. All obsidian commands use `vault=ObsidianPersonal` imme
 
 ## Phase 1 — Survey
 
-Calculate the date range and get the ISO week number:
+Calculate the date range anchored to the most recently completed Sunday — so the skill always reviews the week that just ended, whether run on Sunday itself or days later:
 
 ```bash
-TODAY=$(date +%Y-%m-%d)
-WEEK_AGO=$(date -d "7 days ago" +%Y-%m-%d)
-WEEK_NUM=$(date +%Y-%V)
-echo "Week: $WEEK_NUM | Range: $WEEK_AGO to $TODAY"
+# DOW: 1=Mon … 6=Sat, 7=Sun. Days since last Sunday = DOW % 7 (0 if today IS Sunday).
+DOW=$(date +%u)
+DAYS_BACK=$(( DOW % 7 ))
+WEEK_END=$(date -d "$DAYS_BACK days ago" +%Y-%m-%d)
+WEEK_START=$(date -d "$WEEK_END - 6 days" +%Y-%m-%d)
+WEEK_NUM=$(date -d "$WEEK_END" +%Y-%V)
+echo "Week: $WEEK_NUM | Range: $WEEK_START to $WEEK_END | Run date: $(date +%Y-%m-%d)"
 ```
+
+This handles late runs automatically: running on Monday reviews the Sunday-ending week, not the new week that started today.
 
 Read all context before doing any analysis. Run these in sequence:
 
@@ -40,7 +45,7 @@ find /home/neropol/Syncthing/ObsidianPersonal/1_Projects -maxdepth 2 -name "Inde
 obsidian search vault=ObsidianPersonal query="tag:#stub" format=json
 ```
 
-From the archived daily notes list, filter to files whose YYYY-MM-DD filename falls within the past 7 days. Read the `## Distillation` section of each — specifically the "Day in brief" sentence and the **Action items** list. Skip notes with no Distillation section (empty days).
+From the archived daily notes list, filter to files whose YYYY-MM-DD filename falls between WEEK_START and WEEK_END (inclusive). Do not include notes dated after WEEK_END — those belong to the next week's run. Read the `## Distillation` section of each — specifically the "Day in brief" sentence and the **Action items** list. Skip notes with no Distillation section (empty days).
 
 If fewer than 2 daily notes exist in the 7-day window, note this as a low-data week — proceed with what's available, don't abort.
 
@@ -138,11 +143,7 @@ obsidian append vault=ObsidianPersonal path="1_Projects/<chosen>/Index.md" conte
 
 ## Phase 4 — Weekly Output Note
 
-Write a summary note after all work is complete. Get the week number first:
-
-```bash
-WEEK_NUM=$(date +%Y-%V)
-```
+Write a summary note after all work is complete. Use the WEEK_NUM already computed in Phase 1 (derived from WEEK_END, not today's date — so a Monday run still produces the correct week number).
 
 Create the note at `4_Archive/Weekly Notes/$WEEK_NUM.md`:
 
