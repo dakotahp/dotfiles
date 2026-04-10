@@ -100,7 +100,7 @@ A global pre-commit hook at `~/.config/git/hooks/pre-commit` warns before commit
 git config hooks.allowMasterCommit true
 ```
 
-In non-interactive environments (CI, scripts, Claude Code) the hook detects the missing terminal and allows the commit through with a warning rather than crashing.
+In non-interactive environments (CI, scripts, Claude Code) the hook detects the missing terminal and rejects the commit. To allow non-interactive commits to master/main in a specific repo, set the same config option above.
 
 If the canonical GPG key is imported into the machine, the default git configuration for all repositories is to use that signing key and a personal git identity.
 

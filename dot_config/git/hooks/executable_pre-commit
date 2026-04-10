@@ -13,9 +13,9 @@ fi
 
 # Non-interactive fallback: no controlling terminal available (CI, scripts, etc.)
 if ! exec < /dev/tty 2>/dev/null; then
-  echo "WARNING: committing directly to $currentBranch (non-interactive mode)."
-  echo "To suppress this check in this repo, run: git config hooks.allowMasterCommit true"
-  exit 0
+  echo "ERROR: Committing directly to $currentBranch is not allowed in non-interactive mode."
+  echo "To allow this in this repo, run: git config hooks.allowMasterCommit true"
+  exit 1
 fi
 
 echo "You are about to commit to $currentBranch. Are you sure? [yes/No]"
