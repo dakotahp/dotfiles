@@ -109,7 +109,7 @@ Do not proceed until failing tests are confirmed. If tests pass before implement
 
 Implement only what is needed to satisfy the prove statements and pass the tests. Do not over-engineer or add unrequested functionality.
 
-For large features with clearly independent modules, invoke `superpowers:subagent-driven-development` to coordinate parallel execution across the independent parts. Give each sub-agent a specific, self-contained scope so their changes do not conflict.
+**Always invoke `superpowers:subagent-driven-development`** to implement the plan task-by-task. This is not optional — inline implementation in the main session has no per-task commit discipline and no review checkpoints between tasks, which defeats the pipeline's purpose regardless of feature size. Give each sub-agent a specific, self-contained scope (one task from the plan) so their changes do not conflict.
 
 **Every subagent prompt must include the feature branch name** created in Step 0 and an explicit instruction to commit only to that branch — never to `main` or `master`. Subagents do not inherit your branch context; you must tell them. Example line to include in each subagent prompt: *"All commits must go to branch `feature/my-feature`. Verify with `git branch --show-current` before committing."*
 
@@ -213,6 +213,7 @@ Do not self-declare the loop complete. The exit condition requires evidence from
 | "There are no comments yet so the loop is done" | Both conditions (no threads AND approval/user sign-off) must be satisfied. |
 | "I'm already on a branch, subagents will use it" | Subagents start fresh — they do not inherit your branch. Pass the branch name explicitly in every subagent prompt. |
 | "I'll create the branch after planning" | By then a subagent may have already committed to master. Create the branch in Step 0, before anything else. |
+| "This feature is small, inline execution is fine" | Feature size is irrelevant. Inline execution has no per-task commits and no review checkpoints. Always use subagent-driven-development. |
 
 **This pipeline is complete only when Step 11 has been executed. All steps are required.**
 
