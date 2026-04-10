@@ -52,7 +52,9 @@ If a ticket is being referenced, use the appropriate MCP to assign the ticket to
 
 ## Step 2 — Plan the feature
 
-Invoke `superpowers:brainstorming` as a sub-step to explore requirements and design space. After it completes, invoke `superpowers:writing-plans` to produce the implementation plan. The plan must cover:
+Invoke `superpowers:brainstorming` as a sub-step to explore requirements and design space. When doing so, instruct it to **skip the "User Review Gate" for the written spec** — the plan approval at the end of this step serves as the combined spec+plan gate, so asking the user to separately review the spec file is redundant here. After brainstorming writes and commits the spec, it should proceed directly to invoking writing-plans without pausing for spec review.
+
+After brainstorming completes, invoke `superpowers:writing-plans` to produce the implementation plan. The plan must cover:
 
 - What will be created or changed and why
 - Files to be added or modified
