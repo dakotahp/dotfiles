@@ -67,6 +67,21 @@ After brainstorming completes, invoke `superpowers:writing-plans` to produce the
 
 Approval means the user says something like "approved", "looks good", "proceed", or an unambiguous equivalent. **Feedback without approval is NOT approval** — incorporate the feedback, update the plan, and re-present it. Do not interpret silence or partial responses as approval. **After approval, immediately continue to Step 3 in the same response — do not wait for another user message.**
 
+### Compaction checkpoint
+
+After the user approves the plan, compact the conversation before continuing. The brainstorming and planning phases generate large amounts of exploratory context that is now fully captured in the spec and plan files on disk.
+
+Before compacting, write a brief handoff note to yourself as a message so it survives compaction:
+
+> **Handoff — Step 2 complete.**
+> - Branch: `<branch name>`
+> - Spec file: `<path>`
+> - Plan file: `<path>`
+> - Current step: proceed to Step 3
+> - Open issues: <any user caveats or scope notes from approval>
+
+Then continue to Step 3.
+
 ---
 
 ## Step 3 — Write prove statements
@@ -116,6 +131,23 @@ Implement only what is needed to satisfy the prove statements and pass the tests
 **Every subagent prompt must include the feature branch name** created in Step 0 and an explicit instruction to commit only to that branch — never to `main` or `master`. Subagents do not inherit your branch context; you must tell them. Example line to include in each subagent prompt: *"All commits must go to branch `feature/my-feature`. Verify with `git branch --show-current` before committing."*
 
 **After it completes, return to this pipeline. Continue to Step 6.**
+
+### Compaction checkpoint
+
+After implementation completes, compact the conversation before continuing. Subagent coordination generates substantial context that is now fully captured in the committed code and test files on disk.
+
+Before compacting, write a brief handoff note to yourself as a message so it survives compaction:
+
+> **Handoff — Step 5 complete.**
+> - Branch: `<branch name>`
+> - Plan file: `<path>`
+> - Prove statements: `.claude/prove_statements.md`
+> - Implementation status: all plan tasks implemented, code committed
+> - Test status: <pass/fail summary from subagent runs>
+> - Current step: proceed to Step 6
+> - Open issues: <any known gaps or deferred items>
+
+Then continue to Step 6.
 
 ---
 
