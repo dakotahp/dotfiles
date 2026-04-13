@@ -130,6 +130,18 @@ Implement only what is needed to satisfy the prove statements and pass the tests
 
 **Every subagent prompt must include the feature branch name** created in Step 0 and an explicit instruction to commit only to that branch — never to `main` or `master`. Subagents do not inherit your branch context; you must tell them. Example line to include in each subagent prompt: *"All commits must go to branch `feature/my-feature`. Verify with `git branch --show-current` before committing."*
 
+### Subagent model tiers
+
+To conserve cost and increase speed, use the `model` parameter when dispatching subagents:
+
+| Role | Model | Rationale |
+|------|-------|-----------|
+| **Implementer** | `sonnet` | Mechanical work with clear specs from the plan |
+| **Spec compliance reviewer** | `haiku` | Pure checklist comparison — does code match spec? |
+| **Code quality reviewer** | `sonnet` | Judgment needed but well-scoped to a single task's diff |
+
+**Escalation:** If an implementer returns BLOCKED and the cause is reasoning difficulty (not missing context), re-dispatch with `model: opus`.
+
 **After it completes, return to this pipeline. Continue to Step 6.**
 
 ### Compaction checkpoint
@@ -153,7 +165,7 @@ Then continue to Step 6.
 
 ## Step 6 — Simplify and re-run tests
 
-Spawn the `code-simplifier:code-simplifier` agent on all files modified during implementation. It will refine the code for clarity, consistency, and maintainability while preserving all functionality.
+Spawn the `code-simplifier:code-simplifier` agent (with `model: sonnet`) on all files modified during implementation. It will refine the code for clarity, consistency, and maintainability while preserving all functionality.
 
 After the code-simplifier completes, re-run the full test suite. Every test must pass before continuing. If simplification breaks any tests, fix them before proceeding.
 
@@ -182,7 +194,7 @@ Address any failures before proceeding. Each statement must be backed by capture
 
 ## Step 8 — Code review
 
-Invoke `superpowers:requesting-code-review` as a sub-step. It will spawn a code-reviewer covering all files modified in this session and check for: correctness, edge cases, security vulnerabilities, performance concerns, unclear naming, and missing error handling.
+Invoke `superpowers:requesting-code-review` as a sub-step (with `model: sonnet` for the reviewer agent). It will spawn a code-reviewer covering all files modified in this session and check for: correctness, edge cases, security vulnerabilities, performance concerns, unclear naming, and missing error handling.
 
 Address every issue raised. If you disagree with a suggestion and the reasoning is non-obvious, leave a brief inline comment explaining why. Re-run the test suite after any changes from this step. **After the review is addressed, return to this pipeline. Continue to Step 9.**
 
