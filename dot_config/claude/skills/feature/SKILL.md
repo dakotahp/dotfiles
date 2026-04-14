@@ -6,7 +6,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task
 
 Implement the feature described in $ARGUMENTS by following every step below in order. Do not skip steps. Do not move to the next step until the current one is fully complete.
 
-**This skill is the master pipeline.** All other skills invoked during this pipeline (brainstorming, writing-plans, subagent-driven-development, requesting-code-review, etc.) are sub-routines. After any sub-skill completes, immediately return to this pipeline and continue from the next numbered step. This pipeline is complete only when Step 11 has been executed.
+**This skill is the master pipeline.** All other skills invoked during this pipeline (brainstorming, writing-plans, subagent-driven-development, requesting-code-review, etc.) are sub-routines. After any sub-skill completes, immediately return to this pipeline and continue from the next numbered step. This pipeline is complete only when Step 10 has been executed.
 
 ---
 
@@ -261,20 +261,4 @@ Do not self-declare the loop complete. The exit condition requires evidence from
 | "I'll create the branch after planning" | By then a subagent may have already committed to master. Create the branch in Step 0, before anything else. |
 | "This feature is small, inline execution is fine" | Feature size is irrelevant. Inline execution has no per-task commits and no review checkpoints. Always use subagent-driven-development. |
 
-**This pipeline is complete only when Step 11 has been executed. All steps are required.**
-
----
-
-## Step 11 — Notify
-
-Check whether the environment variable `SLACK_WEBHOOK` is set.
-
-**If set:** Send a POST request to `$SLACK_WEBHOOK` with a JSON payload containing:
-
-- The feature description
-- PR URL (from `gh pr view --json url -q .url`)
-- Test result summary
-- Prove statement verification status
-- Any items still requiring human attention
-
-**If not set:** Print a clear terminal summary containing all of the above.
+**This pipeline is complete only when Step 10 has been executed. All steps are required.**
