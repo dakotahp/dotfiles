@@ -1,64 +1,192 @@
 ---
 name: start-day
-description: Use when starting the day to prime the daily note with priorities and morning context. Non-interactive — runs silently and writes to the note.
-allowed-tools: Bash, Read, Edit
+description: Use when starting the day to set up today's daily note and process any prior unprocessed notes.
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 ---
 
-Primes today's daily note with pre-filled Today's Priorities and Morning Context sections. Non-interactive — makes all judgments autonomously, writes to the note, done. No questions asked.
+Morning startup for the personal Obsidian vault. Runs in two phases: first closes out any unprocessed daily notes from prior days (routing content to its destination and archiving), then primes today's note with rolled-over todos, Avoidance Radar items, and context. Non-interactive except for ambiguous `2_Areas` folder matches.
 
 Vault: ObsidianPersonal. All obsidian commands use `vault=ObsidianPersonal` immediately after the subcommand.
 
+Key rules:
+- Vault parameter comes immediately after the subcommand: `obsidian <subcommand> vault=ObsidianPersonal [options]`
+- Use `path=` for exact vault-relative paths; `file=` for wikilink-style name resolution
+- Never run `obsidian --help` — it hangs and never exits
+
 ---
 
-## Step 1 — Create today's note
+## Phase 1 — Close out unprocessed notes
+
+### Step 1a — Find unprocessed daily notes
+
+Get today's daily note path to learn the inbox folder:
+
+```bash
+obsidian daily:path vault=ObsidianPersonal
+```
+
+This returns a vault-relative path like `0_Inbox/2026-04-11.md`. Extract the containing folder (`0_Inbox/`) and today's date.
+
+List everything in that folder:
+
+```bash
+obsidian files vault=ObsidianPersonal folder="0_Inbox"
+```
+
+Filter to files matching the `YYYY-MM-DD.md` pattern **where the date is before today**. Sort ascending (oldest first). These are unprocessed prior notes.
+
+If none exist, skip to Phase 2.
+
+### Step 1b — Process each prior note (oldest first, no pausing between notes)
+
+Repeat Steps 1b-i through 1b-v for every unprocessed prior note. The only exception to no-pausing is an ambiguous `2_Areas` folder match (see Step 1b-iii).
+
+**Track for each note:** count of todos, avoidance items, idea stubs, learnings filed. Carry the extracted action items forward in memory — they feed directly into Phase 2.
+
+#### Step 1b-i — Read and classify
+
+```bash
+obsidian read vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md"
+```
+
+If the note is empty or contains only a template skeleton with no substantive content, skip to Step 1b-v (archiving).
+
+Classify every meaningful item into one of five types (most specific match wins):
+
+| Type | What it looks like |
+|------|--------------------|
+| **Hard todo** | An explicit next action: "I need to", "call X", "book Y", "follow up on Z" |
+| **Avoidance item** | Something being put off — reappears across notes, reluctant tone |
+| **Reflection** | Mood, mental state, day observations — not actionable |
+| **Learning** | A fact, concept, or insight acquired from reading, a call, or experience |
+| **Idea fragment** | A half-formed thought with no clear next step yet |
+
+Items under `## Today's Priorities` are hard todos by default (unchecked only — skip `- [x]`).
+
+#### Step 1b-ii — Create idea stubs in 0_Inbox
+
+For each **idea fragment**:
+
+```bash
+obsidian create vault=ObsidianPersonal path="0_Inbox/Idea - <Short Title>.md" content="---\ntags:\n  - idea\n  - stub\nsource: \"[[YYYY-MM-DD]]\"\n---\n\n<raw thought, verbatim or lightly cleaned>" silent
+```
+
+Keep `<Short Title>` to 4–6 words. Don't expand or elaborate.
+
+#### Step 1b-iii — Append avoidance items to Avoidance Radar
+
+For each **avoidance item**, first read the Radar and fuzzy-match to avoid duplicates:
+
+```bash
+obsidian read vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md"
+```
+
+If not already present, append:
+
+```bash
+obsidian append vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md" content="\n- [ ] <item> — *first noted: YYYY-MM-DD*"
+```
+
+If the file doesn't exist, create it first:
+
+```bash
+obsidian create vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md" content="---\ntags:\n  - agent-context\n---\n\nThings that keep coming up but keep getting deferred. Reviewed weekly.\n" silent
+```
+
+#### Step 1b-iv — File learnings into 2_Areas
+
+For each **learning**, list `2_Areas/` subfolders and match semantically:
+
+```bash
+obsidian files vault=ObsidianPersonal folder="2_Areas"
+```
+
+**Clear match:** proceed without asking. **No match:** suggest top 2 candidates or offer to create a new folder — this is the **only** time to pause. Once answered, continue.
+
+```bash
+# Append to existing note
+obsidian append vault=ObsidianPersonal file="<Note Name>" content="\n---\n\n<learning content>\n\nSource: [[YYYY-MM-DD]]"
+
+# Or create a new note
+obsidian create vault=ObsidianPersonal path="2_Areas/<Subfolder>/<Title>.md" content="---\ntags:\n  - <tag>\n---\n\n<learning content>\n\nSource: [[YYYY-MM-DD]]" silent
+```
+
+#### Step 1b-v — Write Distillation, navigation footer, archive
+
+**Distillation** — append before archiving:
+
+```bash
+obsidian append vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md" content="## Distillation\n\n**Day in brief:** <1–2 sentence synthesis of the day's tone, main themes, and energy>\n\n**Action items:**\n- [ ] <item> *(<brief context>)*\n\n**Avoiding** *(added to Avoidance Radar):*\n- <item, or omit block if none>\n\n**Ideas stubbed to Inbox:**\n- [[Idea - <title>]]\n\n**Filed to 2_Areas:**\n- [[<Area Note>]] ← <learning summary>"
+```
+
+Omit any subsection with nothing to show.
+
+**Navigation footer:**
+
+```bash
+obsidian append vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md" content="\n\n---\n← [[PREV-DATE]] | → [[NEXT-DATE]]"
+```
+
+- `PREV-DATE`: calendar day before this note's date
+- `NEXT-DATE`: placeholder — will resolve when that note is processed
+
+**Archive:**
+
+```bash
+obsidian move vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md" to="4_Archive/Daily Notes/YYYY-MM/YYYY-MM-DD.md"
+```
+
+**Back-fill the predecessor's forward link:**
+
+```bash
+obsidian append vault=ObsidianPersonal path="4_Archive/Daily Notes/PREV-YYYY-MM/PREV-DATE.md" content="\n\n---\n← [[PREV-PREV-DATE]] | → [[YYYY-MM-DD]]"
+```
+
+Skip if the predecessor doesn't exist in the archive.
+
+---
+
+## Phase 2 — Prime today's note
+
+### Step 2a — Create today's note
 
 ```bash
 obsidian daily vault=ObsidianPersonal
 ```
 
-Creates today's note from the template if it doesn't exist, opens it if it does. Note the date from the returned path (e.g. `0_Inbox/2026-04-04.md` → today is `2026-04-04`).
+Creates today's note from the template if it doesn't exist.
 
----
+### Step 2b — Load context
 
-## Step 2 — Load context
-
-Run all reads before any analysis:
+Run all reads in parallel before any analysis:
 
 ```bash
 # Life Domains manifest
 obsidian read vault=ObsidianPersonal path="2_Areas/Life Domains.md"
 
-# Avoidance Radar
+# Avoidance Radar (freshly updated by Phase 1)
 obsidian read vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md"
 
-# List archived daily notes to find most recent
-obsidian files vault=ObsidianPersonal folder="4_Archive/Daily Notes"
-
-# Project index files — get modification timestamps for staleness check
+# Project index files — modification timestamps for staleness check
 find /home/neropol/Syncthing/ObsidianPersonal/1_Projects -maxdepth 2 -name "Index.md" -printf "%T@ %p\n" | sort -rn
 ```
 
-After listing archived notes, read the most recent one (highest date by filename):
+**Rolled-over todos:**
+- **If Phase 1 processed any notes:** use the action items already in memory from those Distillations — skip the archive re-read.
+- **If Phase 1 had nothing to process:** list archived notes and read the most recent one to extract rolled-over todos:
 
 ```bash
+obsidian files vault=ObsidianPersonal folder="4_Archive/Daily Notes"
 obsidian read vault=ObsidianPersonal path="4_Archive/Daily Notes/YYYY-MM/YYYY-MM-DD.md"
 ```
 
----
+Find `## Distillation` → `**Action items:**`, extract every `- [ ]` line verbatim.
 
-## Step 3 — Analyse and build content
+### Step 2c — Build PRIORITIES_CONTENT and CONTEXT_CONTENT
 
-Work through each source in order. Build two strings: PRIORITIES_CONTENT and CONTEXT_CONTENT.
+**Rolled-over todos** — first items in PRIORITIES_CONTENT, verbatim from Distillation.
 
-### Rolled-over todos
-
-Find `## Distillation` in the most recent archived note. Under `**Action items:**`, extract every line matching `- [ ]` (unchecked only — skip `- [x]`). Include these verbatim as the first items in PRIORITIES_CONTENT.
-
-### Avoidance Radar items
-
-For each `- [ ]` line in the Radar, extract the item text (before ` —`) and the date after `first noted:`. Calculate days elapsed from today.
-
-Escalation rules:
+**Avoidance Radar items** — for each `- [ ]` line, extract item text and `first noted:` date. Calculate days elapsed from today.
 
 | Age | Action | Format |
 |-----|--------|--------|
@@ -68,48 +196,35 @@ Escalation rules:
 | 14–20 days | Near top | `- [ ] Item *(N days — still waiting)*` |
 | 21+ days | Top of list | `- [ ] Item *(N days — decide or drop it)*` |
 
-Sort so oldest items appear highest. Append after rolled-over todos, in age order.
+Sort oldest first. Append after rolled-over todos.
 
-### Domain-aware nudge
-
-Read Life Domains `## Current Context` and `## Life Domains`. Identify any domain marked as seasonally active or high-priority. If none of that domain's concerns appear in the rolled-over todos or surfaced Radar items, add one soft prompt at the bottom of PRIORITIES_CONTENT:
+**Domain-aware nudge** — from Life Domains `## Current Context` and `## Life Domains`, identify any seasonally active or high-priority domain. If none of its concerns appear in rolled-over todos or surfaced Radar items, add one soft prompt at the bottom:
 
 `- [ ] [Domain name]: anything to move forward today?`
 
-Maximum one nudge. Skip entirely if active domains are already represented.
+Maximum one nudge. Skip if active domains are already represented.
 
-### Stale project flag
-
-From the `find` output, convert each timestamp to a date and calculate days since last modification. If any `Index.md` is 30+ days old, pick the one with the most recent modification (least stale) and add one line:
+**Stale project flag** — from the `find` output, if any `Index.md` is 30+ days old, pick the least stale one and add:
 
 `- [ ] [Project name]: no activity in N days — worth a push?`
 
 Skip if a rolled-over todo already references that project. Skip if everything is under 30 days.
 
-### Cap
+**Cap** — if PRIORITIES_CONTENT exceeds 6 items, remove from the bottom: youngest Radar items first, then domain nudge, then stale flag. Never drop rolled-over todos.
 
-If PRIORITIES_CONTENT has more than 6 items, remove from the bottom: drop the youngest Radar items first, then the domain nudge, then the stale flag. Never drop rolled-over todos.
+**CONTEXT_CONTENT:**
+- **Line 1 (always):** One sentence from Life Domains `## Current Context` — the single most time-sensitive or seasonally relevant point.
+- **Line 2 (conditional):** Only if any Radar item is 14+ days old: `Overdue: [item name] (N days), [item name] (N days).` Omit entirely if nothing qualifies.
 
-### Morning Context
-
-- **Line 1 (always):** One sentence from Life Domains `## Current Context`. The single most time-sensitive or seasonally relevant point only.
-- **Line 2 (conditional):** Only if any Radar item is 14+ days old: `Overdue: [item name] (N days), [item name] (N days).` List all items 14+ days. Omit this line entirely if nothing qualifies.
-
----
-
-## Step 4 — Write to today's note
-
-Get the exact path of today's note:
+### Step 2d — Write to today's note
 
 ```bash
 obsidian daily:path vault=ObsidianPersonal
 ```
 
-The full filesystem path is `/home/neropol/Syncthing/ObsidianPersonal/` + the returned vault-relative path.
+Full filesystem path: `/home/neropol/Syncthing/ObsidianPersonal/` + returned path.
 
-The note has empty `## Today's Priorities` and `## Morning Context` sections from the template. Use the Edit tool to fill each one by replacing the empty-section pattern.
-
-**Fill Today's Priorities** — find this exact string in the file:
+**Fill Today's Priorities** — find this exact string and replace:
 
 ```
 ## Today's Priorities
@@ -117,7 +232,7 @@ The note has empty `## Today's Priorities` and `## Morning Context` sections fro
 ## Morning Context
 ```
 
-Replace with:
+→
 
 ```
 ## Today's Priorities
@@ -127,7 +242,7 @@ Replace with:
 ## Morning Context
 ```
 
-**Fill Morning Context** — find this exact string in the file:
+**Fill Morning Context** — find this exact string and replace:
 
 ```
 ## Morning Context
@@ -135,7 +250,7 @@ Replace with:
 ## Brain Dump
 ```
 
-Replace with:
+→
 
 ```
 ## Morning Context
@@ -145,10 +260,18 @@ Replace with:
 ## Brain Dump
 ```
 
-Make both edits sequentially. Do not modify any other part of the note. If either pattern is not found (sections already have content — note was pre-edited), skip that edit silently.
+Make both edits sequentially. If either pattern is not found (sections already have content), skip that edit silently.
 
 ---
 
-## Done
+## Phase 3 — Summary
 
-No output needed. The note is ready.
+If Phase 1 processed any notes, show the processing table:
+
+| Date | Todos | Avoidance | Idea stubs | Learnings filed | Archived |
+|------|-------|-----------|------------|-----------------|---------|
+| 2026-04-10 | 2 | — | — | — | ✓ |
+
+One row per note. Show `—` for columns with nothing found. If a note was empty and skipped processing, note that in the row.
+
+If Phase 1 had nothing to process, no summary needed — the note is ready silently.
