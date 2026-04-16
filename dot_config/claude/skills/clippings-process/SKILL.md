@@ -12,32 +12,51 @@ The user has two Obsidian vaults synced via Syncthing, always siblings in the sa
 
 Clippings in the work vault are personal-interest content discovered during work hours, so they always get filed into the **personal vault**.
 
-Obsidian provides a CLI named `obsidian` that interfaces with the Obsidian desktop app when it is running. Use it for token efficiency when instructed.
+Obsidian provides a CLI named `obsidian` that interfaces with the Obsidian desktop app when it is running.
 
 **Important CLI notes:**
 - Always structure commands as `obsidian <subcommand> vault=<name> [options]` — vault comes after the subcommand, not before
 - `vault:open` is NOT a valid command — do not use it
 - Never run `obsidian --help` — it prints help but hangs and never exits
+- The `vault=` parameter does NOT switch vaults — it is effectively ignored. The CLI always targets the active vault in the Obsidian app.
+
+**Vault access strategy:**
+- **ObsidianWork** — use filesystem tools only (`ls`, Read tool, `rm`) since the CLI cannot target it. Resolve its path dynamically from `obsidian vaults verbose` (see Step 1).
+- **ObsidianPersonal** — use the `obsidian` CLI for all operations (it's the active vault).
 
 ---
 
-## Step 1 — Locate both vaults
+## Step 1 — Resolve vault paths
 
-Verify which vaults are available with `obsidian vaults`. This will return vault names.
+Run `obsidian vaults verbose` to get vault names and their filesystem paths:
 
-Verify at least the personal vault exists. If the personal vault can't be found, tell the user and stop.
+```bash
+obsidian vaults verbose
+# Output format: <VaultName>\t<path>
+# e.g.:
+#   ObsidianWork      /home/user/Syncthing/ObsidianWork
+#   ObsidianPersonal  /home/user/Syncthing/ObsidianPersonal
+```
+
+Parse and store the ObsidianWork path. Use it for all filesystem operations against that vault. Do not hard-code paths.
+
+If ObsidianWork cannot be found, tell the user and stop.
 
 ---
 
 ## Step 2 — Find clippings to process
 
-List files in the work vault's Clippings folder:
+List files in the work vault's Clippings folder via filesystem:
 
-`obsidian files vault=ObsidianWork folder="Clippings"`
+```bash
+ls "<work_vault_path>/Clippings/"
+```
 
-After processing the work vault, repeat for the personal vault:
+Then check the personal vault's Clippings folder via CLI:
 
-`obsidian files vault=ObsidianPersonal folder="Clippings"`
+```bash
+obsidian files vault=ObsidianPersonal folder="Clippings"
+```
 
 If both folders are empty or missing, tell the user there's nothing to process and stop.
 
@@ -49,7 +68,15 @@ Process every clipping back-to-back. Do **not** pause between clippings to ask f
 
 ### Step 3a — Read and parse the clipping
 
-Read the file with `obsidian read vault=ObsidianWork path="<exact path>"` (use `path=` not `file=` for exact paths from the file listing). Extract from the YAML frontmatter:
+For **ObsidianWork** clippings, read the file using the Read tool with the full resolved path:
+
+`<work_vault_path>/Clippings/<filename>.md`
+
+For **ObsidianPersonal** clippings, read via the CLI:
+
+`obsidian read vault=ObsidianPersonal path="Clippings/<filename>.md"`
+
+Extract from the YAML frontmatter:
 - `title` — the article/post title
 - `source` — the original URL (preserve this)
 - `tags` — list of tags (drop the generic `clippings` tag, keep the rest)
@@ -59,9 +86,11 @@ Read the body content below the frontmatter.
 
 ### Step 3b — Match tags to a 2_Areas subfolder
 
-List the distinct existing folders inside the personal vault's `2_Areas/` with:
+List the existing subfolders inside the personal vault's `2_Areas/` via CLI:
 
-`obsidian files vault=ObsidianPersonal folder="2_Areas" | grep -o -E "^/?([^/]+/){1,2}" | uniq`
+```bash
+obsidian folders vault=ObsidianPersonal folder="2_Areas"
+```
 
 Compare the clipping's tags against folder names to find the best semantic match. Tags won't be exact matches — a tag like `nutrition` might map to a folder called `Health` or `Fitness`. Use your judgment on the best fit.
 
@@ -100,7 +129,7 @@ Strip any filler, self-promotion, or repetitive phrasing from the source. Keep w
 
 **File name:** Use a descriptive title derived from the content (no date prefix). Keep it concise but specific enough to be findable. Example: `High Protein Breakfast Recipe.md`, not `3 Minute Breakfast.md` or `2026-04-02 Nutrition Post.md`.
 
-Write the file to the matched `2_Areas/` subfolder in the personal vault using:
+Write the file to the matched `2_Areas/` subfolder in the personal vault using the CLI:
 
 `obsidian create vault=ObsidianPersonal path="2_Areas/<Subfolder>/<File Name>.md" content="<content>"`
 
@@ -108,9 +137,17 @@ Note: `create` is the correct command — `write` does not exist.
 
 ### Step 3e — Delete the original
 
-Immediately delete the original clipping file without asking:
+Immediately delete the original clipping file without asking.
 
-`obsidian delete vault=ObsidianWork path="Clippings/<filename>.md"`
+For **ObsidianWork** clippings:
+```bash
+rm "<work_vault_path>/Clippings/<filename>.md"
+```
+
+For **ObsidianPersonal** clippings:
+```bash
+obsidian delete vault=ObsidianPersonal path="Clippings/<filename>.md"
+```
 
 Then move to the next clipping.
 

@@ -172,6 +172,9 @@ Creates today's note from the template if it doesn't exist.
 Run all reads in parallel before any analysis:
 
 ```bash
+# Daily quote source
+obsidian read vault=ObsidianPersonal path="2_Areas/Quotes.md"
+
 # Life Domains manifest
 obsidian read vault=ObsidianPersonal path="2_Areas/Life Domains.md"
 
@@ -202,6 +205,12 @@ obsidian read vault=ObsidianPersonal path="4_Archive/Daily Notes/YYYY-MM/YYYY-MM
 Find `## Distillation` → `**Action items:**`, extract every `- [ ]` line verbatim.
 
 **Recurring todo escalation** — before building priorities, check for todos stuck across 3+ days. Read the two archived Distillations immediately preceding the source note and extract their unchecked `- [ ]` action items. Any todo text that fuzzy-matches a rolled-over todo in both prior notes has been deferred for 3+ consecutive days — escalate it: append to Avoidance Radar (Step 1b-iii format, `first noted:` = today's date) and remove it from rolled-over todos. Skip this check if fewer than 2 prior archived Distillations exist.
+
+### Step 2b-ii — Pick today's quote
+
+From the `Quotes.md` content, extract every line beginning with `- `. Strip the leading `- `. Use today's date as a seed: take the day-of-year (1–366), mod by the number of quotes, and select that line. This gives a deterministic-but-rotating quote — no randomness call needed, same quote all day if the skill runs twice.
+
+Store as **QUOTE_CONTENT** — the raw line text including attribution and any `[[wikilink]]`.
 
 ### Step 2c — Build PRIORITIES_CONTENT and CONTEXT_CONTENT
 
@@ -244,6 +253,21 @@ obsidian daily:path vault=ObsidianPersonal
 ```
 
 Full filesystem path: `$VAULT_PATH/` + returned path (reuse the `VAULT_PATH` variable from Step 2b, already stripped of the `=>` prefix).
+
+**Insert quote** — find this exact string and replace:
+
+```
+## Today's Priorities
+```
+
+→
+
+```
+> [!quote]
+> [QUOTE_CONTENT]
+
+## Today's Priorities
+```
 
 **Fill Today's Priorities** — find this exact string and replace:
 
