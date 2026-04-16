@@ -11,3 +11,5 @@
   [[ -z "${HOMEBREW_PREFIX:-}" ]] && [[ -x "/home/linuxbrew/.linuxbrew/bin/brew" ]] && \
     eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 {{ end }}
+
+[[ -f "$HOME/.zprofile.local" ]] && source "$HOME/.zprofile.local"

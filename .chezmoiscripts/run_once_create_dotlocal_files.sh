@@ -31,4 +31,7 @@ create_local_file "$HOME_DIR/.gitconfig.local" ".gitconfig.local"
 # Create .aliases.local if it doesn't exist
 create_local_file "$HOME_DIR/.aliases.local" ".aliases.local"
 
+# Create .zprofile.local if it doesn't exist
+create_local_file "$HOME_DIR/.zprofile.local" ".zprofile.local"
+
 echo "Local configuration files check complete!"
