@@ -1,7 +1,11 @@
 [tools]
 go = "latest"
 node = "latest"
+{{ if .work_computer -}}
+ruby = "3"
+{{ else -}}
 ruby = "latest"
+{{ end -}}
 
 [settings]
 idiomatic_version_file_enable_tools = ["ruby"]
