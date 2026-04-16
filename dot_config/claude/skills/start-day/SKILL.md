@@ -43,7 +43,7 @@ Repeat Steps 1b-i through 1b-v for every unprocessed prior note. The only except
 
 **Track for each note:** count of todos, avoidance items, idea stubs, learnings filed. Carry the extracted action items forward in memory — they feed directly into Phase 2.
 
-#### Step 1b-i — Read and classify
+#### Step 1b-i — Read, resolve wikilinks, and classify
 
 ```bash
 obsidian read vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md"
@@ -51,7 +51,15 @@ obsidian read vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md"
 
 If the note is empty or contains only a template skeleton with no substantive content, skip to Step 1b-v (archiving).
 
-Classify every meaningful item into one of five types (most specific match wins):
+**Wikilink project override** — extract all `[[...]]` references from the note text. For each link name, check if it resolves to a file in `1_Projects/`:
+
+```bash
+obsidian search vault=ObsidianPersonal folder="1_Projects" query="<link name>" format=json
+```
+
+If a match is found and that project is not already in the project context map (loaded in Step 2b), read the matched file and any sibling `#agent-context`-tagged files in that project's folder, then add them to the map. This surfaces projects referenced intentionally but outside the 14-day auto-load window.
+
+**Classify** every meaningful item into one of five types (most specific match wins):
 
 | Type | What it looks like |
 |------|--------------------|
@@ -62,6 +70,8 @@ Classify every meaningful item into one of five types (most specific match wins)
 | **Idea fragment** | A half-formed thought with no clear next step yet |
 
 Items under `## Today's Priorities` are hard todos by default (unchecked only — skip `- [x]`).
+
+**Project attribution** — for each hard todo, fuzzy-match its text against project names in the project context map. A direct name mention, a wikilink to the project, or a domain clearly owned by one project all count. Tag each todo internally with its matched project, or mark it "unattributed" if no match.
 
 #### Step 1b-ii — Create idea stubs in 0_Inbox
 
@@ -116,10 +126,10 @@ obsidian create vault=ObsidianPersonal path="2_Areas/<Subfolder>/<Title>.md" con
 **Distillation** — append before archiving:
 
 ```bash
-obsidian append vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md" content="## Distillation\n\n**Day in brief:** <1–2 sentence synthesis of the day's tone, main themes, and energy>\n\n**Action items:**\n- [ ] <item> *(<brief context>)*\n\n**Avoiding** *(added to Avoidance Radar):*\n- <item, or omit block if none>\n\n**Ideas stubbed to Inbox:**\n- [[Idea - <title>]]\n\n**Filed to 2_Areas:**\n- [[<Area Note>]] ← <learning summary>"
+obsidian append vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md" content="## Distillation\n\n**Day in brief:** <1–2 sentence synthesis of the day's tone, main themes, and energy — drawn from project context where applicable, not just the surface text>\n\n**Action items:**\n\n*[[Project Name]]:*\n- [ ] <item> *(<brief context informed by project state>)*\n\n*Unattributed:*\n- [ ] <item> *(<brief context>)*\n\n**Avoiding** *(added to Avoidance Radar):*\n- <item, or omit block if none>\n\n**Ideas stubbed to Inbox:**\n- [[Idea - <title>]]\n\n**Filed to 2_Areas:**\n- [[<Area Note>]] ← <learning summary>"
 ```
 
-Omit any subsection with nothing to show.
+Omit any subsection with nothing to show. For **Action items**: group todos under their attributed project as a subheading. If all todos are unattributed, skip the grouping and list flat. If only one project is represented, skip the project subheading and annotate each item inline with `*(→ [[Project Name]])*`. Omit the *Unattributed* heading if everything is attributed.
 
 **Navigation footer:**
 
@@ -167,9 +177,16 @@ obsidian read vault=ObsidianPersonal path="2_Areas/Life Domains.md"
 # Avoidance Radar (freshly updated by Phase 1)
 obsidian read vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md"
 
-# Project index files — modification timestamps for staleness check
-find /home/neropol/Syncthing/ObsidianPersonal/1_Projects -maxdepth 2 -name "Index.md" -printf "%T@ %p\n" | sort -rn
+# Project Index modification times for staleness check (vault API — portable, no hardcoded path)
+obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().filter(f => f.path.startsWith('1_Projects/') && f.name === 'Index.md').map(f => ({path: f.path, mtime: f.stat.mtime})).sort((a,b) => a.mtime - b.mtime))"
+
+# Agent-context files in 1_Projects modified within 14 days
+# obsidian CLI has no date filter — find used here to overcome that limitation
+VAULT_PATH=$(obsidian eval vault=ObsidianPersonal code="app.vault.adapter.basePath")
+find "$VAULT_PATH/1_Projects" -name "*.md" -mtime -14 | xargs grep -l "agent-context" 2>/dev/null
 ```
+
+Read each file from the last command and build the **project context map**: project name (from path or frontmatter title) → key details (goal, current status, any constraints or blockers noted). This map is shared across Phase 1 and Phase 2.
 
 **Rolled-over todos:**
 - **If Phase 1 processed any notes:** use the action items already in memory from those Distillations — skip the archive re-read.
