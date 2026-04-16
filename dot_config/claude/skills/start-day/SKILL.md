@@ -51,13 +51,14 @@ obsidian read vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md"
 
 If the note is empty or contains only a template skeleton with no substantive content, skip to Step 1b-v (archiving).
 
-**Wikilink project override** — extract all `[[...]]` references from the note text. For each link name, check if it resolves to a file in `1_Projects/`:
+**Wikilink context override** — extract all `[[...]]` references from the note text. For each link name, search `1_Projects/` and `2_Areas/` in parallel:
 
 ```bash
 obsidian search vault=ObsidianPersonal folder="1_Projects" query="<link name>" format=json
+obsidian search vault=ObsidianPersonal folder="2_Areas" query="<link name>" format=json
 ```
 
-If a match is found and that project is not already in the project context map (loaded in Step 2b), read the matched file and any sibling `#agent-context`-tagged files in that project's folder, then add them to the map. This surfaces projects referenced intentionally but outside the 14-day auto-load window.
+If a match is found in either folder and is not already in the project context map, read the matched file and any sibling `#agent-context`-tagged files in that folder, then add them to the map. This surfaces projects and areas referenced intentionally but outside the 14-day auto-load window.
 
 **Classify** every meaningful item into one of five types (most specific match wins):
 
@@ -182,7 +183,8 @@ obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().f
 
 # Agent-context files in 1_Projects modified within 14 days
 # obsidian CLI has no date filter — find used here to overcome that limitation
-VAULT_PATH=$(obsidian eval vault=ObsidianPersonal code="app.vault.adapter.basePath")
+# obsidian eval prefixes output with "=> "; strip it before using as a path
+VAULT_PATH=$(obsidian eval vault=ObsidianPersonal code="app.vault.adapter.basePath" | sed 's/^=> //')
 find "$VAULT_PATH/1_Projects" -name "*.md" -mtime -14 | xargs grep -l "agent-context" 2>/dev/null
 ```
 
@@ -198,6 +200,8 @@ obsidian read vault=ObsidianPersonal path="4_Archive/Daily Notes/YYYY-MM/YYYY-MM
 ```
 
 Find `## Distillation` → `**Action items:**`, extract every `- [ ]` line verbatim.
+
+**Recurring todo escalation** — before building priorities, check for todos stuck across 3+ days. Read the two archived Distillations immediately preceding the source note and extract their unchecked `- [ ]` action items. Any todo text that fuzzy-matches a rolled-over todo in both prior notes has been deferred for 3+ consecutive days — escalate it: append to Avoidance Radar (Step 1b-iii format, `first noted:` = today's date) and remove it from rolled-over todos. Skip this check if fewer than 2 prior archived Distillations exist.
 
 ### Step 2c — Build PRIORITIES_CONTENT and CONTEXT_CONTENT
 
@@ -239,7 +243,7 @@ Skip if a rolled-over todo already references that project. Skip if everything i
 obsidian daily:path vault=ObsidianPersonal
 ```
 
-Full filesystem path: `/home/neropol/Syncthing/ObsidianPersonal/` + returned path.
+Full filesystem path: `$VAULT_PATH/` + returned path (reuse the `VAULT_PATH` variable from Step 2b, already stripped of the `=>` prefix).
 
 **Fill Today's Priorities** — find this exact string and replace:
 
