@@ -1,10 +1,10 @@
 ---
 name: clippings-process
-description: Processes web clippings from an Obsidian vault's Clippings/ folder — summarizes each clipping, files it into the appropriate 2_Areas/ subfolder in the personal vault based on tags, and removes the original. Use this skill whenever the user says "process clippings", "sort clippings", "clean up clippings", mentions their Clippings folder, or asks to organize saved/clipped articles. Also trigger when the user runs /clippings-process.
+description: Processes web clippings from an Obsidian vault's 0_Inbox/ folder — summarizes each clipping, files it into the appropriate 2_Areas/ subfolder in the personal vault based on tags, and removes the original. Use this skill whenever the user says "process clippings", "sort clippings", "clean up clippings", mentions their 0_Inbox or Inbox, or asks to organize saved/clipped articles. Also trigger when the user runs /clippings-process.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 ---
 
-Process web clippings from an Obsidian vault's `Clippings/` folder into summarized notes filed in the personal vault.
+Process web clippings from an Obsidian vault's `0_Inbox/` folder into summarized notes filed in the personal vault.
 
 The user has two Obsidian vaults synced via Syncthing, always siblings in the same parent directory:
 - **ObsidianWork** — work vault
@@ -46,16 +46,16 @@ If ObsidianWork cannot be found, tell the user and stop.
 
 ## Step 2 — Find clippings to process
 
-List files in the work vault's Clippings folder via filesystem:
+List files in the work vault's 0_Inbox folder via filesystem:
 
 ```bash
-ls "<work_vault_path>/Clippings/"
+ls "<work_vault_path>/0_Inbox/"
 ```
 
-Then check the personal vault's Clippings folder via CLI:
+Then check the personal vault's 0_Inbox folder via CLI:
 
 ```bash
-obsidian files vault=ObsidianPersonal folder="Clippings"
+obsidian files vault=ObsidianPersonal folder="0_Inbox"
 ```
 
 If both folders are empty or missing, tell the user there's nothing to process and stop.
@@ -70,11 +70,11 @@ Process every clipping back-to-back. Do **not** pause between clippings to ask f
 
 For **ObsidianWork** clippings, read the file using the Read tool with the full resolved path:
 
-`<work_vault_path>/Clippings/<filename>.md`
+`<work_vault_path>/0_Inbox/<filename>.md`
 
 For **ObsidianPersonal** clippings, read via the CLI:
 
-`obsidian read vault=ObsidianPersonal path="Clippings/<filename>.md"`
+`obsidian read vault=ObsidianPersonal path="0_Inbox/<filename>.md"`
 
 Extract from the YAML frontmatter:
 - `title` — the article/post title
@@ -141,12 +141,12 @@ Immediately delete the original clipping file without asking.
 
 For **ObsidianWork** clippings:
 ```bash
-rm "<work_vault_path>/Clippings/<filename>.md"
+rm "<work_vault_path>/0_Inbox/<filename>.md"
 ```
 
 For **ObsidianPersonal** clippings:
 ```bash
-obsidian delete vault=ObsidianPersonal path="Clippings/<filename>.md"
+obsidian delete vault=ObsidianPersonal path="0_Inbox/<filename>.md"
 ```
 
 Then move to the next clipping.
