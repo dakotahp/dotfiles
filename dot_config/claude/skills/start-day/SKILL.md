@@ -175,6 +175,9 @@ Run all reads in parallel before any analysis:
 # Daily quote source
 obsidian read vault=ObsidianPersonal path="2_Areas/Quotes.md"
 
+# Inspiration file index
+obsidian search vault=ObsidianPersonal query="tag:#inspiration" format=json
+
 # Life Domains manifest
 obsidian read vault=ObsidianPersonal path="2_Areas/Life Domains.md"
 
@@ -206,11 +209,17 @@ Find `## Distillation` → `**Action items:**`, extract every `- [ ]` line verba
 
 **Recurring todo escalation** — before building priorities, check for todos stuck across 3+ days. Read the two archived Distillations immediately preceding the source note and extract their unchecked `- [ ]` action items. Any todo text that fuzzy-matches a rolled-over todo in both prior notes has been deferred for 3+ consecutive days — escalate it: append to Avoidance Radar (Step 1b-iii format, `first noted:` = today's date) and remove it from rolled-over todos. Skip this check if fewer than 2 prior archived Distillations exist.
 
-### Step 2b-ii — Pick today's quote
+### Step 2b-ii — Pick today's quote and inspiration
 
-From the `Quotes.md` content, extract every line beginning with `- `. Strip the leading `- `. Use today's date as a seed: take the day-of-year (1–366), mod by the number of quotes, and select that line. This gives a deterministic-but-rotating quote — no randomness call needed, same quote all day if the skill runs twice.
+**Quote** — from `Quotes.md`, extract every line beginning with `- `. Strip the leading `- `. Use today's date as a seed: take the day-of-year (1–366), mod by the number of quotes, and select that line. Same quote all day if the skill runs twice.
 
 Store as **QUOTE_CONTENT** — the raw line text including attribution and any `[[wikilink]]`.
+
+**Inspiration** — from the `#inspiration` search results, apply the same day-of-year mod against the list to pick one file deterministically.
+
+Read just the first non-frontmatter, non-heading line of that file (skip `---` blocks and lines starting with `#`). This is the teaser sentence.
+
+Store as **INSPIRATION_PATH** (vault-relative path) and **INSPIRATION_TEASER** (the first prose line).
 
 ### Step 2c — Build PRIORITIES_CONTENT and CONTEXT_CONTENT
 
@@ -254,20 +263,12 @@ obsidian daily:path vault=ObsidianPersonal
 
 Full filesystem path: `$VAULT_PATH/` + returned path (reuse the `VAULT_PATH` variable from Step 2b, already stripped of the `=>` prefix).
 
-**Insert quote** — find this exact string and replace:
+**Fill daily spark** — the template includes the callout scaffold with placeholder comments. Replace each placeholder:
 
-```
-## Today's Priorities
-```
+- Find `<!-- quote -->` → replace with `[QUOTE_CONTENT]`
+- Find `<!-- inspiration -->` → replace with `[[INSPIRATION_FILENAME]] — [INSPIRATION_TEASER]`
 
-→
-
-```
-> [!quote]
-> [QUOTE_CONTENT]
-
-## Today's Priorities
-```
+`INSPIRATION_FILENAME` is the bare note name (no path, no `.md`) for the wikilink. The `*italics*` wrapper is already in the template around the quote placeholder. If either placeholder is not found (skill already ran today), skip that replacement silently.
 
 **Fill Today's Priorities** — find this exact string and replace:
 
