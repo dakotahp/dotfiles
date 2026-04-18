@@ -1,10 +1,10 @@
 ---
 name: clippings-process
-description: Processes web clippings from an Obsidian vault's 0_Inbox/ folder — summarizes each clipping, files it into the appropriate 2_Areas/ subfolder in the personal vault based on tags, and removes the original. Use this skill whenever the user says "process clippings", "sort clippings", "clean up clippings", mentions their 0_Inbox or Inbox, or asks to organize saved/clipped articles. Also trigger when the user runs /clippings-process.
+description: Processes web clippings from an Obsidian vault — summarizes each clipping, files it into the appropriate 2_Areas/ subfolder in the personal vault based on tags, and removes the original. Use this skill whenever the user says "process clippings", "sort clippings", "clean up clippings", or asks to organize saved/clipped articles. Also trigger when the user runs /clippings-process.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 ---
 
-Process web clippings from an Obsidian vault's `0_Inbox/` folder into summarized notes filed in the personal vault.
+Process web clippings from Obsidian vaults into summarized notes filed in the personal vault. Clippings are identified by the `#clippings` tag — they can live anywhere in either vault.
 
 The user has two Obsidian vaults synced via Syncthing, always siblings in the same parent directory:
 - **ObsidianWork** — work vault
@@ -46,19 +46,25 @@ If ObsidianWork cannot be found, tell the user and stop.
 
 ## Step 2 — Find clippings to process
 
-List files in the work vault's 0_Inbox folder via filesystem:
+Search for files tagged `#clippings` in the personal vault:
 
 ```bash
-ls "<work_vault_path>/0_Inbox/"
+obsidian search vault=ObsidianPersonal query="tag:#clippings" format=json
 ```
 
-Then check the personal vault's 0_Inbox folder via CLI:
+Search for files tagged `#clippings` in the work vault via filesystem grep:
 
 ```bash
-obsidian files vault=ObsidianPersonal folder="0_Inbox"
+grep -rl "clippings" "<work_vault_path>" --include="*.md" | xargs grep -l "tags:" | while read f; do grep -q "clippings" "$f" && echo "$f"; done
 ```
 
-If both folders are empty or missing, tell the user there's nothing to process and stop.
+Or more precisely, look for files where the frontmatter tags list includes `clippings`:
+
+```bash
+grep -rl "^\s*-\s*['\"]?clippings['\"]?" "<work_vault_path>" --include="*.md"
+```
+
+If no tagged clippings are found in either vault, tell the user there's nothing to process and stop.
 
 ---
 
@@ -68,13 +74,11 @@ Process every clipping back-to-back. Do **not** pause between clippings to ask f
 
 ### Step 3a — Read and parse the clipping
 
-For **ObsidianWork** clippings, read the file using the Read tool with the full resolved path:
+For **ObsidianWork** clippings, read the file using the Read tool with the full resolved path returned from the grep search.
 
-`<work_vault_path>/0_Inbox/<filename>.md`
+For **ObsidianPersonal** clippings, read via the CLI using the path returned from the search:
 
-For **ObsidianPersonal** clippings, read via the CLI:
-
-`obsidian read vault=ObsidianPersonal path="0_Inbox/<filename>.md"`
+`obsidian read vault=ObsidianPersonal path="<path from search result>"`
 
 Extract from the YAML frontmatter:
 - `title` — the article/post title
@@ -112,16 +116,26 @@ author: (if available)
 clipped: (original created date)
 ---
 
-(Summary content here)
+(1–2 sentence spark summary)
+
+---
+
+(Detail content here — bullets, sections, etc.)
 
 ---
 *Source: [Original Title](url)*
 ```
 
-**For the summary content**, use judgment based on length:
+**The first line after frontmatter is always a 1–2 sentence spark summary**, separated from the detail content by a `---` divider. This block exists solely as a daily teaser — it should stand alone without the rest of the note.
+
+- Aim for 1 sentence; use 2 only if one sentence can't carry the idea
+- Write it as a declarative insight, not a description of the article ("Over-apologizing erodes credibility" not "This post is about apologizing at work")
+- If the content has a memorable phrase or reframe, lead with that
+
+**The detail content** after the divider is independent — format it however best fits the source:
 
 - **Short content** (like a LinkedIn post): distill into a clean bulleted list. Get to the point — the user wants quick-reference notes, not a rehash of the original prose.
-- **Long content** (full articles, detailed guides): lead with a 2-3 sentence written summary of the key takeaway, then follow with bulleted details organized by theme or section. The goal is that the user can glance at the summary and get 80% of the value without re-reading the source.
+- **Long content** (full articles, detailed guides): bulleted details organized by theme or section. The goal is that the user can glance and get 80% of the value without re-reading the source.
 
 Strip any filler, self-promotion, or repetitive phrasing from the source. Keep what's actionable or informative.
 
@@ -141,12 +155,12 @@ Immediately delete the original clipping file without asking.
 
 For **ObsidianWork** clippings:
 ```bash
-rm "<work_vault_path>/0_Inbox/<filename>.md"
+rm "<full_path_from_grep_result>"
 ```
 
 For **ObsidianPersonal** clippings:
 ```bash
-obsidian delete vault=ObsidianPersonal path="0_Inbox/<filename>.md"
+obsidian delete vault=ObsidianPersonal path="<path from search result>"
 ```
 
 Then move to the next clipping.
