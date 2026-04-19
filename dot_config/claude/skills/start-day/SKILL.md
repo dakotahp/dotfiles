@@ -1,7 +1,7 @@
 ---
 name: start-day
 description: Use when starting the day to set up today's daily note and process any prior unprocessed notes.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, mcp__claude_ai_Google_Calendar__list_events
 ---
 
 Morning startup for the personal Obsidian vault. Runs in two phases: first closes out any unprocessed daily notes from prior days (routing content to its destination and archiving), then primes today's note with rolled-over todos, Avoidance Radar items, and context. Non-interactive except for ambiguous `2_Areas` folder matches.
@@ -171,6 +171,20 @@ Creates today's note from the template if it doesn't exist.
 
 Run all reads in parallel before any analysis:
 
+**Work calendar** — fetch today's events via MCP (not bash):
+
+```
+mcp__claude_ai_Google_Calendar__list_events(
+  calendarId="dakotah.pena@apartmentiq.io",
+  startTime="<today>T00:00:00",
+  endTime="<today>T23:59:59",
+  orderBy="startTime",
+  timeZone="America/Los_Angeles"
+)
+```
+
+Store results as **CALENDAR_EVENTS** — a list of `{summary, start, end}` objects. If the call fails or returns empty, store an empty list and continue silently.
+
 ```bash
 # Daily quote source
 obsidian read vault=ObsidianPersonal path="2_Areas/Quotes.md"
@@ -254,6 +268,7 @@ Skip if a rolled-over todo already references that project. Skip if everything i
 **CONTEXT_CONTENT:**
 - **Line 1 (always):** One sentence from Life Domains `## Current Context` — the single most time-sensitive or seasonally relevant point.
 - **Line 2 (conditional):** Only if any Radar item is 14+ days old: `Overdue: [item name] (N days), [item name] (N days).` Omit entirely if nothing qualifies.
+- **Line 3 (conditional):** Only if CALENDAR_EVENTS is non-empty: `**Meetings:** HH:MM Event title, HH:MM Event title` — list each event's start time (12-hour, no seconds) and summary, comma-separated. Omit entirely if no events.
 
 ### Step 2d — Write to today's note
 
