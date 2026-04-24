@@ -52,7 +52,9 @@ If a ticket is being referenced, use the appropriate MCP to assign the ticket to
 
 ## Step 2 — Plan the feature
 
-Invoke `superpowers:brainstorming` as a sub-step to explore requirements and design space. When doing so, instruct it to **skip the "User Review Gate" for the written spec** — the plan approval at the end of this step serves as the combined spec+plan gate, so asking the user to separately review the spec file is redundant here. After brainstorming writes and commits the spec, it should proceed directly to invoking writing-plans without pausing for spec review.
+Invoke `superpowers:brainstorming` as a sub-step to explore requirements and design space. When doing so, instruct it to **skip the "User Review Gate" for the written spec** — the plan approval at the end of this step serves as the combined spec+plan gate, so asking the user to separately review the spec file is redundant here. After brainstorming writes the spec, it should proceed directly to invoking writing-plans without pausing for spec review.
+
+**Do NOT commit the spec file or the plan file.** These planning documents are not part of the feature implementation and must not appear in the git history. Write them to disk but skip any commit step that would include them.
 
 After brainstorming completes, invoke `superpowers:writing-plans` to produce the implementation plan. The plan must cover:
 
@@ -69,18 +71,20 @@ Approval means the user says something like "approved", "looks good", "proceed",
 
 ### Compaction checkpoint
 
-After the user approves the plan, compact the conversation before continuing. The brainstorming and planning phases generate large amounts of exploratory context that is now fully captured in the spec and plan files on disk.
+**STOP. Do not continue to Step 3.** Context compaction must happen here but cannot be triggered automatically — only you can do it.
 
-Before compacting, write a brief handoff note to yourself as a message so it survives compaction:
+Post this message verbatim, then wait for the user to respond before doing anything else:
 
-> **Handoff — Step 2 complete.**
+> **Handoff — Step 2 complete. Action required before continuing.**
 > - Branch: `<branch name>`
 > - Spec file: `<path>`
 > - Plan file: `<path>`
-> - Current step: proceed to Step 3
-> - Open issues: <any user caveats or scope notes from approval>
+> - Next step: Step 3
+> - Open issues: `<any user caveats or scope notes from approval>`
+>
+> **Please run `/compact` now to clear the brainstorming/planning context, then reply "continue" to proceed to Step 3.**
 
-Then continue to Step 3.
+Do not proceed to Step 3 until the user explicitly replies after compacting.
 
 ---
 
@@ -146,20 +150,22 @@ To conserve cost and increase speed, use the `model` parameter when dispatching 
 
 ### Compaction checkpoint
 
-After implementation completes, compact the conversation before continuing. Subagent coordination generates substantial context that is now fully captured in the committed code and test files on disk.
+**STOP. Do not continue to Step 6.** Context compaction must happen here but cannot be triggered automatically — only you can do it.
 
-Before compacting, write a brief handoff note to yourself as a message so it survives compaction:
+Post this message verbatim, then wait for the user to respond before doing anything else:
 
-> **Handoff — Step 5 complete.**
+> **Handoff — Step 5 complete. Action required before continuing.**
 > - Branch: `<branch name>`
 > - Plan file: `<path>`
 > - Prove statements: `.claude/prove_statements.md`
 > - Implementation status: all plan tasks implemented, code committed
-> - Test status: <pass/fail summary from subagent runs>
-> - Current step: proceed to Step 6
-> - Open issues: <any known gaps or deferred items>
+> - Test status: `<pass/fail summary from subagent runs>`
+> - Next step: Step 6
+> - Open issues: `<any known gaps or deferred items>`
+>
+> **Please run `/compact` now to clear the implementation context, then reply "continue" to proceed to Step 6.**
 
-Then continue to Step 6.
+Do not proceed to Step 6 until the user explicitly replies after compacting.
 
 ---
 
