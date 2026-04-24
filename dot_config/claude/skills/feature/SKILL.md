@@ -112,6 +112,8 @@ Write tests that directly exercise each prove statement from Step 3. Then run th
 
 Do not proceed until failing tests are confirmed. If tests pass before implementation, the tests are not testing the right thing — fix them first.
 
+**Delegation:** If the plan contains exact test code (copy-paste ready), dispatch a `sonnet` subagent to write the test files and verify they fail. The subagent prompt must include: the branch name, the exact test code from the plan, the command to run tests, and the instruction to confirm tests fail with specific error messages. If the plan does NOT contain exact test code (only describes behaviors), write the tests in the main session — test design requires judgment.
+
 **Red flags — STOP if you are thinking any of these:**
 
 | Rationalization | Reality |
@@ -136,15 +138,24 @@ Implement only what is needed to satisfy the prove statements and pass the tests
 
 ### Subagent model tiers
 
-To conserve cost and increase speed, use the `model` parameter when dispatching subagents:
+To conserve cost, speed, and context window hygiene, use the `model` parameter when dispatching subagents. This table governs the **entire pipeline**, not just Step 5:
 
-| Role | Model | Rationale |
-|------|-------|-----------|
-| **Implementer** | `sonnet` | Mechanical work with clear specs from the plan |
-| **Spec compliance reviewer** | `haiku` | Pure checklist comparison — does code match spec? |
-| **Code quality reviewer** | `sonnet` | Judgment needed but well-scoped to a single task's diff |
+| Step | Role | Model | Rationale |
+|------|------|-------|-----------|
+| 4 | **Test writer** | `sonnet` | Plan contains exact test code; writing + verifying failure is mechanical |
+| 5 | **Implementer** | `sonnet` | Mechanical work with clear specs from the plan |
+| 5 | **Spec compliance reviewer** | `haiku` | Pure checklist comparison — does code match spec? |
+| 5 | **Code quality reviewer** | `sonnet` | Judgment needed but well-scoped to a single task's diff |
+| 6 | **Code simplifier** | `sonnet` | Refinement within clear conventions, not invention |
+| 7 | **Prove verifier** | `haiku` | Rote command execution: run command, check output, record pass/fail |
+| 8 | **Code reviewer** | `sonnet` | Judgment needed but scoped to a known diff with clear conventions |
+| 9 | **Cleanup & PR creator** | `sonnet` | Linting, removing debug code, calling `gh pr create` is mechanical |
 
-**Escalation:** If an implementer returns BLOCKED and the cause is reasoning difficulty (not missing context), re-dispatch with `model: opus`.
+**Escalation:** If any subagent returns BLOCKED and the cause is reasoning difficulty (not missing context), re-dispatch with `model: opus`.
+
+**When NOT to delegate:** Steps 2 (planning) and 3 (prove statements) require understanding the design spec and translating requirements into falsifiable claims. These stay in the main session.
+
+**Context window benefit:** Subagent results return as short summaries, not raw tool output. A haiku agent running 10 prove_it commands keeps ~50 lines of test output out of the main opus context. Over a full pipeline run, this compounds significantly.
 
 **After it completes, return to this pipeline. Continue to Step 6.**
 
@@ -196,6 +207,8 @@ prove_it signal done
 
 Address any failures before proceeding. Each statement must be backed by captured evidence.
 
+**Delegation:** Dispatch a `haiku` subagent to handle prove verification. The subagent prompt must include: the full contents of `.claude/prove_statements.md`, the branch name, and instructions to run each verification command, check the output, and call `prove_it record` + `prove_it signal done`. If any statement fails, the subagent must report BLOCKED with the failure details so the main session can diagnose and fix. This is pure command execution — haiku is sufficient and keeps test output out of the main context.
+
 ---
 
 ## Step 8 — Code review
@@ -226,6 +239,8 @@ Complete all of the following before creating the PR:
 
    The PR body must reference the prove statements from Step 3 and link to their evidence.
 4. Open the PR with `open <url>` (macOS) or `xdg-open <url>` (Linux) in the default browser.
+
+**Delegation:** Steps 1-2 (cleanup and linting) can be dispatched to a `sonnet` subagent. The subagent prompt must include: the branch name, the list of modified files, the lint command for the project, and instructions to fix any issues and commit the cleanup. Step 3 (PR creation) should stay in the main session — the PR title and body require understanding the full feature context, and the user needs to see the PR URL immediately.
 
 ---
 
