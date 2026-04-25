@@ -1,16 +1,38 @@
 ---
 name: save-takeaways
-description: Distills conversation takeaways (insights, decisions, action items) and saves them to the Obsidian vault. Insights and decisions go to a standalone 0_Inbox note (persists for later filing). Action items go to the daily note (picked up by start-day rollover). Use when the user says "save takeaways", "capture takeaways", "what did I learn", "save what we discussed", or invokes /save-takeaways. Typically used at the end of exploratory conversations (business ideas, competitive analysis, technical investigations, strategy discussions) but safe to invoke mid-conversation or multiple times.
-allowed-tools: Bash
+description: Distills takeaways from **cross-project or non-project** exploratory conversations (business ideas, competitive analysis, technical investigations, strategy discussions not yet anchored to a project) and saves them to the Obsidian vault. Insights and decisions go to a standalone 0_Inbox note (persists for later filing). Action items go to the daily note (picked up by start-day rollover). Use when the user says "save takeaways", "capture takeaways", "what did I learn", "save what we discussed", or invokes /save-takeaways. **For conversations anchored to a 1_Projects/ or 2_Areas/ folder, use `/preserve` instead** — that writes to the project's canonical Session Context, which is the right home for project-scoped insights.
+allowed-tools: Bash, AskUserQuestion
 ---
 
-Scan the current conversation and distill takeaways into three categories. Insights and decisions are saved to a standalone `0_Inbox/` note so they persist for filing. Action items go to the daily note so `start-day` can roll them forward. All vault interaction goes through the `obsidian` CLI.
+Scan the current conversation and distill takeaways into three categories. This skill is for **cross-project or non-project exploratory conversations** — the catch-all for thinking that doesn't yet belong to a project folder. Insights and decisions land in `0_Inbox/` so they persist for filing later. Action items go to today's daily note so `start-day` can roll them forward.
 
-## Step 1 — Determine topic label
+For project-anchored conversations, `/preserve` is the right tool — it writes structured Session Context to the project's canonical file. `save-takeaways` and `/preserve` should not be used together on the same conversation.
+
+## Step 1 — Scope check (project-anchored?)
+
+Determine whether the current conversation is project-anchored:
+
+- Walk up from `pwd`. If an ancestor folder is named `1_Projects` or `2_Areas`, the immediate child is the active project/area. Capture that name.
+- If no such ancestor exists, you're in cross-project territory — proceed to Step 2.
+
+**If a project/area was detected**, ask the user before proceeding:
+
+> "You're in `{Category}/{ProjectName}/`. This skill is for cross-project conversations — for project work, `/preserve` writes to that project's Session Context, which is usually the right home.
+>
+> Was this conversation actually about `{ProjectName}`, or was it about something else?"
+
+Use AskUserQuestion with options:
+1. **About {ProjectName}** — stop and suggest `/preserve "{ProjectName}"`
+2. **Something else (proceed with takeaways)** — continue to Step 2
+3. **Mixed (proceed, I'll file later)** — continue to Step 2
+
+Only continue if the user picks option 2 or 3. If they pick 1, output: `"Use /preserve "{ProjectName}" instead — it'll write to the project's Session Context."` and stop.
+
+## Step 2 — Determine topic label
 
 If `$ARGUMENTS` is provided, use it as the topic label. Otherwise, infer a short 3-6 word descriptor from the conversation (e.g., "B2B pricing strategy exploration", "React Server Components feasibility").
 
-## Step 2 — Distill takeaways
+## Step 3 — Distill takeaways
 
 Scan the full conversation and extract content into three sections:
 
@@ -35,7 +57,7 @@ Concrete next steps where the user expressed **explicit intent to act** — some
 - Include enough context that each bullet is useful when read cold weeks later
 - Don't pad sections — 2 strong bullets beat 6 vague ones
 
-## Step 3 — Save insights and decisions to 0_Inbox
+## Step 4 — Save insights and decisions to 0_Inbox
 
 If there are any Key Insights or Decisions & Positions, create a standalone note in `0_Inbox/`:
 
@@ -69,7 +91,7 @@ obsidian create vault="ObsidianPersonal" name="Takeaways - {topic label} {YYYY-M
 
 If there are no Key Insights and no Decisions & Positions, skip this step entirely.
 
-## Step 4 — Append action items to daily note
+## Step 5 — Append action items to daily note
 
 If there are any Action Items, append them to today's daily note:
 
@@ -84,7 +106,7 @@ obsidian daily:append vault="ObsidianPersonal" content="<formatted content>"
 
 If there are no Action Items, skip this step entirely.
 
-## Step 5 — Confirm
+## Step 6 — Confirm
 
 Report to the user in one line: what was saved where. Examples:
 - "3 insights + 1 decision → `0_Inbox/Takeaways - Chemo Navigator strategy 2026-04-16.md`; 2 action items → daily note."

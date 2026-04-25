@@ -58,7 +58,7 @@ obsidian search vault=ObsidianPersonal folder="1_Projects" query="<link name>" f
 obsidian search vault=ObsidianPersonal folder="2_Areas" query="<link name>" format=json
 ```
 
-If a match is found in either folder and is not already in the project context map, read the matched file and any sibling `#agent-context`-tagged files in that folder, then add them to the map. This surfaces projects and areas referenced intentionally but outside the 14-day auto-load window.
+If a match is found in either folder and is not already in the project context map, read the matched file and any sibling files with `agent-context: project` (or `agent-context: area` if under `2_Areas/`) in their frontmatter, then add them to the map. This surfaces projects and areas referenced intentionally but outside the 14-day auto-load window.
 
 **Classify** every meaningful item into one of five types (most specific match wins):
 
@@ -101,7 +101,7 @@ obsidian append vault=ObsidianPersonal path="2_Areas/Personal Knowledge Manageme
 If the file doesn't exist, create it first:
 
 ```bash
-obsidian create vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md" content="---\ntags:\n  - agent-context\n---\n\nThings that keep coming up but keep getting deferred. Reviewed weekly.\n" silent
+obsidian create vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md" content="---\nagent-context: vault\n---\n\nThings that keep coming up but keep getting deferred. Reviewed weekly.\n" silent
 ```
 
 #### Step 1b-iv — File learnings into 2_Areas
@@ -199,11 +199,15 @@ obsidian read vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management
 # Project Index modification times for staleness check (vault API — portable, no hardcoded path)
 obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().filter(f => f.path.startsWith('1_Projects/') && f.name === 'Index.md').map(f => ({path: f.path, mtime: f.stat.mtime})).sort((a,b) => a.mtime - b.mtime))"
 
-# Agent-context files in 1_Projects modified within 14 days
+# Vault-scope agent context — global personal frame, loaded every session
+obsidian vault=ObsidianPersonal search query="[agent-context:vault]" format=json
+# Read each returned path. These provide who-I-am, life-domain, and long-running-goals context.
+
+# Project-scope agent-context files in 1_Projects modified within 14 days
 # obsidian CLI has no date filter — find used here to overcome that limitation
 # obsidian eval prefixes output with "=> "; strip it before using as a path
 VAULT_PATH=$(obsidian eval vault=ObsidianPersonal code="app.vault.adapter.basePath" | sed 's/^=> //')
-find "$VAULT_PATH/1_Projects" -name "*.md" -mtime -14 | xargs grep -l "agent-context" 2>/dev/null
+find "$VAULT_PATH/1_Projects" -name "*.md" -mtime -14 | xargs grep -l "^agent-context: project" 2>/dev/null
 ```
 
 Read each file from the last command and build the **project context map**: project name (from path or frontmatter title) → key details (goal, current status, any constraints or blockers noted). This map is shared across Phase 1 and Phase 2.

@@ -13,7 +13,7 @@ Scores each project against four signals: strategic priority (from Life Domains)
 Projects with no vault activity in 60+ days and no clear pause signal are flagged as archive candidates rather than worked on.
 
 **Phase 3 — Depth dive**
-Reads the chosen project thoroughly (Index first, then `#agent-context` notes, then recent files). Forms a diagnosis before touching anything. Work type adapts to project state:
+Reads the chosen project thoroughly (Index first, then `agent-context: project` notes, then recent files). Forms a diagnosis before touching anything. Work type adapts to project state:
 
 | Project state | What it does |
 |---------------|-------------|

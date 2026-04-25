@@ -29,17 +29,18 @@ This handles late runs automatically: running on Monday reviews the Sunday-endin
 Read all context before doing any analysis. Run these in sequence:
 
 ```bash
-# Strategic context
-obsidian read vault=ObsidianPersonal path="2_Areas/Life Domains.md"
-
-# Deferred items
-obsidian read vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md"
+# Vault-scope agent context — global personal frame (Life Domains, Avoidance Radar, etc.)
+# Returns every file with `agent-context: vault` in frontmatter; read each.
+obsidian vault=ObsidianPersonal search query="[agent-context:vault]" format=json
 
 # List archived daily notes — filter to past 7 days by filename
 obsidian files vault=ObsidianPersonal folder="4_Archive/Daily Notes"
 
-# Project velocity — modification timestamps on Index files
-find /home/neropol/Syncthing/ObsidianPersonal/1_Projects -maxdepth 2 -name "Index.md" -printf "%T@ %p\n" | sort -rn
+# Project velocity — prefer authoritative `last-touched` frontmatter, fall back to file mtime.
+# `last-touched` is written by /preserve and /compress. Files without it haven't had a session-skill
+# run yet — fall back to mtime (less reliable across Syncthing devices, but a usable starting signal).
+obsidian vault=ObsidianPersonal search query="[last-touched]" format=json
+find /home/neropol/Syncthing/ObsidianPersonal/1_Projects -maxdepth 2 \( -name "Index.md" -o -name "*.md" \) -printf "%T@ %p\n" | sort -rn
 
 # Idea stubs waiting for attention
 obsidian search vault=ObsidianPersonal query="tag:#stub" format=json
@@ -55,7 +56,7 @@ Read each project's `Index.md`:
 obsidian read vault=ObsidianPersonal path="1_Projects/<project>/Index.md"
 ```
 
-Do this for every project listed under `1_Projects/`. The Index.md files contain the `#agent-context` content that describes each project's current state.
+Do this for every project listed under `1_Projects/`. The Index.md files typically carry `agent-context: project` and describe each project's current state.
 
 **Internal picture to build (not written yet):**
 - Which domains were active in the week's distillations vs. absent
@@ -73,11 +74,11 @@ Score each project against four signals. Higher score = stronger case to focus h
 | Signal | How to score |
 |--------|-------------|
 | **Strategic priority** | Read from Life Domains — Chemo Navigator rates highest, then LetsConnect.lol, then idea stubs. Use the domain's described priority/cadence as weight. |
-| **Neglect duration** | Convert `find` timestamps to days-ago. More days since any file in the project folder was touched = higher score. A project touched yesterday scores 0 here. |
+| **Neglect duration** | Prefer the canonical file's `last-touched` frontmatter (authoritative — written by `/preserve` and `/compress`). Fall back to `find` mtime only if `last-touched` is absent. More days since last touch = higher score. A project touched yesterday scores 0 here. |
 | **Idea stubs waiting** | Count stubs from `0_Inbox` whose content is semantically about this project. Each related stub adds to the score. |
 | **Phase readiness** | Can useful work happen right now without the user present? A project waiting on an external reply scores low. A project with clear gaps in documentation or strategy scores high. |
 
-**Archive flag check:** If a project's last-modified timestamp is 60+ days ago AND its Index.md gives no signal of intentional pause, flag it as "is this still active?" rather than scoring it. Do not do depth dive work on archive-candidate projects — surface the question in the weekly output note instead.
+**Archive flag check:** If `last-touched` (or mtime fallback) is 60+ days ago AND its Index.md gives no signal of intentional pause, flag it as "is this still active?" rather than scoring it. Do not do depth dive work on archive-candidate projects — surface the question in the weekly output note instead.
 
 **Feedback check:** If any project's notes contain a `## Feedback` section with content saying "shelving" or "not active" or similar, exclude it from scoring.
 
@@ -92,7 +93,10 @@ Pick the highest-scoring project. Announce before diving in:
 Read the chosen project thoroughly, starting with what matters most:
 
 1. Recall the `Index.md` already read in Phase 1
-2. Read any notes tagged `#agent-context` in the project folder
+2. Read any notes with `agent-context: project` in their frontmatter, scoped to the project folder:
+   ```bash
+   obsidian vault=ObsidianPersonal search path="1_Projects/<chosen>" query="[agent-context:project]" format=json
+   ```
 3. Check for `## Feedback` sections on any existing notes — incorporate this before doing any new work
 4. Read recently modified notes (use modification timestamps to prioritize)
 5. For large projects (20+ notes), stop reading individual files once you have enough to form a diagnosis — don't read every technical reference note
