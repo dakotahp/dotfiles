@@ -164,6 +164,16 @@ obsidian create path="{ProjectPath}/Session Logs/{filename}" content="{session l
 
 The `obsidian create` command will create the `Session Logs/` folder if it doesn't exist.
 
+### Step 7.25: Update `last-touched` Frontmatter on Canonical File
+
+Stamp the canonical project file with today's date. Authoritative engagement signal consumed by `/resume` (stale-warning) and `/end-week` (neglect scoring).
+
+```bash
+obsidian property:set name=last-touched value=$(date +%Y-%m-%d) type=date path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
+```
+
+Swallow errors — a failure here should not block the save.
+
 ### Step 7.5: Link to Today's Daily Note (Side Effect)
 
 Build a passive event log of project engagement so backlinks on the project file naturally accumulate "when did I touch this." Best-effort and silent on failure.

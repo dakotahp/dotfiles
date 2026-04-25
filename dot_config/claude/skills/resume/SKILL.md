@@ -87,6 +87,9 @@ Extract from the summary file:
 - Current phase/status
 - Key references and paths
 - The `## Session Context` section (if it exists) — status, blockers, next steps
+- The `last-touched` frontmatter property (if present)
+
+**Stale check:** if `last-touched` is present and more than 30 days before today, set a `STALE_WARNING` flag with the day count. Surface it prominently in the Step 6 report (see CONTEXT block). If `last-touched` is absent, no warning — the project simply hasn't had a session-skill run yet.
 
 ### Step 3: Find Session Logs
 
@@ -161,6 +164,8 @@ obsidian daily:append vault="{Vault}" content="
 ══════════════════════════════════════════════
 
 CONTEXT (from {ProjectName}.md):
+{If STALE_WARNING is set, prepend this line in bold:}
+⚠ **Stale: last touched {N} days ago ({YYYY-MM-DD}).** Re-orient before assuming session context is current.
 - {Key insight from summary file}
 - {Current status/phase}
 - {Important project state}

@@ -136,6 +136,16 @@ Based on the user's selections, generate the section content:
 
 **Critical:** Preserve ALL other content in the file exactly as-is. The summary file is manually curated — only touch the Session Context section.
 
+### Step 6.5: Update `last-touched` Frontmatter
+
+Stamp the canonical project file with today's date. This is the authoritative engagement signal consumed by `/resume` (stale-warning) and `/end-week` (neglect scoring).
+
+```bash
+obsidian property:set name=last-touched value=$(date +%Y-%m-%d) type=date path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
+```
+
+If the property doesn't exist on the file, `property:set` adds it. If it exists, it's overwritten. Swallow errors — a failure here should not block the preserve.
+
 ### Step 7: Link to Today's Daily Note (Side Effect)
 
 Build a passive event log of project engagement so backlinks on the project file naturally accumulate "when did I touch this." This step is best-effort and silent on failure — never block the main flow.
