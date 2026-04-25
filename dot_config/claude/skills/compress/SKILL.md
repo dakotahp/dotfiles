@@ -13,14 +13,6 @@ Captures key session content into a searchable log file in the project's `Sessio
 
 ## Instructions for Claude
 
-### Step 0: Verify Obsidian Is Running
-
-```bash
-obsidian version
-```
-
-If this fails, stop and tell the user: "Obsidian doesn't appear to be running. Please open it and try again."
-
 ### Step 1: Ask What to Preserve
 
 Use AskUserQuestion with multi-select:

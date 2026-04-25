@@ -16,14 +16,6 @@ Loads the project's canonical summary file and recent session logs to get up to 
 
 ## Instructions for Claude
 
-### Step 0: Verify Obsidian Is Running
-
-```bash
-obsidian version
-```
-
-If this fails, stop and tell the user: "Obsidian doesn't appear to be running. Please open it and try again."
-
 ### Step 1: Parse Arguments
 
 Check if the user provided arguments after `/resume`:

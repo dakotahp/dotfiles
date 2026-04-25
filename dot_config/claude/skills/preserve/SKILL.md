@@ -13,15 +13,6 @@ Updates the project's canonical summary file with key learnings from this sessio
 
 ## Instructions for Claude
 
-### Step 0: Verify Obsidian Is Running
-
-Run a quick check:
-```bash
-obsidian version
-```
-
-If this fails or returns an error, stop and tell the user: "Obsidian doesn't appear to be running. Please open it and try again."
-
 ### Step 1: Detect Project Context
 
 1. Get the current working directory via `pwd`
