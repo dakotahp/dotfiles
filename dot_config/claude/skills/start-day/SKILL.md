@@ -283,43 +283,15 @@ Full filesystem path: `$VAULT_PATH/` + returned path (reuse the `VAULT_PATH` var
 
 `INSPIRATION_FILENAME` is the bare note name (no path, no `.md`) for the wikilink. The `*italics*` wrapper is already in the template around the quote placeholder. If either placeholder is not found (skill already ran today), skip that replacement silently.
 
-**Fill Today's Priorities** — find this exact string and replace:
+**Fill Today's Priorities** — find the exact placeholder and replace it:
 
-```
-## Today's Priorities
+- Find `<!-- priorities -->` → replace with `[PRIORITIES_CONTENT]`
 
-## Morning Context
-```
+**Fill Morning Context** — find the exact placeholder and replace it:
 
-→
+- Find `<!-- context -->` → replace with `[CONTEXT_CONTENT]`
 
-```
-## Today's Priorities
-
-[PRIORITIES_CONTENT]
-
-## Morning Context
-```
-
-**Fill Morning Context** — find this exact string and replace:
-
-```
-## Morning Context
-
-## Brain Dump
-```
-
-→
-
-```
-## Morning Context
-
-[CONTEXT_CONTENT]
-
-## Brain Dump
-```
-
-Make both edits sequentially. If either pattern is not found (sections already have content), skip that edit silently.
+Make both edits sequentially. If either placeholder is not found (skill already ran today), skip that edit silently.
 
 **Append yesterday's navigation link** — calculate yesterday's date (today minus 1 day, formatted `YYYY-MM-DD`), then append to today's note:
 
