@@ -9,39 +9,71 @@ allowed-tools: Bash
 Loads the project's canonical summary file and recent session logs to get up to speed quickly.
 
 **Usage:**
-- `/resume` — summary file + last 3 session logs
+- `/resume` — summary file + last 3 session logs (project derived from cwd)
 - `/resume 5` — summary file + last 5 session logs
 - `/resume auth` — summary file + last 3 + search for "auth" in past sessions
 - `/resume 10 migration` — summary file + last 10 + search for "migration"
+- `/resume "Real Estate Operating Company"` — explicit project, last 3 logs (works from anywhere)
+- `/resume "Real Estate Operating Company" 5 migration` — explicit project + N + topic
 
 ## Instructions for Claude
 
 ### Step 1: Parse Arguments
 
-Check if the user provided arguments after `/resume`:
-- **Number (N):** How many recent sessions to load (default: 3, max: 50)
-- **Topic keyword:** Search for related sessions beyond the last N
+`$ARGUMENTS` may contain, in order:
+
+1. **Optional quoted project name** — if `$ARGUMENTS` starts with `"`, take everything up to the next `"` as the project name. Strip it (and surrounding whitespace) from `$ARGUMENTS` before parsing the rest.
+2. **Number (N):** How many recent sessions to load (default: 3, max: 50)
+3. **Topic keyword:** Search for related sessions beyond the last N
 
 Examples:
-- `/resume` → N=3, no topic search
-- `/resume 5` → N=5, no topic search
-- `/resume auth` → N=3, topic="auth"
-- `/resume 10 jira` → N=10, topic="jira"
+- `/resume` → project from cwd, N=3, no topic
+- `/resume 5` → project from cwd, N=5, no topic
+- `/resume auth` → project from cwd, N=3, topic="auth"
+- `/resume 10 jira` → project from cwd, N=10, topic="jira"
+- `/resume "My Project"` → project="My Project", N=3, no topic
+- `/resume "My Project" 5 auth` → project="My Project", N=5, topic="auth"
 
-### Step 2: Detect Project and Read Summary File
+### Step 2: Resolve Project Context
 
-1. Get the current working directory via `pwd`
-2. Extract the folder name (last path component) as the **project name**
-3. Read the summary file:
-   ```bash
-   obsidian read file="{ProjectName}" vault="ObsidianWork"
-   ```
+This skill operates on a **project** under `1_Projects/` or an **area** under `2_Areas/`. Both must be folder-form: `<category>/<name>/<name>.md`.
 
-If the user provides a vault name override, use that instead of `ObsidianWork` throughout.
+**2a. Determine the project name:**
+
+- If a quoted project name was extracted in Step 1, use it.
+- Otherwise, derive from `pwd`: walk up from cwd. If an ancestor folder is named `1_Projects` or `2_Areas`, the immediate child folder is the project name.
+- If neither yields a project, error and stop:
+  ```
+  No project specified. Run from inside a 1_Projects/ or 2_Areas/ folder, or pass the project name: /resume "Project Name"
+  ```
+
+**2b. Determine the vault and category:**
+
+- If the walk-up succeeded, the vault root is the parent of the matched `1_Projects` or `2_Areas` folder. The vault name is that root's basename. The category is whichever of `1_Projects` / `2_Areas` was matched.
+- Otherwise (arg-mode from outside any vault):
+  1. Run `obsidian vaults verbose` to list vaults and their absolute paths.
+  2. For each vault, check whether `<vault path>/1_Projects/<project>/<project>.md` or `<vault path>/2_Areas/<project>/<project>.md` exists on disk.
+  3. Exactly one match → use that vault and category.
+  4. Multiple matches → error: `"Found '<project>' in multiple vaults: <list>. Run from inside the project folder to disambiguate."`
+  5. No match → error: `"No folder-form project or area named '<project>' found in any vault."`
+
+**2c. Set placeholders:**
+
+- `{Vault}` — resolved vault name
+- `{Category}` — `1_Projects` or `2_Areas`
+- `{ProjectName}` — the project/area name
+- `{ProjectPath}` — `{Category}/{ProjectName}` (vault-relative)
+- `{ProjectAbsPath}` — absolute filesystem path to the project folder (for `ls` of session logs)
+
+**2d. Read the summary file:**
+
+```bash
+obsidian read path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
+```
 
 **If the summary file is not found:**
 ```
-No summary file "{ProjectName}.md" found in this project folder.
+No summary file "{ProjectPath}/{ProjectName}.md" found.
 
 Options:
 1. Tell me about this project and I'll help create one
@@ -60,7 +92,7 @@ Extract from the summary file:
 
 List session log files in the project's `Session Logs/` folder:
 ```bash
-ls -1r "{absolute-path-to-project}/Session Logs/"*.md 2>/dev/null
+ls -1r "{ProjectAbsPath}/Session Logs/"*.md 2>/dev/null
 ```
 
 Files are named `YYYY-MM-DD-HH_MM-{topic}.md`, so reverse-sorted `ls` gives newest first.
@@ -74,7 +106,7 @@ Files are named `YYYY-MM-DD-HH_MM-{topic}.md`, so reverse-sorted `ls` gives newe
 For each of the last N session log files:
 1. Read the full file via:
    ```bash
-   obsidian read path="{vault-relative-path-to-session-log}" vault="ObsidianWork"
+   obsidian read path="{ProjectPath}/Session Logs/{filename}" vault="{Vault}"
    ```
 2. Extract:
    - **Date and topic** (from filename: `YYYY-MM-DD-HH_MM-{topic}.md`)
@@ -91,16 +123,16 @@ If fewer than N logs exist, read all available and note: "Found {X} session logs
 If the user provided a topic keyword:
 
 ```bash
-obsidian search query="{keyword}" vault="ObsidianWork"
+obsidian search query="{keyword}" vault="{Vault}"
 ```
 
-Filter results to only files within this project's `Session Logs/` folder. For each matched session not already in the last N, read it and extract the same fields as Step 4.
+Filter results to only files within `{ProjectPath}/Session Logs/`. For each matched session not already in the last N, read it and extract the same fields as Step 4.
 
 ### Step 6: Output Combined Report
 
 ```
 ══════════════════════════════════════════════
- RESUMING: {Project Name}
+ RESUMING: {ProjectName}  ({Vault} → {ProjectPath})
 ══════════════════════════════════════════════
 
 CONTEXT (from {ProjectName}.md):

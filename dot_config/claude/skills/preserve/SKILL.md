@@ -13,19 +13,44 @@ Updates the project's canonical summary file with key learnings from this sessio
 
 ## Instructions for Claude
 
-### Step 1: Detect Project Context
+### Step 1: Resolve Project Context
 
-1. Get the current working directory via `pwd`
-2. Extract the folder name (last path component) — this is the **project name**
-3. Determine the vault-relative path of the summary file
-4. Verify the summary file exists:
-   ```bash
-   obsidian read file="{ProjectName}" vault="ObsidianWork"
-   ```
-5. If not found, ask the user:
-   "No summary file `{ProjectName}.md` found in this project folder. Would you like me to create one, or specify a different file?"
+This skill operates on a **project** under `1_Projects/` or an **area** under `2_Areas/`. Both must be folder-form: `<category>/<name>/<name>.md`. Other top-level folders (`0_Inbox/`, `3_Resources/`, `4_Archive/`) are not supported.
 
-If the user provides a vault name override, use that instead of `ObsidianWork` throughout.
+**1a. Determine the project name:**
+
+- If `$ARGUMENTS` is provided, treat the entire argument string as the project name.
+- Otherwise, derive from `pwd`: walk up from cwd. If an ancestor folder is named `1_Projects` or `2_Areas`, the immediate child folder is the project name.
+- If neither yields a project, error and stop:
+  ```
+  No project specified. Run from inside a 1_Projects/ or 2_Areas/ folder, or pass the project name: /preserve "Project Name"
+  ```
+
+**1b. Determine the vault and category:**
+
+- If the walk-up in 1a succeeded, the vault root is the parent of the matched `1_Projects` or `2_Areas` folder. The vault name is that root's basename. The category is whichever of `1_Projects` / `2_Areas` was matched.
+- Otherwise (arg-mode from outside any vault):
+  1. Run `obsidian vaults verbose` to list vaults and their absolute paths.
+  2. For each vault, check whether `<vault path>/1_Projects/<project>/<project>.md` or `<vault path>/2_Areas/<project>/<project>.md` exists on disk.
+  3. Exactly one match → use that vault and category.
+  4. Multiple matches → error: `"Found '<project>' in multiple vaults: <list>. Run from inside the project folder to disambiguate."`
+  5. No match → error: `"No folder-form project or area named '<project>' found in any vault."`
+
+**1c. Set the placeholders used in later steps:**
+
+- `{Vault}` — resolved vault name (e.g., `ObsidianPersonal`, `ObsidianWork`)
+- `{Category}` — `1_Projects` or `2_Areas`
+- `{ProjectName}` — the project/area name
+- `{ProjectPath}` — `{Category}/{ProjectName}` (vault-relative)
+
+**1d. Verify the summary file exists:**
+
+```bash
+obsidian read path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
+```
+
+If not found, ask the user:
+"No summary file `{ProjectPath}/{ProjectName}.md` found. Would you like me to create one, or specify a different file?"
 
 ### Step 2: Ask What to Preserve
 
@@ -49,7 +74,7 @@ Ask: "Anything specific you want to highlight or remember? (Type 'skip' to conti
 
 Read the full content of the summary file:
 ```bash
-obsidian read file="{ProjectName}" vault="ObsidianWork"
+obsidian read path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
 ```
 
 Understand:
@@ -100,13 +125,13 @@ Based on the user's selections, generate the section content:
 4. Replace everything between those boundaries with the new section content
 5. Write the reconstructed file:
    ```bash
-   obsidian create name="{ProjectName}" content="{full reconstructed content}" vault="ObsidianWork" overwrite silent
+   obsidian create path="{ProjectPath}/{ProjectName}.md" content="{full reconstructed content}" vault="{Vault}" overwrite silent
    ```
 
 **If `## Session Context` does not exist:**
 1. Append the new section to the end of the file:
    ```bash
-   obsidian append file="{ProjectName}" content="\n\n{session context section}" vault="ObsidianWork"
+   obsidian append path="{ProjectPath}/{ProjectName}.md" content="\n\n{session context section}" vault="{Vault}"
    ```
 
 **Critical:** Preserve ALL other content in the file exactly as-is. The summary file is manually curated — only touch the Session Context section.
@@ -118,7 +143,7 @@ Output a confirmation:
 ```
 Session Context Updated
 
-Preserved to: {ProjectName}.md
+Preserved to: {Vault} → {ProjectPath}/{ProjectName}.md
 - {list of what was added/changed}
 
 Status: {the status line written}

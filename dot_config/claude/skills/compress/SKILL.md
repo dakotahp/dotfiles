@@ -13,7 +13,37 @@ Captures key session content into a searchable log file in the project's `Sessio
 
 ## Instructions for Claude
 
-### Step 1: Ask What to Preserve
+### Step 1: Resolve Project Context
+
+This skill operates on a **project** under `1_Projects/` or an **area** under `2_Areas/`. Both must be folder-form: `<category>/<name>/<name>.md`. Other top-level folders (`0_Inbox/`, `3_Resources/`, `4_Archive/`) are not supported.
+
+**1a. Determine the project name:**
+
+- If `$ARGUMENTS` is provided, treat the entire argument string as the project name.
+- Otherwise, derive from `pwd`: walk up from cwd. If an ancestor folder is named `1_Projects` or `2_Areas`, the immediate child folder is the project name.
+- If neither yields a project, error and stop:
+  ```
+  No project specified. Run from inside a 1_Projects/ or 2_Areas/ folder, or pass the project name: /compress "Project Name"
+  ```
+
+**1b. Determine the vault and category:**
+
+- If the walk-up succeeded, the vault root is the parent of the matched `1_Projects` or `2_Areas` folder. The vault name is that root's basename. The category is whichever of `1_Projects` / `2_Areas` was matched.
+- Otherwise (arg-mode from outside any vault):
+  1. Run `obsidian vaults verbose` to list vaults and their absolute paths.
+  2. For each vault, check whether `<vault path>/1_Projects/<project>/` or `<vault path>/2_Areas/<project>/` exists on disk.
+  3. Exactly one match → use that vault and category.
+  4. Multiple matches → error: `"Found '<project>' in multiple vaults: <list>. Run from inside the project folder to disambiguate."`
+  5. No match → error: `"No folder-form project or area named '<project>' found in any vault."`
+
+**1c. Set the placeholders used in later steps:**
+
+- `{Vault}` — resolved vault name
+- `{Category}` — `1_Projects` or `2_Areas`
+- `{ProjectName}` — the project/area name
+- `{ProjectPath}` — `{Category}/{ProjectName}` (vault-relative)
+
+### Step 2: Ask What to Preserve
 
 Use AskUserQuestion with multi-select:
 
@@ -28,11 +58,11 @@ Use AskUserQuestion with multi-select:
 6. **Pending Tasks** — unfinished work, next steps, blockers
 7. **Errors & Workarounds** — problems encountered and how they were solved
 
-### Step 2: Ask for Custom Notes (Optional)
+### Step 3: Ask for Custom Notes (Optional)
 
 Ask: "Anything specific you want to highlight or remember? (Type 'skip' to continue)"
 
-### Step 3: Suggest Topic Name
+### Step 4: Suggest Topic Name
 
 Analyze the conversation and suggest a concise topic name (3-5 words, lowercase, hyphens):
 
@@ -44,7 +74,7 @@ Accept this, or type your preferred topic name:
 
 The user can accept with "ok"/"yes" or provide their own.
 
-### Step 4: Generate Session Log Content
+### Step 5: Generate Session Log Content
 
 Create the session log with this structure:
 
@@ -93,14 +123,14 @@ Create the session log with this structure:
 ```
 
 **Rules:**
-- Only include sections the user selected in Step 1
+- Only include sections the user selected in Step 2
 - **Always include:** Quick Reference and Quick Resume Context (regardless of selection)
 - Be concise: each bullet should be actionable or informative
 - Use code blocks for commands, paths, and code snippets
 - Preserve exact values — don't paraphrase specific configs, IDs, or identifiers
 - If something depends on something else, note the relationship
 
-### Step 5: Extract Keywords
+### Step 6: Extract Keywords
 
 For the Quick Reference **Keywords** field, extract from the conversation:
 - Project/product names
@@ -112,11 +142,9 @@ For the Quick Reference **Keywords** field, extract from the conversation:
 
 These keywords enable `/resume` to find relevant sessions via search.
 
-### Step 6: Detect Project Path and Save
+### Step 7: Save the Session Log
 
-1. Get the current working directory via `pwd`
-2. Extract the folder name as the project name
-3. Determine the vault-relative project path
+Use the `{Vault}` and `{ProjectPath}` resolved in Step 1.
 
 **Generate filename:**
 ```
@@ -129,19 +157,14 @@ Example: `2026-04-24-14_30-api-auth-refactor.md`
 date +"%Y-%m-%d-%H_%M"
 ```
 
-**Construct the vault-relative path** for the session log. The path is relative to the vault root. For example, if working in `1_Projects/Feature Seed Data/`, the path would be:
-```
-1_Projects/Feature Seed Data/Session Logs/2026-04-24-14_30-api-auth-refactor.md
-```
-
 **Save via Obsidian CLI:**
 ```bash
-obsidian create path="{vault-relative-project-path}/Session Logs/{filename}" content="{session log content}" vault="ObsidianWork" silent
+obsidian create path="{ProjectPath}/Session Logs/{filename}" content="{session log content}" vault="{Vault}" silent
 ```
 
 The `obsidian create` command will create the `Session Logs/` folder if it doesn't exist.
 
-### Step 7: Confirm
+### Step 8: Confirm
 
 Output confirmation:
 
