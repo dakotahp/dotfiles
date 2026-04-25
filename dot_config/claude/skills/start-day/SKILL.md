@@ -132,28 +132,26 @@ obsidian append vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md" content="## 
 
 Omit any subsection with nothing to show. For **Action items**: group todos under their attributed project as a subheading. If all todos are unattributed, skip the grouping and list flat. If only one project is represented, skip the project subheading and annotate each item inline with `*(→ [[Project Name]])*`. Omit the *Unattributed* heading if everything is attributed.
 
-**Navigation footer:**
+**Navigation footer** — the note may already have a `← [[PREV-DATE]]` line (added by Phase 2 when today's note was primed). If so, replace it with the full bidirectional footer using a direct file edit on the full filesystem path (`$VAULT_PATH/0_Inbox/YYYY-MM-DD.md`):
+
+```bash
+sed -i "s|← \[\[PREV-DATE\]\]|← [[PREV-DATE]] | → [[NEXT-DATE]]|" "$VAULT_PATH/0_Inbox/YYYY-MM-DD.md"
+```
+
+If no footer line exists yet (note was never primed by Phase 2), append instead:
 
 ```bash
 obsidian append vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md" content="\n\n---\n← [[PREV-DATE]] | → [[NEXT-DATE]]"
 ```
 
 - `PREV-DATE`: calendar day before this note's date
-- `NEXT-DATE`: placeholder — will resolve when that note is processed
+- `NEXT-DATE`: calendar day after this note's date
 
 **Archive:**
 
 ```bash
 obsidian move vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md" to="4_Archive/Daily Notes/YYYY-MM/YYYY-MM-DD.md"
 ```
-
-**Back-fill the predecessor's forward link:**
-
-```bash
-obsidian append vault=ObsidianPersonal path="4_Archive/Daily Notes/PREV-YYYY-MM/PREV-DATE.md" content="\n\n---\n← [[PREV-PREV-DATE]] | → [[YYYY-MM-DD]]"
-```
-
-Skip if the predecessor doesn't exist in the archive.
 
 ---
 
@@ -322,6 +320,14 @@ Full filesystem path: `$VAULT_PATH/` + returned path (reuse the `VAULT_PATH` var
 ```
 
 Make both edits sequentially. If either pattern is not found (sections already have content), skip that edit silently.
+
+**Append yesterday's navigation link** — calculate yesterday's date (today minus 1 day, formatted `YYYY-MM-DD`), then append to today's note:
+
+```bash
+obsidian append vault=ObsidianPersonal path="<TODAY_VAULT_PATH>" content="\n\n---\n← [[YESTERDAY-DATE]]"
+```
+
+If the note already ends with a nav footer line (starts with `←`), skip silently — the skill already ran today.
 
 ---
 
