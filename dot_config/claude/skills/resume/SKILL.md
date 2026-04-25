@@ -128,6 +128,31 @@ obsidian search query="{keyword}" vault="{Vault}"
 
 Filter results to only files within `{ProjectPath}/Session Logs/`. For each matched session not already in the last N, read it and extract the same fields as Step 4.
 
+### Step 5.5: Link to Today's Daily Note (Side Effect)
+
+Resuming a project counts as touching it. Append a backlink to today's daily note so the project's backlink graph naturally records engagement. Best-effort and silent on failure.
+
+**a. Check whether today's daily note exists in `{Vault}`:**
+
+```bash
+obsidian daily vault="{Vault}"
+```
+
+- If the command errors or indicates no daily note exists, **skip silently**. Do NOT create one — that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes.
+
+**b. Idempotency:** if the daily note content already contains `[[{ProjectName}]]`, skip.
+
+**c. Append:** if `## Sessions` exists, add `- [[{ProjectName}]]` under it. Otherwise append a new `## Sessions` section with the bullet:
+
+```bash
+obsidian daily:append vault="{Vault}" content="
+
+## Sessions
+- [[{ProjectName}]]"
+```
+
+**d. Swallow errors.** This is a side effect; never block the resume report.
+
 ### Step 6: Output Combined Report
 
 ```

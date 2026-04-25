@@ -164,6 +164,31 @@ obsidian create path="{ProjectPath}/Session Logs/{filename}" content="{session l
 
 The `obsidian create` command will create the `Session Logs/` folder if it doesn't exist.
 
+### Step 7.5: Link to Today's Daily Note (Side Effect)
+
+Build a passive event log of project engagement so backlinks on the project file naturally accumulate "when did I touch this." Best-effort and silent on failure.
+
+**a. Check whether today's daily note exists in `{Vault}`:**
+
+```bash
+obsidian daily vault="{Vault}"
+```
+
+- If the command errors or indicates no daily note exists, **skip silently**. Do NOT create one — that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes.
+
+**b. Idempotency:** if the daily note content already contains `[[{ProjectName}]]`, skip.
+
+**c. Append:** if `## Sessions` exists, add `- [[{ProjectName}]]` under it. Otherwise append a new `## Sessions` section with the bullet:
+
+```bash
+obsidian daily:append vault="{Vault}" content="
+
+## Sessions
+- [[{ProjectName}]]"
+```
+
+**d. Swallow errors.** This is a side effect; never block the save.
+
 ### Step 8: Confirm
 
 Output confirmation:

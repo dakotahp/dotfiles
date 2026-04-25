@@ -136,7 +136,39 @@ Based on the user's selections, generate the section content:
 
 **Critical:** Preserve ALL other content in the file exactly as-is. The summary file is manually curated — only touch the Session Context section.
 
-### Step 7: Confirm
+### Step 7: Link to Today's Daily Note (Side Effect)
+
+Build a passive event log of project engagement so backlinks on the project file naturally accumulate "when did I touch this." This step is best-effort and silent on failure — never block the main flow.
+
+**7a. Check whether today's daily note exists in `{Vault}`:**
+
+```bash
+obsidian daily vault="{Vault}"
+```
+
+- If the command errors or indicates no daily note exists, **skip the rest of this step silently**. Do NOT create the daily note — that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes at all.
+- If it returns content, capture it.
+
+**7b. Idempotency check:**
+
+If the daily note content already contains the substring `[[{ProjectName}]]` anywhere, skip — the project is already logged for today.
+
+**7c. Append the link:**
+
+If `## Sessions` exists in the daily note, append `- [[{ProjectName}]]` under that heading. Otherwise, append a new `## Sessions` section with the bullet:
+
+```bash
+obsidian daily:append vault="{Vault}" content="
+
+## Sessions
+- [[{ProjectName}]]"
+```
+
+(If `## Sessions` already exists but doesn't contain the project link, append just `- [[{ProjectName}]]` under it via `obsidian daily:append` — the CLI's append behavior controls placement; if precise section insertion isn't possible, appending the bullet to the end of the daily note is acceptable.)
+
+**7d. On any error in this step, swallow it.** This is a side effect, not the primary purpose of `/preserve`.
+
+### Step 8: Confirm
 
 Output a confirmation:
 
