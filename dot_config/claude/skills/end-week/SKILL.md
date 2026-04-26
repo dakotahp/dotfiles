@@ -65,6 +65,8 @@ Do this for every project listed under `1_Projects/`. The Index.md files typical
 - What idea stubs exist and what projects they relate to (judge by content, not formal links)
 - Any `## Feedback` sections on existing notes in project folders (scan while reading)
 
+**Stale agent-context check.** While reading agent-context files in this phase, capture each file's `last-reviewed` frontmatter date (or note its absence). Any file with `last-reviewed` 60+ days ago, or missing the field entirely, is a candidate to surface in `## Stale Context` in the weekly note (Phase 4). Do not edit these files in this skill — the user runs `/refresh-context` for that.
+
 ---
 
 ## Phase 2 — Score, Diagnose, Curate
@@ -235,6 +237,14 @@ Projects not touched in 60+ days with no clear pause signal:
 - [[Project Name]] — last activity: YYYY-MM-DD. Still active?
 
 (Omit if no candidates.)
+
+## Stale Context
+
+Agent-context files (vault/project/area scope) with `last-reviewed` 60+ days old or missing. These shape automatic agent framing — drift here misdirects everything downstream. Run `/refresh-context` to walk through them.
+
+- [[File path]] — last-reviewed: YYYY-MM-DD (or "never")
+
+(Omit if all agent-context files are within 60 days.)
 ```
 
 ---
