@@ -77,7 +77,7 @@ No summary file "{ProjectPath}/{ProjectName}.md" found.
 
 Options:
 1. Tell me about this project and I'll help create one
-2. Just start working and run /preserve later
+2. Just start working and run /snapshot later
 
 What would you like to do?
 ```
@@ -102,7 +102,7 @@ Files are named `YYYY-MM-DD-HH_MM-{topic}.md`, so reverse-sorted `ls` gives newe
 
 **If no session logs exist** (folder missing or empty):
 - Skip all session log sections
-- Note: "No session logs yet. Run /compress to start building session history."
+- Note: "No session logs yet. Run /log to start building session history."
 
 ### Step 4: Read Last N Session Logs
 

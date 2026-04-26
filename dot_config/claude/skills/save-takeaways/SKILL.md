@@ -1,12 +1,12 @@
 ---
 name: save-takeaways
-description: Distills takeaways from **cross-project or non-project** exploratory conversations (business ideas, competitive analysis, technical investigations, strategy discussions not yet anchored to a project) and saves them to the Obsidian vault. Insights and decisions go to a standalone 0_Inbox note (persists for later filing). Action items go to the daily note (picked up by start-day rollover). Use when the user says "save takeaways", "capture takeaways", "what did I learn", "save what we discussed", or invokes /save-takeaways. **For conversations anchored to a 1_Projects/ or 2_Areas/ folder, use `/preserve` instead** — that writes to the project's canonical Session Context, which is the right home for project-scoped insights.
+description: Distills takeaways from **cross-project or non-project** exploratory conversations (business ideas, competitive analysis, technical investigations, strategy discussions not yet anchored to a project) and saves them to the Obsidian vault. Insights and decisions go to a standalone 0_Inbox note (persists for later filing). Action items go to the daily note (picked up by start-day rollover). Use when the user says "save takeaways", "capture takeaways", "what did I learn", "save what we discussed", or invokes /save-takeaways. **For conversations anchored to a 1_Projects/ or 2_Areas/ folder, use `/snapshot` instead** — that writes to the project's canonical Session Context, which is the right home for project-scoped insights.
 allowed-tools: Bash, AskUserQuestion
 ---
 
 Scan the current conversation and distill takeaways into three categories. This skill is for **cross-project or non-project exploratory conversations** — the catch-all for thinking that doesn't yet belong to a project folder. Insights and decisions land in `0_Inbox/` so they persist for filing later. Action items go to today's daily note so `start-day` can roll them forward.
 
-For project-anchored conversations, `/preserve` is the right tool — it writes structured Session Context to the project's canonical file. `save-takeaways` and `/preserve` should not be used together on the same conversation.
+For project-anchored conversations, `/snapshot` is the right tool — it writes structured Session Context to the project's canonical file. `save-takeaways` and `/snapshot` should not be used together on the same conversation.
 
 ## Step 1 — Scope check (project-anchored?)
 
@@ -17,16 +17,16 @@ Determine whether the current conversation is project-anchored:
 
 **If a project/area was detected**, ask the user before proceeding:
 
-> "You're in `{Category}/{ProjectName}/`. This skill is for cross-project conversations — for project work, `/preserve` writes to that project's Session Context, which is usually the right home.
+> "You're in `{Category}/{ProjectName}/`. This skill is for cross-project conversations — for project work, `/snapshot` writes to that project's Session Context, which is usually the right home.
 >
 > Was this conversation actually about `{ProjectName}`, or was it about something else?"
 
 Use AskUserQuestion with options:
-1. **About {ProjectName}** — stop and suggest `/preserve "{ProjectName}"`
+1. **About {ProjectName}** — stop and suggest `/snapshot "{ProjectName}"`
 2. **Something else (proceed with takeaways)** — continue to Step 2
 3. **Mixed (proceed, I'll file later)** — continue to Step 2
 
-Only continue if the user picks option 2 or 3. If they pick 1, output: `"Use /preserve "{ProjectName}" instead — it'll write to the project's Session Context."` and stop.
+Only continue if the user picks option 2 or 3. If they pick 1, output: `"Use /snapshot "{ProjectName}" instead — it'll write to the project's Session Context."` and stop.
 
 ## Step 2 — Determine topic label
 

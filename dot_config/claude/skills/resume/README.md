@@ -39,7 +39,7 @@ Supports loading a configurable number of recent sessions and searching past ses
 
 ## Relationship to other skills
 
-- **Independent** — reads what `/preserve` and `/compress` write
-- Reads the `## Session Context` section written by `/preserve`
-- Reads session log files created by `/compress`
+- **Independent** — reads what `/snapshot` and `/log` write
+- Reads the `## Session Context` section written by `/snapshot`
+- Reads session log files created by `/log`
 - Works without either — gracefully handles missing session context or logs
