@@ -1,7 +1,7 @@
 ---
 name: start-day
 description: Use when starting the day to set up today's daily note and process any prior unprocessed notes.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, mcp__claude_ai_Google_Calendar__list_events
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Agent, mcp__claude_ai_Google_Calendar__list_events
 ---
 
 Morning startup for the personal Obsidian vault. Runs in two phases: first closes out any unprocessed daily notes from prior days (routing content to its destination and archiving), then primes today's note with rolled-over todos, Avoidance Radar items, and context. Non-interactive except for ambiguous `2_Areas` folder matches.
@@ -17,31 +17,61 @@ Key rules:
 
 ## Phase 1 — Close out unprocessed notes
 
-### Step 1a — Find unprocessed daily notes
+### Step 1a — Find unprocessed daily notes and fire bootstrap reads
 
-Get today's daily note path to learn the inbox folder:
+Fire all of the following in one parallel batch:
 
 ```bash
+# Today's note path — extracts inbox folder and today's date
 obsidian daily:path vault=ObsidianPersonal
+
+# VAULT_PATH — needed for find commands below; strip the leading "=> " prefix
+obsidian eval vault=ObsidianPersonal code="app.vault.adapter.basePath"
+
+# Phase 2 bootstrap reads — fire now so results accumulate while Phase 1 runs
+mcp__claude_ai_Google_Calendar__list_events(
+  calendarId="dakotah.pena@apartmentiq.io",
+  startTime="<today>T00:00:00",
+  endTime="<today>T23:59:59",
+  orderBy="startTime",
+  timeZone="America/Los_Angeles"
+)
+obsidian read vault=ObsidianPersonal path="2_Areas/Quotes.md"
+obsidian search vault=ObsidianPersonal query="tag:#inspiration" format=json
+obsidian read vault=ObsidianPersonal path="2_Areas/Life Domains.md"
+obsidian search vault=ObsidianPersonal query="[agent-context:vault]" format=json
+
+# Project Index modification times for staleness check (vault API)
+obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().filter(f => f.path.startsWith('1_Projects/') && f.name === 'Index.md').map(f => ({path: f.path, mtime: f.stat.mtime})).sort((a,b) => a.mtime - b.mtime))"
 ```
 
-This returns a vault-relative path like `0_Inbox/2026-04-11.md`. Extract the containing folder (`0_Inbox/`) and today's date.
-
-List everything in that folder:
+After VAULT_PATH resolves, fire this second batch (also in parallel):
 
 ```bash
+# Inbox contents (Phase 1 input — folder derived from daily:path result)
 obsidian files vault=ObsidianPersonal folder="0_Inbox"
+
+# Weekly note for current ISO week
+CURRENT_WEEK=$(date +%Y-%V)
+obsidian files vault=ObsidianPersonal folder="4_Archive/Weekly Notes"
+
+# Project-scope agent-context files modified within 14 days
+find "$VAULT_PATH/1_Projects" -name "*.md" -mtime -14 | xargs grep -l "^agent-context: project" 2>/dev/null
 ```
 
-Filter to files matching the `YYYY-MM-DD.md` pattern **where the date is before today**. Sort ascending (oldest first). These are unprocessed prior notes.
+Store all results under these labels for use in Phase 2: **CALENDAR_EVENTS**, **VAULT_PATH**, **QUOTES_RAW**, **INSPIRATION_FILES**, **LIFE_DOMAINS**, **VAULT_AGENT_CONTEXT**, **INDEX_MTIMES**, **WEEKLY_FILES**, **PROJECT_CONTEXT_FILES**. If any call fails, store empty/null and continue silently.
+
+Filter the inbox list to files matching the `YYYY-MM-DD.md` pattern **where the date is before today**. Sort ascending (oldest first). These are unprocessed prior notes.
 
 If none exist, skip to Phase 2.
 
 ### Step 1b — Process each prior note (oldest first, no pausing between notes)
 
-Repeat Steps 1b-i through 1b-v for every unprocessed prior note. The only exception to no-pausing is an ambiguous `2_Areas` folder match (see Step 1b-iii).
+The only exception to no-pausing is an ambiguous `2_Areas` folder match (see Step 1b-iii/iv).
 
-**Track for each note:** count of todos, avoidance items, idea stubs, learnings filed. Carry the extracted action items forward in memory — they feed directly into Phase 2.
+**Track for each note:** count of todos, avoidance items, idea stubs, learnings filed. Carry extracted action items forward in memory — they feed directly into Phase 2.
+
+**Multiple prior notes (2+):** Dispatch one Agent subagent per note (`model: haiku`) to run Steps 1b-i through 1b-iv concurrently. Each subagent creates stubs and files learnings directly. However, each subagent **returns avoidance items as output** rather than writing them — the main thread does a single Avoidance Radar read + batch append after all subagents finish (avoids write conflicts on a shared file). After all subagents complete, the main thread runs Step 1b-v (distillation + archive) for each note in date order.
 
 #### Step 1b-i — Read, resolve wikilinks, and classify
 
@@ -51,14 +81,17 @@ obsidian read vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md"
 
 If the note is empty or contains only a template skeleton with no substantive content, skip to Step 1b-v (archiving).
 
-**Wikilink context override** — extract all `[[...]]` references from the note text. For each link name, search `1_Projects/` and `2_Areas/` in parallel:
+**Wikilink batch search** — extract ALL `[[...]]` references from the note text at once. Launch all searches simultaneously in one parallel batch (both folders for every link at the same time):
 
 ```bash
-obsidian search vault=ObsidianPersonal folder="1_Projects" query="<link name>" format=json
-obsidian search vault=ObsidianPersonal folder="2_Areas" query="<link name>" format=json
+obsidian search vault=ObsidianPersonal folder="1_Projects" query="<link1>" format=json
+obsidian search vault=ObsidianPersonal folder="2_Areas" query="<link1>" format=json
+obsidian search vault=ObsidianPersonal folder="1_Projects" query="<link2>" format=json
+obsidian search vault=ObsidianPersonal folder="2_Areas" query="<link2>" format=json
+# … all links at once, not one at a time
 ```
 
-If a match is found in either folder and is not already in the project context map, read the matched file and any sibling files with `agent-context: project` (or `agent-context: area` if under `2_Areas/`) in their frontmatter, then add them to the map. This surfaces projects and areas referenced intentionally but outside the 14-day auto-load window.
+If a match is found in either folder and is not already in the project context map, read the matched file and any sibling files with `agent-context: project` (or `agent-context: area` if under `2_Areas/`) in their frontmatter, then add them to the map. This surfaces projects referenced intentionally but outside the 14-day auto-load window.
 
 **Classify** every meaningful item into one of five types (most specific match wins):
 
@@ -74,46 +107,37 @@ Items under `## Today's Priorities` are hard todos by default (unchecked only �
 
 **Project attribution** — for each hard todo, fuzzy-match its text against project names in the project context map. A direct name mention, a wikilink to the project, or a domain clearly owned by one project all count. Tag each todo internally with its matched project, or mark it "unattributed" if no match.
 
-#### Step 1b-ii — Create idea stubs in 0_Inbox
+#### Step 1b-ii/iii/iv — Create stubs, log avoidance, file learnings (parallel)
 
-For each **idea fragment**:
+Run two batches in sequence:
 
-```bash
-obsidian create vault=ObsidianPersonal path="0_Inbox/Idea - <Short Title>.md" content="---\ntags:\n  - idea\n  - stub\nsource: \"[[YYYY-MM-DD]]\"\n---\n\n<raw thought, verbatim or lightly cleaned>" silent
-```
-
-Keep `<Short Title>` to 4–6 words. Don't expand or elaborate.
-
-#### Step 1b-iii — Append avoidance items to Avoidance Radar
-
-For each **avoidance item**, first read the Radar and fuzzy-match to avoid duplicates:
-
+**Read batch (fire together):**
 ```bash
 obsidian read vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md"
-```
-
-If not already present, append:
-
-```bash
-obsidian append vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md" content="\n- [ ] <item> — *first noted: YYYY-MM-DD*"
-```
-
-If the file doesn't exist, create it first:
-
-```bash
-obsidian create vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md" content="---\nagent-context: vault\n---\n\nThings that keep coming up but keep getting deferred. Reviewed weekly.\n" silent
-```
-
-#### Step 1b-iv — File learnings into 2_Areas
-
-For each **learning**, list `2_Areas/` subfolders and match semantically:
-
-```bash
 obsidian files vault=ObsidianPersonal folder="2_Areas"
 ```
 
-**Clear match:** proceed without asking. **No match:** suggest top 2 candidates or offer to create a new folder — this is the **only** time to pause. Once answered, continue.
+**Write batch (fire together after reads complete):**
 
+All three write types target different files — fire them simultaneously.
+
+*Idea stubs* — for each idea fragment:
+```bash
+obsidian create vault=ObsidianPersonal path="0_Inbox/Idea - <Short Title>.md" content="---\ntags:\n  - idea\n  - stub\nsource: \"[[YYYY-MM-DD]]\"\n---\n\n<raw thought, verbatim or lightly cleaned>" silent
+```
+Keep `<Short Title>` to 4–6 words. Don't expand or elaborate.
+
+*Avoidance items* — fuzzy-match each item against the Radar content read above. If not already present, append:
+```bash
+obsidian append vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md" content="\n- [ ] <item> — *first noted: YYYY-MM-DD*"
+```
+If the Radar file doesn't exist, create it first:
+```bash
+obsidian create vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md" content="---\nagent-context: vault\n---\n\nThings that keep coming up but keep getting deferred. Reviewed weekly.\n" silent
+```
+**When running as a subagent (multi-note dispatch):** skip writing to the Radar entirely — return avoidance items as output to the main thread instead.
+
+*Learnings* — match each learning semantically to a `2_Areas/` subfolder (from the files list). **Clear match:** proceed without asking. **No match:** suggest top 2 candidates or offer to create a new folder — this is the **only** pause point. Once answered, continue:
 ```bash
 # Append to existing note
 obsidian append vault=ObsidianPersonal file="<Note Name>" content="\n---\n\n<learning content>\n\nSource: [[YYYY-MM-DD]]"
@@ -167,62 +191,18 @@ Creates today's note from the template if it doesn't exist.
 
 ### Step 2b — Load context
 
-Run all reads in parallel before any analysis:
+**Bootstrap batch results** from Step 1a should already be available. If any are still pending, wait for them now before continuing.
 
-**Work calendar** — fetch today's events via MCP (not bash):
+**Read vault agent-context files** — for each path returned in **VAULT_AGENT_CONTEXT**, read the file. These provide who-I-am, life-domain, and long-running-goals context.
 
-```
-mcp__claude_ai_Google_Calendar__list_events(
-  calendarId="dakotah.pena@apartmentiq.io",
-  startTime="<today>T00:00:00",
-  endTime="<today>T23:59:59",
-  orderBy="startTime",
-  timeZone="America/Los_Angeles"
-)
-```
+**Read project-scope agent-context files** — for each path in **PROJECT_CONTEXT_FILES**, read the file. Build the **project context map**: project name (from path or frontmatter title) → key details (goal, current status, constraints, blockers). This map is shared across Phase 1 and Phase 2.
 
-Store results as **CALENDAR_EVENTS** — a list of `{summary, start, end}` objects. If the call fails or returns empty, store an empty list and continue silently.
+**Weekly note** — from **WEEKLY_FILES**, find the file matching `$CURRENT_WEEK.md`. If found, read it. Used as AMBIENT CONTEXT ONLY — do not replicate any content into today's daily note. It informs internal calibration: which rolled-over todos feel weightier (project matched `## Projects Focused`), which domain nudges to favor (open `## Decisions Needed` items), whether to flag a stale project (already covered by `## Archive Candidates`).
 
+**Avoidance Radar** — read now (after Phase 1 has finished updating it):
 ```bash
-# Daily quote source
-obsidian read vault=ObsidianPersonal path="2_Areas/Quotes.md"
-
-# Inspiration file index
-obsidian search vault=ObsidianPersonal query="tag:#inspiration" format=json
-
-# Life Domains manifest
-obsidian read vault=ObsidianPersonal path="2_Areas/Life Domains.md"
-
-# Avoidance Radar (freshly updated by Phase 1)
 obsidian read vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md"
-
-# Project Index modification times for staleness check (vault API — portable, no hardcoded path)
-obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().filter(f => f.path.startsWith('1_Projects/') && f.name === 'Index.md').map(f => ({path: f.path, mtime: f.stat.mtime})).sort((a,b) => a.mtime - b.mtime))"
-
-# Vault-scope agent context — global personal frame, loaded every session
-obsidian vault=ObsidianPersonal search query="[agent-context:vault]" format=json
-# Read each returned path. These provide who-I-am, life-domain, and long-running-goals context.
-
-# Most recent weekly note — strategic frame for the current ISO week
-# Stale-week guard: only use if the filename matches today's ISO week (date +%Y-%V → e.g. "2026-17").
-# If absent (no end-week run yet this week, or first week of vault), skip silently.
-CURRENT_WEEK=$(date +%Y-%V)
-obsidian files vault=ObsidianPersonal folder="4_Archive/Weekly Notes"
-# From the returned list, find the file matching $CURRENT_WEEK.md. If found:
-obsidian read vault=ObsidianPersonal path="4_Archive/Weekly Notes/$CURRENT_WEEK.md"
-# Used as AMBIENT CONTEXT ONLY — do not replicate any of its content into today's daily note.
-# It informs internal calibration: which rolled-over todos feel weightier (project matched `## Projects Focused`),
-# which domain nudges to favor (open `## Decisions Needed` items), whether to flag a stale project
-# (already covered by `## Archive Candidates`). No new visible lines in the daily note from this read.
-
-# Project-scope agent-context files in 1_Projects modified within 14 days
-# obsidian CLI has no date filter — find used here to overcome that limitation
-# obsidian eval prefixes output with "=> "; strip it before using as a path
-VAULT_PATH=$(obsidian eval vault=ObsidianPersonal code="app.vault.adapter.basePath" | sed 's/^=> //')
-find "$VAULT_PATH/1_Projects" -name "*.md" -mtime -14 | xargs grep -l "^agent-context: project" 2>/dev/null
 ```
-
-Read each file from the last command and build the **project context map**: project name (from path or frontmatter title) → key details (goal, current status, any constraints or blockers noted). This map is shared across Phase 1 and Phase 2.
 
 **Rolled-over todos:**
 - **If Phase 1 processed any notes:** use the action items already in memory from those Distillations — skip the archive re-read.
@@ -239,13 +219,11 @@ Find `## Distillation` → `**Action items:**`, extract every `- [ ]` line verba
 
 ### Step 2b-ii — Pick today's quote and inspiration
 
-**Quote** — from `Quotes.md`, extract every line beginning with `- `. Strip the leading `- `. Use today's date as a seed: take the day-of-year (1–366), mod by the number of quotes, and select that line. Same quote all day if the skill runs twice.
+**Quote** — from **QUOTES_RAW**, extract every line beginning with `- `. Strip the leading `- `. Use today's date as a seed: take the day-of-year (1–366), mod by the number of quotes, and select that line. Same quote all day if the skill runs twice.
 
 Store as **QUOTE_CONTENT** — the raw line text including attribution and any `[[wikilink]]`.
 
-**Inspiration** — from the `#inspiration` search results, apply the same day-of-year mod against the list to pick one file deterministically.
-
-Read just the first non-frontmatter, non-heading line of that file (skip `---` blocks and lines starting with `#`). This is the teaser sentence.
+**Inspiration** — from **INSPIRATION_FILES**, apply the same day-of-year mod against the list to pick one file deterministically. Read **only the first non-frontmatter, non-heading line** of that file (skip `---` blocks and lines starting with `#`) — stop after the first prose paragraph; do not load the full file.
 
 Store as **INSPIRATION_PATH** (vault-relative path) and **INSPIRATION_TEASER** (the first prose line).
 
@@ -265,13 +243,13 @@ Store as **INSPIRATION_PATH** (vault-relative path) and **INSPIRATION_TEASER** (
 
 Sort oldest first. Append after rolled-over todos.
 
-**Domain-aware nudge** — from Life Domains `## Current Context` and `## Life Domains`, identify any seasonally active or high-priority domain. If none of its concerns appear in rolled-over todos or surfaced Radar items, add one soft prompt at the bottom:
+**Domain-aware nudge** — from **LIFE_DOMAINS** `## Current Context` and `## Life Domains`, identify any seasonally active or high-priority domain. If none of its concerns appear in rolled-over todos or surfaced Radar items, add one soft prompt at the bottom:
 
 `- [ ] [Domain name]: anything to move forward today?`
 
 Maximum one nudge. Skip if active domains are already represented.
 
-**Stale project flag** — from the `find` output, if any `Index.md` is 30+ days old, pick the least stale one and add:
+**Stale project flag** — from **INDEX_MTIMES**, if any `Index.md` is 30+ days old, pick the least stale one and add:
 
 `- [ ] [[Project name]]: no activity in N days — worth a push?`
 
@@ -290,7 +268,7 @@ Skip if a rolled-over todo already references that project. Skip if everything i
 obsidian daily:path vault=ObsidianPersonal
 ```
 
-Full filesystem path: `$VAULT_PATH/` + returned path (reuse the `VAULT_PATH` variable from Step 2b, already stripped of the `=>` prefix).
+Full filesystem path: `$VAULT_PATH/` + returned path (reuse **VAULT_PATH** from Step 1a).
 
 **Fill daily spark** — the template includes the callout scaffold with placeholder comments. Replace each placeholder:
 
