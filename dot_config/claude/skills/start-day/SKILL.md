@@ -203,6 +203,18 @@ obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().f
 obsidian vault=ObsidianPersonal search query="[agent-context:vault]" format=json
 # Read each returned path. These provide who-I-am, life-domain, and long-running-goals context.
 
+# Most recent weekly note — strategic frame for the current ISO week
+# Stale-week guard: only use if the filename matches today's ISO week (date +%Y-%V → e.g. "2026-17").
+# If absent (no end-week run yet this week, or first week of vault), skip silently.
+CURRENT_WEEK=$(date +%Y-%V)
+obsidian files vault=ObsidianPersonal folder="4_Archive/Weekly Notes"
+# From the returned list, find the file matching $CURRENT_WEEK.md. If found:
+obsidian read vault=ObsidianPersonal path="4_Archive/Weekly Notes/$CURRENT_WEEK.md"
+# Used as AMBIENT CONTEXT ONLY — do not replicate any of its content into today's daily note.
+# It informs internal calibration: which rolled-over todos feel weightier (project matched `## Projects Focused`),
+# which domain nudges to favor (open `## Decisions Needed` items), whether to flag a stale project
+# (already covered by `## Archive Candidates`). No new visible lines in the daily note from this read.
+
 # Project-scope agent-context files in 1_Projects modified within 14 days
 # obsidian CLI has no date filter — find used here to overcome that limitation
 # obsidian eval prefixes output with "=> "; strip it before using as a path
