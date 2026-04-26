@@ -1,9 +1,15 @@
 # Set environment variables
 
-# 1Password-source env vars
-if op whoami >/dev/null 2>&1; then
-  # Gemini API Key
-  export GEMINI_API_KEY=$(op read "op://Private/Gemini LLM API Key/credential")
+# 1Password-sourced env vars
+_load_op_secrets() {
+  export WEATHER_LAT_LONG=$(op read "op://Private/Weather API lat-long and TZ/lat-long")
+  export WEATHER_TZ=$(op read "op://Private/Weather API lat-long and TZ/timezone")
+}
+
+if [[ -z "$SSH_TTY" ]]; then
+  _load_op_secrets 2>/dev/null
+elif op whoami >/dev/null 2>&1; then
+  _load_op_secrets
 fi
 
 {{ if eq .chezmoi.os "linux" -}}
