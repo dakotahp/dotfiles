@@ -261,7 +261,7 @@ Maximum one nudge. Skip if active domains are already represented.
 
 **Stale project flag** — from the `find` output, if any `Index.md` is 30+ days old, pick the least stale one and add:
 
-`- [ ] [Project name]: no activity in N days — worth a push?`
+`- [ ] [[Project name]]: no activity in N days — worth a push?`
 
 Skip if a rolled-over todo already references that project. Skip if everything is under 30 days.
 

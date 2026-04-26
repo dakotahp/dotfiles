@@ -177,7 +177,7 @@ Domains from Life Domains with zero activity in the week's daily notes:
 
 ## Project Focused
 
-**[Project Name]** — [reason it was chosen]
+**[[Project Name]]** — [reason it was chosen]
 
 ## Work Produced
 
