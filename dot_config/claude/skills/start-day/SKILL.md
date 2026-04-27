@@ -2,6 +2,7 @@
 name: start-day
 description: Use when starting the day to set up today's daily note and process any prior unprocessed notes.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Agent, mcp__claude_ai_Google_Calendar__list_events
+model: claude-sonnet-4-6
 ---
 
 Morning startup for the personal Obsidian vault. Runs in two phases: first closes out any unprocessed daily notes from prior days (routing content to its destination and archiving), then primes today's note with rolled-over todos, Avoidance Radar items, and context. Non-interactive except for ambiguous `2_Areas` folder matches.

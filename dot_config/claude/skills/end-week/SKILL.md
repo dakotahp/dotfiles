@@ -2,6 +2,7 @@
 name: end-week
 description: Weekly cofounder session — surveys the past week's vault activity, scores top-candidate projects, presents a multi-select menu of candidate work products for the user to curate, then executes the selected deep dives (research, planning, structuring, decision-surfacing). Writes a decisions-first weekly summary note. One curation checkpoint; otherwise autonomous.
 allowed-tools: Bash, Read, Edit, Write, WebSearch, WebFetch, AskUserQuestion
+model: claude-opus-4-7
 ---
 
 Weekly cofounder and personal assistant session. Works through four phases: survey the week, score and diagnose top-candidate projects, present a multi-select menu of candidate work products, then execute the user's selections. One curation checkpoint in the middle; everything else runs autonomously.
