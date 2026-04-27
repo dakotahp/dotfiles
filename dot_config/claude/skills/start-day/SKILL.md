@@ -43,6 +43,9 @@ obsidian search vault=ObsidianPersonal query="[agent-context:vault]" format=json
 
 # Project Index modification times for staleness check (vault API)
 obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().filter(f => f.path.startsWith('1_Projects/') && f.name === 'Index.md').map(f => ({path: f.path, mtime: f.stat.mtime})).sort((a,b) => a.mtime - b.mtime))"
+
+# Today's weather forecast — requires $WEATHER_LAT_LONG and $WEATHER_TZ env vars
+curl "https://api.open-meteo.com/v1/forecast?${WEATHER_LAT_LONG}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&current=weather_code&${WEATHER_TZ}&past_days=0&forecast_days=7&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch" | jq -r '{high_temperature: .daily.temperature_2m_max, low_temperature: .daily.temperature_2m_min, precipitation_chance: .daily.precipitation_probability_max} | map_values(max) | "Todays Forecast: High \(.high_temperature)°F, Low \(.low_temperature)°F, with a \(.precipitation_chance)% chance of precipitation"'
 ```
 
 After VAULT_PATH resolves, fire this second batch (also in parallel):
@@ -59,7 +62,7 @@ obsidian files vault=ObsidianPersonal folder="4_Archive/Weekly Notes"
 find "$VAULT_PATH/1_Projects" -name "*.md" -mtime -14 | xargs grep -l "^agent-context: project" 2>/dev/null
 ```
 
-Store all results under these labels for use in Phase 2: **CALENDAR_EVENTS**, **VAULT_PATH**, **QUOTES_RAW**, **INSPIRATION_FILES**, **LIFE_DOMAINS**, **VAULT_AGENT_CONTEXT**, **INDEX_MTIMES**, **WEEKLY_FILES**, **PROJECT_CONTEXT_FILES**. If any call fails, store empty/null and continue silently.
+Store all results under these labels for use in Phase 2: **CALENDAR_EVENTS**, **VAULT_PATH**, **QUOTES_RAW**, **INSPIRATION_FILES**, **LIFE_DOMAINS**, **VAULT_AGENT_CONTEXT**, **INDEX_MTIMES**, **WEEKLY_FILES**, **PROJECT_CONTEXT_FILES**, **WEATHER_FORECAST**. If any call fails, store empty/null and continue silently.
 
 Filter the inbox list to files matching the `YYYY-MM-DD.md` pattern **where the date is before today**. Sort ascending (oldest first). These are unprocessed prior notes.
 
@@ -276,6 +279,12 @@ Full filesystem path: `$VAULT_PATH/` + returned path (reuse **VAULT_PATH** from 
 - Find `<!-- inspiration -->` → replace with `[[INSPIRATION_FILENAME]] — [INSPIRATION_TEASER]`
 
 `INSPIRATION_FILENAME` is the bare note name (no path, no `.md`) for the wikilink. The `*italics*` wrapper is already in the template around the quote placeholder. If either placeholder is not found (skill already ran today), skip that replacement silently.
+
+**Fill weather** — find the placeholder and replace it:
+
+- Find `<!-- weather -->` → replace with `[WEATHER_FORECAST]`
+
+If **WEATHER_FORECAST** is empty/null (env vars not set or fetch failed), replace the placeholder with an empty string. If the placeholder is not found, skip silently.
 
 **Fill Today's Priorities** — find the exact placeholder and replace it:
 
