@@ -159,7 +159,7 @@ Omit any subsection with nothing to show. For **Action items**: group todos unde
 **Navigation footer** — the note may already have a `← [[PREV-DATE]]` line (added by Phase 2 when today's note was primed). If so, replace it with the full bidirectional footer using a direct file edit on the full filesystem path (`$VAULT_PATH/0_Inbox/YYYY-MM-DD.md`):
 
 ```bash
-sed -i "s|← \[\[PREV-DATE\]\]|← [[PREV-DATE]] | → [[NEXT-DATE]]|" "$VAULT_PATH/0_Inbox/YYYY-MM-DD.md"
+perl -i -pe 's|\Q← [[PREV-DATE]]\E|← [[PREV-DATE]] \| → [[NEXT-DATE]]|' "$VAULT_PATH/0_Inbox/YYYY-MM-DD.md"
 ```
 
 If no footer line exists yet (note was never primed by Phase 2), append instead:
