@@ -1,4 +1,4 @@
-# /compress
+# /log
 
 Saves a structured session log to your project's `Session Logs/` folder.
 
@@ -31,6 +31,6 @@ Files are saved as `Session Logs/YYYY-MM-DD-HH_MM-topic-name.md` within the proj
 
 ## Relationship to other skills
 
-- **Independent** — can run alone or after `/preserve`
+- **Independent** — can run alone or after `/snapshot`
 - `/resume` reads these session logs to restore context in future sessions
-- `/preserve` updates the summary file's current state; `/compress` creates historical records
+- `/snapshot` updates the summary file's current state; `/log` creates historical records

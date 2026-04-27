@@ -5,11 +5,11 @@ model: opus
 allowed-tools: Bash, AskUserQuestion
 ---
 
-# /compress - Save Structured Session Log
+# /log - Save Structured Session Log
 
 Captures key session content into a searchable log file in the project's `Session Logs/` folder. No raw conversation transcript — only structured, extracted insights.
 
-**Independent skill.** Can run alone or after `/preserve`. Does not depend on or trigger any other skill.
+**Independent skill.** Can run alone or after `/snapshot`. Does not depend on or trigger any other skill.
 
 ## Instructions for Claude
 
@@ -23,7 +23,7 @@ This skill operates on a **project** under `1_Projects/` or an **area** under `2
 - Otherwise, derive from `pwd`: walk up from cwd. If an ancestor folder is named `1_Projects` or `2_Areas`, the immediate child folder is the project name.
 - If neither yields a project, error and stop:
   ```
-  No project specified. Run from inside a 1_Projects/ or 2_Areas/ folder, or pass the project name: /compress "Project Name"
+  No project specified. Run from inside a 1_Projects/ or 2_Areas/ folder, or pass the project name: /log "Project Name"
   ```
 
 **1b. Determine the vault and category:**
@@ -43,7 +43,7 @@ This skill operates on a **project** under `1_Projects/` or an **area** under `2
 - `{ProjectName}` — the project/area name
 - `{ProjectPath}` — `{Category}/{ProjectName}` (vault-relative)
 
-### Step 2: Ask What to Preserve
+### Step 2: Ask What to Capture
 
 Use AskUserQuestion with multi-select:
 
