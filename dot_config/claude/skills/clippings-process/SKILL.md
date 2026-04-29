@@ -52,16 +52,10 @@ Search for files tagged `#clippings` in the personal vault:
 obsidian search vault=ObsidianPersonal query="tag:#clippings" format=json
 ```
 
-Search for files tagged `#clippings` in the work vault via filesystem grep:
+Search for files tagged `#clippings` in the work vault via filesystem grep. Use POSIX character classes (`[[:space:]]`) instead of `\s` — macOS BSD grep doesn't support `\s`:
 
 ```bash
-grep -rl "clippings" "<work_vault_path>" --include="*.md" | xargs grep -l "tags:" | while read f; do grep -q "clippings" "$f" && echo "$f"; done
-```
-
-Or more precisely, look for files where the frontmatter tags list includes `clippings`:
-
-```bash
-grep -rl "^\s*-\s*['\"]?clippings['\"]?" "<work_vault_path>" --include="*.md"
+grep -rEl "^[[:space:]]*-[[:space:]]*['\"]?clippings['\"]?" "<work_vault_path>" --include="*.md"
 ```
 
 If no tagged clippings are found in either vault, tell the user there's nothing to process and stop.
