@@ -1,7 +1,7 @@
 ---
 context: conversation
 description: Save a structured session log to your project's Session Logs folder via Obsidian CLI
-model: opus
+model: sonnet
 allowed-tools: Bash, AskUserQuestion
 ---
 
