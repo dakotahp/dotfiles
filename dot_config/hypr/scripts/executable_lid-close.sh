@@ -1,7 +1,6 @@
 #!/bin/bash
 # Move all workspaces off eDP-1 before disabling it on lid close
 LAPTOP="eDP-1"
-EXTERNAL="DP-3"
 
 # Verify the lid is actually physically closed before proceeding.
 # Guards against spurious triggers from hyprctl reload re-firing switch bindings.
@@ -10,8 +9,10 @@ if [ "$LID_STATE" != "closed" ]; then
   exit 0
 fi
 
-# Check if external monitor is connected
-if ! hyprctl monitors -j | jq -e ".[] | select(.name == \"$EXTERNAL\")" > /dev/null 2>&1; then
+# Detect the connected external monitor at runtime — connector name (DP-3, DP-5,
+# HDMI-A-1, etc.) is not stable across physical monitors, so we can't hardcode it.
+EXTERNAL=$(hyprctl monitors -j | jq -r ".[] | select(.name != \"$LAPTOP\") | .name" | head -1)
+if [ -z "$EXTERNAL" ]; then
   exit 0
 fi
 
