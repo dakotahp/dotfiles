@@ -1,0 +1,15 @@
+# Set environment variables
+
+# Static values baked at chezmoi apply time — no runtime 1Password dependency
+export WEATHER_LAT_LONG="{{ onepasswordRead "op://Private/Weather API lat-long and TZ/lat-long" }}"
+export WEATHER_TZ="{{ onepasswordRead "op://Private/Weather API lat-long and TZ/timezone" }}"
+
+{{ if eq .chezmoi.os "linux" -}}
+# 1Password SSH agent on linux
+export SSH_AUTH_SOCK=~/.1password/agent.sock
+{{ end -}}
+
+{{ if eq .chezmoi.os "darwin" -}}
+# Convince MacOS to use ~/.config/ instead of ~/Library/Application Support/
+export XDG_CONFIG_HOME="$HOME/.config"
+{{ end -}}
