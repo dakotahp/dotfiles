@@ -116,35 +116,53 @@ Based on the user's selections, generate the section content:
 - Point to files (`See {filename}`) rather than duplicating content
 - Include custom notes from Step 3 under the Notes subsection if provided
 
-### Step 6: Replace the Session Context Section
+### Step 6: Replace the Session Context Section and Stamp Frontmatter
 
-**If `## Session Context` already exists in the file:**
-1. Parse the file content from Step 4
-2. Find the `## Session Context` heading
-3. Find the next `## ` heading after it (or end of file)
-4. Replace everything between those boundaries with the new section content
-5. Write the reconstructed file:
-   ```bash
-   obsidian create path="{ProjectPath}/{ProjectName}.md" content="{full reconstructed content}" vault="{Vault}" overwrite silent
-   ```
+This step performs **one atomic write** that both replaces the Session Context section and stamps the `last-touched` frontmatter property. Never use `obsidian property:set` — it is known to destroy the file body on success.
 
-**If `## Session Context` does not exist:**
-1. Append the new section to the end of the file:
-   ```bash
-   obsidian append path="{ProjectPath}/{ProjectName}.md" content="\n\n{session context section}" vault="{Vault}"
-   ```
+**6a. Prepare the updated frontmatter:**
 
-**Critical:** Preserve ALL other content in the file exactly as-is. The summary file is manually curated — only touch the Session Context section.
+Take the frontmatter block from the file read in Step 4. Set (or add) the `last-touched` property to today's date (`YYYY-MM-DD`). Keep all other frontmatter properties exactly as-is.
 
-### Step 6.5: Update `last-touched` Frontmatter
-
-Stamp the canonical project file with today's date. This is the authoritative engagement signal consumed by `/resume` (stale-warning) and `/end-week` (neglect scoring).
-
-```bash
-obsidian property:set name=last-touched value=$(date +%Y-%m-%d) type=date path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
+Example — if the existing frontmatter is:
+```
+---
+tags: [project]
+status: active
+---
+```
+Transform it to:
+```
+---
+tags: [project]
+status: active
+last-touched: 2025-06-01
+---
 ```
 
-If the property doesn't exist on the file, `property:set` adds it. If it exists, it's overwritten. Swallow errors — a failure here should not block the snapshot.
+**6b. Reconstruct the full file content:**
+
+1. Start with the updated frontmatter from 6a.
+2. Take the body (everything after the closing `---`).
+   - **If `## Session Context` exists:** find the heading, find the next `## ` heading after it (or end of body), and replace everything between those boundaries with the new section content.
+   - **If `## Session Context` does not exist:** append the new section to the end of the body.
+3. The result is the complete new file content.
+
+**6c. Write the reconstructed file:**
+
+```bash
+obsidian create path="{ProjectPath}/{ProjectName}.md" content="{full reconstructed content}" vault="{Vault}" overwrite silent
+```
+
+**6d. Verify the write was not destructive:**
+
+Immediately read the file back:
+```bash
+obsidian read path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
+```
+Confirm that the file body (non-frontmatter content) is present and matches the reconstructed content. If the body is missing or shorter than expected, **stop and report the issue to the user** — do not proceed silently.
+
+**Critical:** Preserve ALL other content in the file exactly as-is. The summary file is manually curated — only touch the Session Context section and the `last-touched` frontmatter property.
 
 ### Step 7: Link to Today's Daily Note (Side Effect)
 
