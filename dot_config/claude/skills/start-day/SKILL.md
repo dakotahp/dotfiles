@@ -268,42 +268,41 @@ Skip if a rolled-over todo already references that project. Skip if everything i
 
 ### Step 2d — Write to today's note
 
+Get today's note path:
 ```bash
 obsidian daily:path vault=ObsidianPersonal
 ```
 
 Full filesystem path: `$VAULT_PATH/` + returned path (reuse **VAULT_PATH** from Step 1a).
 
-**Fill daily spark** — the template includes the callout scaffold with placeholder comments. Replace each placeholder:
+**Use a single Python script** to do all substitutions and write the final file. Always read from the **template file directly** — do not patch the `obsidian daily`-created file, which has a known CLI bug that double-encodes multibyte characters (emoji, `°`, curly quotes) and will corrupt the note.
 
-- Find `<!-- quote -->` → replace with `[QUOTE_CONTENT]`
-- Find `<!-- inspiration -->` → replace with `[[INSPIRATION_FILENAME]] — [INSPIRATION_TEASER]`
+Template path: `$VAULT_PATH/3_Resources/Obsidian Templates/Daily Note Template.md`
 
-`INSPIRATION_FILENAME` is the bare note name (no path, no `.md`) for the wikilink. The `*italics*` wrapper is already in the template around the quote placeholder. If either placeholder is not found (skill already ran today), skip that replacement silently.
+`INSPIRATION_FILENAME` is the bare note name (no path, no `.md`) for the wikilink. The `*italics*` wrapper around the quote placeholder is already in the template. If **WEATHER_FORECAST** is empty/null, substitute an empty string for `<!-- weather -->`.
 
-**Fill weather** — find the placeholder and replace it:
+```python
+python3 << 'PYEOF'
+vault = "$VAULT_PATH"
+template_path = f"{vault}/3_Resources/Obsidian Templates/Daily Note Template.md"
+note_path = f"{vault}/<TODAY_VAULT_PATH>"
 
-- Find `<!-- weather -->` → replace with `[WEATHER_FORECAST]`
+with open(template_path, 'r', encoding='utf-8') as f:
+    content = f.read()
 
-If **WEATHER_FORECAST** is empty/null (env vars not set or fetch failed), replace the placeholder with an empty string. If the placeholder is not found, skip silently.
+content = content.replace('<!-- quote -->', 'QUOTE_CONTENT')
+content = content.replace('<!-- inspiration -->', '[[INSPIRATION_FILENAME]] — INSPIRATION_TEASER')
+content = content.replace('<!-- weather -->', 'WEATHER_FORECAST')
+content = content.replace('<!-- priorities -->', 'PRIORITIES_CONTENT')
+content = content.replace('<!-- context -->', 'CONTEXT_CONTENT')
+content += '\n\n---\n← [[YESTERDAY-DATE]]'
 
-**Fill Today's Priorities** — find the exact placeholder and replace it:
-
-- Find `<!-- priorities -->` → replace with `[PRIORITIES_CONTENT]`
-
-**Fill Morning Context** — find the exact placeholder and replace it:
-
-- Find `<!-- context -->` → replace with `[CONTEXT_CONTENT]`
-
-Make both edits sequentially. If either placeholder is not found (skill already ran today), skip that edit silently.
-
-**Append yesterday's navigation link** — calculate yesterday's date (today minus 1 day, formatted `YYYY-MM-DD`), then append to today's note:
-
-```bash
-obsidian append vault=ObsidianPersonal path="<TODAY_VAULT_PATH>" content="\n\n---\n← [[YESTERDAY-DATE]]"
+with open(note_path, 'w', encoding='utf-8') as f:
+    f.write(content)
+PYEOF
 ```
 
-If the note already ends with a nav footer line (starts with `←`), skip silently — the skill already ran today.
+Embed all content values directly into the heredoc before running — do not use shell variable interpolation for the replacement strings, as they may contain characters that break shell quoting. If the note already contains a nav footer line (starts with `←`), the skill already ran today — skip the write entirely.
 
 ---
 
