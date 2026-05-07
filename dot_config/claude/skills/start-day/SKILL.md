@@ -5,12 +5,21 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Agent, mcp_
 model: claude-sonnet-4-6
 ---
 
-Morning startup for the personal Obsidian vault. Runs in two phases: first closes out any unprocessed daily notes from prior days (routing content to its destination and archiving), then primes today's note with rolled-over todos, Avoidance Radar items, and context. Non-interactive except for ambiguous `2_Areas` folder matches.
+Morning startup for an Obsidian vault using the PARA structure. Runs in two phases: first closes out any unprocessed daily notes from prior days (routing content to its destination and archiving), then primes today's note with rolled-over todos, Avoidance Radar items, and context. Non-interactive except for ambiguous `2_Areas` folder matches.
 
-Vault: ObsidianPersonal. All obsidian commands use `vault=ObsidianPersonal` immediately after the subcommand.
+**Vault resolution** — at the top of the run, determine which vault is active:
+
+```bash
+obsidian vaults
+```
+
+- If `ObsidianPersonal` appears, set `$VAULT=ObsidianPersonal` — this is the **personal vault** mode (Daily Spark, Life Domains, Quotes, inspiration all apply).
+- Otherwise (e.g. `ObsidianWork`), set `$VAULT` to that vault name — this is **non-personal vault** mode (skip Daily Spark, skip Life Domains domain nudge, skip the templated Daily Note write — fall back to a simpler `obsidian daily` + append flow). Avoidance Radar still applies if the file exists.
+
+All `vault=ObsidianPersonal` references below should be read as `vault=$VAULT` — substitute the resolved vault name throughout. Sections marked **[personal-vault only]** are skipped in non-personal mode.
 
 Key rules:
-- Vault parameter comes immediately after the subcommand: `obsidian <subcommand> vault=ObsidianPersonal [options]`
+- Vault parameter comes immediately after the subcommand: `obsidian <subcommand> vault=$VAULT [options]`
 - Use `path=` for exact vault-relative paths; `file=` for wikilink-style name resolution
 - Never run `obsidian --help` — it hangs and never exits
 
@@ -42,8 +51,11 @@ obsidian search vault=ObsidianPersonal query="tag:#inspiration" format=json
 obsidian read vault=ObsidianPersonal path="2_Areas/Life Domains.md"
 obsidian search vault=ObsidianPersonal query="[agent-context:vault]" format=json
 
-# Project Index modification times for staleness check (vault API)
-obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().filter(f => f.path.startsWith('1_Projects/') && f.name === 'Index.md').map(f => ({path: f.path, mtime: f.stat.mtime})).sort((a,b) => a.mtime - b.mtime))"
+# Project canonical-file modification times for staleness check (vault API).
+# Convention: a project's canonical file is named after its folder, e.g.
+# `1_Projects/Foo Project/Foo Project.md`. (The legacy `Index.md` naming is no
+# longer used — wikilinking to a verbose project name is more readable than to `[[Index]]`.)
+obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().filter(f => f.path.startsWith('1_Projects/') && f.parent && f.basename === f.parent.name).map(f => ({path: f.path, mtime: f.stat.mtime})).sort((a,b) => a.mtime - b.mtime))"
 
 # Today's weather forecast — requires $WEATHER_LAT_LONG and $WEATHER_TZ env vars
 curl "https://api.open-meteo.com/v1/forecast?${WEATHER_LAT_LONG}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&current=weather_code&${WEATHER_TZ}&past_days=0&forecast_days=7&wind_speed_unit=mph&temperature_unit=fahrenheit&precipitation_unit=inch" | jq -r '{high_temperature: .daily.temperature_2m_max, low_temperature: .daily.temperature_2m_min, precipitation_chance: .daily.precipitation_probability_max} | map_values(max) | "Todays Forecast: High \(.high_temperature)°F, Low \(.low_temperature)°F, with a \(.precipitation_chance)% chance of precipitation"'
@@ -221,7 +233,10 @@ Find `## Distillation` → `**Action items:**`, extract every `- [ ]` line verba
 
 **Recurring todo escalation** — before building priorities, check for todos stuck across 3+ days. Read the two archived Distillations immediately preceding the source note and extract their unchecked `- [ ]` action items. Any todo text that fuzzy-matches a rolled-over todo in both prior notes has been deferred for 3+ consecutive days — escalate it: append to Avoidance Radar (Step 1b-iii format, `first noted:` = today's date) and remove it from rolled-over todos. Skip this check if fewer than 2 prior archived Distillations exist.
 
-### Step 2b-ii — Pick today's quote and inspiration
+### Step 2b-ii — Pick today's quote and inspiration **[personal-vault only]**
+
+**Skip this entire step in non-personal vault mode.** Leave QUOTE_CONTENT, INSPIRATION_PATH, and INSPIRATION_TEASER empty/null.
+
 
 **Quote** — from **QUOTES_RAW**, extract every line beginning with `- `. Strip the leading `- `. Use today's date as a seed: take the day-of-year (1–366), mod by the number of quotes, and select that line. Same quote all day if the skill runs twice.
 
@@ -247,13 +262,13 @@ Store as **INSPIRATION_PATH** (vault-relative path) and **INSPIRATION_TEASER** (
 
 Sort oldest first. Append after rolled-over todos.
 
-**Domain-aware nudge** — from **LIFE_DOMAINS** `## Current Context` and `## Life Domains`, identify any seasonally active or high-priority domain. If none of its concerns appear in rolled-over todos or surfaced Radar items, add one soft prompt at the bottom:
+**Domain-aware nudge [personal-vault only]** — skip in non-personal mode. From **LIFE_DOMAINS** `## Current Context` and `## Life Domains`, identify any seasonally active or high-priority domain. If none of its concerns appear in rolled-over todos or surfaced Radar items, add one soft prompt at the bottom:
 
 `- [ ] [Domain name]: anything to move forward today?`
 
 Maximum one nudge. Skip if active domains are already represented.
 
-**Stale project flag** — from **INDEX_MTIMES**, if any `Index.md` is 30+ days old, pick the least stale one and add:
+**Stale project flag** — from **INDEX_MTIMES** (the canonical project files, e.g. `1_Projects/Foo/Foo.md`), if any is 30+ days old, pick the least stale one and add:
 
 `- [ ] [[Project name]]: no activity in N days — worth a push?`
 
@@ -262,7 +277,7 @@ Skip if a rolled-over todo already references that project. Skip if everything i
 **Cap** — if PRIORITIES_CONTENT exceeds 6 items, remove from the bottom: youngest Radar items first, then domain nudge, then stale flag. Never drop rolled-over todos.
 
 **CONTEXT_CONTENT:**
-- **Line 1 (always):** One sentence from Life Domains `## Current Context` — the single most time-sensitive or seasonally relevant point.
+- **Line 1 (personal-vault only):** One sentence from Life Domains `## Current Context` — the single most time-sensitive or seasonally relevant point. Skip in non-personal mode.
 - **Line 2 (conditional):** Only if any Radar item is 14+ days old: `Overdue: [item name] (N days), [item name] (N days).` Omit entirely if nothing qualifies.
 - **Line 3 (conditional):** Only if CALENDAR_EVENTS is non-empty: `**Meetings:** HH:MM Event title, HH:MM Event title` — list each event's start time (12-hour, no seconds) and summary, comma-separated. Omit entirely if no events.
 
@@ -275,7 +290,9 @@ obsidian daily:path vault=ObsidianPersonal
 
 Full filesystem path: `$VAULT_PATH/` + returned path (reuse **VAULT_PATH** from Step 1a).
 
-**Use a single Python script** to do all substitutions and write the final file. Always read from the **template file directly** — do not patch the `obsidian daily`-created file, which has a known CLI bug that double-encodes multibyte characters (emoji, `°`, curly quotes) and will corrupt the note.
+**In non-personal vault mode**, skip the Python template-rewrite block entirely. Instead, run `obsidian daily vault=$VAULT` to create today's note from whatever default template the vault has, then append two sections: `## Rolled-over Todos` (PRIORITIES_CONTENT) and `## Morning Context` (CONTEXT_CONTENT, omitting any empty lines). Append the yesterday-nav footer the same way.
+
+**In personal vault mode**, use a single Python script to do all substitutions and write the final file. Always read from the **template file directly** — do not patch the `obsidian daily`-created file, which has a known CLI bug that double-encodes multibyte characters (emoji, `°`, curly quotes) and will corrupt the note.
 
 Template path: `$VAULT_PATH/3_Resources/Obsidian Templates/Daily Note Template.md`
 

@@ -168,11 +168,23 @@ The `obsidian create` command will create the `Session Logs/` folder if it doesn
 
 Stamp the canonical project file with today's date. Authoritative engagement signal consumed by `/resume` (stale-warning) and `/end-week` (neglect scoring).
 
+**Never use `obsidian property:set`** — it is known to destroy the file body on success. Instead, do an atomic read → modify-frontmatter-in-memory → write-back, mirroring `/snapshot` Step 6:
+
+**a. Read the file:**
 ```bash
-obsidian property:set name=last-touched value=$(date +%Y-%m-%d) type=date path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
+obsidian read path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
 ```
 
-Swallow errors — a failure here should not block the save.
+**b. Update the frontmatter in memory:** if a `---`-delimited frontmatter block exists at the top of the file, set (or add) `last-touched: YYYY-MM-DD`. If no frontmatter block exists, prepend one containing only that property. Preserve every other frontmatter property and the entire file body exactly as-is.
+
+**c. Write back atomically:**
+```bash
+obsidian create path="{ProjectPath}/{ProjectName}.md" content="{full reconstructed content}" vault="{Vault}" overwrite silent
+```
+
+**d. Verify the write was not destructive** by reading the file back and confirming the body length matches what was reconstructed. If anything looks wrong, **stop and report to the user** — do not proceed silently.
+
+Swallow non-destructive errors (e.g., file not found) — a failure here should not block the session-log save. But never swallow a verify failure: a truncated canonical file is worse than a missing date stamp.
 
 ### Step 7.5: Link to Today's Daily Note (Side Effect)
 
