@@ -213,7 +213,10 @@ Creates today's note from the template if it doesn't exist.
 
 **Read project-scope agent-context files** — for each path in **PROJECT_CONTEXT_FILES**, read the file. Build the **project context map**: project name (from path or frontmatter title) → key details (goal, current status, constraints, blockers). This map is shared across Phase 1 and Phase 2.
 
-**Weekly note** — from **WEEKLY_FILES**, find the file matching `$CURRENT_WEEK.md`. If found, read it. Used as AMBIENT CONTEXT ONLY — do not replicate any content into today's daily note. It informs internal calibration: which rolled-over todos feel weightier (project matched `## Projects Focused`), which domain nudges to favor (open `## Decisions Needed` items), whether to flag a stale project (already covered by `## Archive Candidates`).
+**Weekly note** — from **WEEKLY_FILES**, find the file matching `$CURRENT_WEEK.md`. If found, read it.
+
+- **Extract `## Weekly Focus`** — if the section exists, take the single sentence beneath the heading and store as **WEEKLY_FOCUS_CONTENT** (the verbatim sentence, no heading, no surrounding whitespace). If the section is absent, the file is empty, or the weekly note doesn't exist at all, leave WEEKLY_FOCUS_CONTENT empty. This is the **only** content from the weekly note that gets replicated into today's daily note — it powers the `<!-- weekly-focus -->` placeholder.
+- **Everything else is AMBIENT CONTEXT ONLY** — do not replicate other sections into today's daily note. It informs internal calibration: which rolled-over todos feel weightier (project matched `## Projects Focused`), which open `## Decisions Needed` items deserve attention, whether to flag a stale project (already covered by `## Archive Candidates`).
 
 **Avoidance Radar** — read now (after Phase 1 has finished updating it):
 ```bash
@@ -262,19 +265,13 @@ Store as **INSPIRATION_PATH** (vault-relative path) and **INSPIRATION_TEASER** (
 
 Sort oldest first. Append after rolled-over todos.
 
-**Domain-aware nudge [personal-vault only]** — skip in non-personal mode. From **LIFE_DOMAINS** `## Current Context` and `## Life Domains`, identify any seasonally active or high-priority domain. If none of its concerns appear in rolled-over todos or surfaced Radar items, add one soft prompt at the bottom:
-
-`- [ ] [Domain name]: anything to move forward today?`
-
-Maximum one nudge. Skip if active domains are already represented.
-
 **Stale project flag** — from **INDEX_MTIMES** (the canonical project files, e.g. `1_Projects/Foo/Foo.md`), if any is 30+ days old, pick the least stale one and add:
 
 `- [ ] [[Project name]]: no activity in N days — worth a push?`
 
 Skip if a rolled-over todo already references that project. Skip if everything is under 30 days.
 
-**Cap** — if PRIORITIES_CONTENT exceeds 6 items, remove from the bottom: youngest Radar items first, then domain nudge, then stale flag. Never drop rolled-over todos.
+**Cap** — if PRIORITIES_CONTENT exceeds 6 items, remove from the bottom: youngest Radar items first, then stale flag. Never drop rolled-over todos.
 
 **CONTEXT_CONTENT:**
 - **Line 1 (personal-vault only):** One sentence from Life Domains `## Current Context` — the single most time-sensitive or seasonally relevant point. Skip in non-personal mode.
@@ -298,6 +295,10 @@ Template path: `$VAULT_PATH/3_Resources/Obsidian Templates/Daily Note Template.m
 
 `INSPIRATION_FILENAME` is the bare note name (no path, no `.md`) for the wikilink. The `*italics*` wrapper around the quote placeholder is already in the template. If **WEATHER_FORECAST** is empty/null, substitute an empty string for `<!-- weather -->`.
 
+**WEEKLY_FOCUS_LINE** — derive from WEEKLY_FOCUS_CONTENT (extracted in Step 2b):
+- If WEEKLY_FOCUS_CONTENT is non-empty: `WEEKLY_FOCUS_LINE = f"{WEEKLY_FOCUS_CONTENT} — [[{CURRENT_WEEK}]]"` — this puts the focus sentence followed by a wikilink to the weekly note for one-click access.
+- If WEEKLY_FOCUS_CONTENT is empty (no weekly note, or no `## Weekly Focus` section in it): substitute an empty string. The surrounding callout still has quote/inspiration/weather, so the missing line collapses gracefully.
+
 ```python
 python3 << 'PYEOF'
 vault = "$VAULT_PATH"
@@ -307,6 +308,7 @@ note_path = f"{vault}/<TODAY_VAULT_PATH>"
 with open(template_path, 'r', encoding='utf-8') as f:
     content = f.read()
 
+content = content.replace('<!-- weekly-focus -->', 'WEEKLY_FOCUS_LINE')
 content = content.replace('<!-- quote -->', 'QUOTE_CONTENT')
 content = content.replace('<!-- inspiration -->', '[[INSPIRATION_FILENAME]] — INSPIRATION_TEASER')
 content = content.replace('<!-- weather -->', 'WEATHER_FORECAST')

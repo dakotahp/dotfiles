@@ -109,6 +109,6 @@ If there are no Action Items, skip this step entirely.
 ## Step 6 — Confirm
 
 Report to the user in one line: what was saved where. Examples:
-- "3 insights + 1 decision → `0_Inbox/Takeaways - Chemo Navigator strategy 2026-04-16.md`; 2 action items → daily note."
+- "3 insights + 1 decision → `0_Inbox/Takeaways - Project Apollo strategy 2026-04-16.md`; 2 action items → daily note."
 - "2 insights → `0_Inbox/Takeaways - React RSC feasibility 2026-04-16.md`; no action items."
 - "2 action items → daily note; no insights or decisions worth preserving."

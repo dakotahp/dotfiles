@@ -37,7 +37,7 @@ Compute staleness in days:
 
 Sort all files by staleness descending. Cap at 8 candidates (the stalest). For each, build:
 
-- **label**: `<scope>: <filename>` — e.g. `vault: Life Domains` or `project: Chemo Navigator/Index`
+- **label**: `<scope>: <filename>` — e.g. `vault: Life Domains` or `project: Project Apollo/Index`
 - **description**: one line — `Last reviewed N days ago` or `Never reviewed`. If `agent-context: vault`, append a brief note that this file shapes every session's framing (higher leverage to keep current).
 
 Present via `AskUserQuestion` with `multiSelect: true`:

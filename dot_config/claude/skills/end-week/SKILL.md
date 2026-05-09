@@ -1,11 +1,11 @@
 ---
 name: end-week
-description: Weekly cofounder session — surveys the past week's vault activity, scores top-candidate projects, presents a multi-select menu of candidate work products for the user to curate, then executes the selected deep dives (research, planning, structuring, decision-surfacing). Writes a decisions-first weekly summary note. One curation checkpoint; otherwise autonomous.
+description: Use at the end of the week to review vault activity, set a weekly focus, curate deep-dive work products, and write the weekly summary note.
 allowed-tools: Bash, Read, Edit, Write, WebSearch, WebFetch, AskUserQuestion
 model: claude-opus-4-7
 ---
 
-Weekly cofounder and personal assistant session. Works through four phases: survey the week, score and diagnose top-candidate projects, present a multi-select menu of candidate work products, then execute the user's selections. One curation checkpoint in the middle; everything else runs autonomously.
+Weekly cofounder and personal assistant session. Works through four phases: survey the week, score top-candidate projects + capture a weekly focus + diagnose and present a multi-select menu of candidate work products, execute the user's selections, then write the weekly summary note. Two checkpoints in the middle (focus picker, work-product curation); everything else runs autonomously.
 
 Vault: ObsidianPersonal. All obsidian commands use `vault=ObsidianPersonal` immediately after the subcommand.
 
@@ -72,7 +72,7 @@ Do this for every project listed under `1_Projects/`. The Index.md files typical
 
 ## Phase 2 — Score, Diagnose, Curate
 
-This phase has three sub-steps: score every project, do lightweight diagnosis on the top candidates and propose work products for each, then present them to the user as a multi-select menu.
+This phase has four sub-steps: score every project, capture the week's high-level focus, do lightweight diagnosis on the top candidates and propose work products for each, then present them to the user as a multi-select menu.
 
 ### Phase 2a — Score all projects
 
@@ -80,7 +80,7 @@ Score each project against four signals. Higher score = stronger case to focus h
 
 | Signal | How to score |
 |--------|-------------|
-| **Strategic priority** | Read from Life Domains — Chemo Navigator rates highest, then LetsConnect.lol, then idea stubs. Use the domain's described priority/cadence as weight. |
+| **Strategic priority** | Read from Life Domains — use each project's described priority/cadence as the weight. Idea stubs rank below active projects unless flagged otherwise. |
 | **Neglect duration** | Prefer the canonical file's `last-touched` frontmatter (authoritative — written by `/snapshot` and `/log`). Fall back to `find` mtime only if `last-touched` is absent. More days since last touch = higher score. A project touched yesterday scores 0 here. |
 | **Idea stubs waiting** | Count stubs from `0_Inbox` whose content is semantically about this project. Each related stub adds to the score. |
 | **Phase readiness** | Can useful work happen right now without the user present? A project waiting on an external reply scores low. A project with clear gaps in documentation or strategy scores high. |
@@ -91,7 +91,30 @@ Score each project against four signals. Higher score = stronger case to focus h
 
 Take the **top 3-4 scoring projects** as candidates. The remainder are excluded from this week's depth-dive options.
 
-### Phase 2b — Lightweight diagnosis + propose work products per candidate
+### Phase 2b — Weekly focus
+
+A single high-level focus sentence steers the rest of the week. It shapes which work products get proposed in the next sub-phase, gets written to the weekly note, and gets surfaced in every daily note via the `start-day` skill. Without this, daily work tends to drift toward small-but-easy tasks at the expense of the bigger picture.
+
+Draft 3 focus angles — one per top-scoring project from Phase 2a (skip the 4th if there were 4 candidates). Each angle is a concrete sentence describing the most valuable direction for that project this week, informed by its Index.md, recent feedback, and current diagnosis. Aim for sentences that would meaningfully inform a Tuesday morning's decision about what to work on.
+
+Present them via `AskUserQuestion` (single-select). The user can pick one or use the automatic "Other" option to write their own. The question itself should be brief — the options carry the framing.
+
+Example shape (illustrative — actual sentences are project-specific):
+
+```
+Question: "What's your focus for this week?"
+options:
+  - label: "Push [top-scoring project] from one phase to the next"
+    description: "One-sentence framing of the most valuable next phase shift for this project."
+  - label: "Drive [second project] toward its primary near-term metric"
+    description: "Concrete weekly target tied to the project's current bottleneck."
+  - label: "Triage and pick a direction across pending idea stubs"
+    description: "Use when no single project is clearly the focus — consolidate stubs and decide what graduates."
+```
+
+Store the chosen sentence as **WEEKLY_FOCUS**. If the user selects "Other", their typed text is the focus. If they decline to choose anything, WEEKLY_FOCUS is empty — proceed without one.
+
+### Phase 2c — Lightweight diagnosis + propose work products per candidate
 
 For each top-candidate project, do a focused diagnosis (faster than the original Phase 3 deep read — just enough to propose work):
 
@@ -113,13 +136,15 @@ Form a diagnosis (idea → validation → building → shipped → stalled → d
 | Shipped, no traction | A traction strategy note grounded in comparable products' tactics |
 | Discovery phase | A synthesis of what's been learned + 3-5 highest-value next discovery questions |
 
-When generating multiple options for one project, make them **distinct angles** — not the same work product reworded. E.g. for Chemo Navigator: one option could be "synthesize warm-network discovery approach" and a second could be "research cold-call playbooks for community oncology" — both valid, different focus.
+When generating multiple options for one project, make them **distinct angles** — not the same work product reworded. E.g. one option might synthesize the work already done into a structured next-step plan, while a second researches external playbooks or comparables — both valid, different focus.
 
 **Use feedback as a hard constraint.** If a project's notes say "prioritize warm network over cold names," do not propose a cold-name work product. The feedback section is authoritative.
 
-### Phase 2c — Multi-select checkpoint
+**Use the weekly focus as a constraint.** If WEEKLY_FOCUS is set, bias proposals toward work products that advance that focus. Work products for the focus's project should directly serve the focus sentence; work products for other candidate projects should still be coherent with the focus (e.g. don't propose a heavy deep-dive on a non-focus project that would crowd out focus work). If WEEKLY_FOCUS is empty, proceed without this filter.
 
-Present the candidate work products as a single multi-select question. Group options under per-project headers. Cap at 6-7 total candidates.
+### Phase 2d — Multi-select checkpoint
+
+Present the candidate work products as a single multi-select question. Group options under per-project headers. Cap at 6-7 total candidates. If WEEKLY_FOCUS is set, surface focus-aligned options first.
 
 Use `AskUserQuestion` with `multiSelect: true`. Each option's `label` is the work product name (concise, 5-8 words); each `description` is one sentence describing what would be produced and why it's valuable now. The question header should reference the project; the question body should be brief.
 
@@ -129,14 +154,14 @@ Example shape (illustrative — actual content driven by Phase 2b):
 Question: "Which deep dives should I do this week?"
 multiSelect: true
 options:
-  - label: "Chemo Navigator: synthesize warm-network discovery"
-    description: "Consolidate this week's discovery notes; propose next 3-5 questions scoped to wife's network. Defers cold-call work per feedback."
-  - label: "Chemo Navigator: COA Conference go/no-go brief"
-    description: "Decision brief weighing $1.2k travel + 2 days vs Phase 3 procurement signal. Resolves the open weekly decision."
-  - label: "LetsConnect.lol: traction tactics from comparable products"
-    description: "Research 4-5 early-stage growth playbooks; draft a 2hrs/week promotion plan."
-  - label: "Idea stub consolidation: warm network mapping"
-    description: "Merge 3 related stubs in 0_Inbox into a structured next-step note for Chemo Navigator."
+  - label: "[Project A]: synthesize this week's discovery into next steps"
+    description: "Consolidate recent discovery notes; propose the next 3-5 questions or actions, constrained by stated feedback."
+  - label: "[Project A]: decision brief on an open commitment"
+    description: "Frame an outstanding go/no-go (travel, spend, scope) as options + tradeoffs. Resolves a blocking decision."
+  - label: "[Project B]: research traction tactics from comparable products"
+    description: "Pull 4-5 early-stage growth playbooks; draft a lightweight weekly promotion plan."
+  - label: "Idea stub consolidation"
+    description: "Merge a cluster of related stubs in 0_Inbox into a structured next-step note for the parent project."
 ```
 
 After the user responds:
@@ -192,6 +217,12 @@ tags:
   - weekly-note
 week: YYYY-WW
 ---
+
+## Weekly Focus
+
+[WEEKLY_FOCUS sentence — verbatim from Phase 2b]
+
+(Omit this section if WEEKLY_FOCUS is empty. Keep it as a single line — `start-day` reads it and substitutes it into each daily note.)
 
 ## Decisions Needed
 
