@@ -235,121 +235,83 @@ If the same project has multiple selected work products, append one canonical-fi
 
 ---
 
-## Phase 4 — Weekly Output Notes (two files)
+## Phase 4 — Weekly Notes (one note per week, two operations per run)
 
-Write **two** files:
+Each ISO week has **one** note at `4_Archive/Weekly Notes/$WEEK_NUM.md`. That note has two halves:
 
-1. **Past-week retrospective** at `4_Archive/Weekly Notes/$WEEK_NUM.md` — what happened, work produced, gaps. This is the historical record.
-2. **Upcoming-week forward plan** at `4_Archive/Weekly Notes/$NEXT_WEEK_NUM.md` — Weekly Focus + Decisions Needed. This is what `start-day` reads via `$(date +%Y-%V)` to splice into each daily note next week.
+- **Forward half** (`## Weekly Focus`, `## Decisions Needed`) — written *before* the week starts, by the prior week's `end-week` run. `start-day` during the week reads `## Weekly Focus` and splices it into each daily note.
+- **Retrospective half** (`## Projects Focused`, `## Work Produced`, `## Not Selected This Week`, `## Week in Brief`, `## Domain Gaps`, `## Archive Candidates`, `## Stale Context`) — filled in *after* the week ends, by that week's `end-week` run.
 
-The split exists because `start-day` reads the *current* ISO week's file, not the past one. Writing focus into the past-week file would make it invisible.
+So a single end-week run does two writes to two different week files:
 
-### File 1 — Past-week retrospective (`$WEEK_NUM.md`)
+1. **Amend `$WEEK_NUM.md`** (past week — already stubbed last week) — fill in the retrospective sections. Preserve the forward half that was set last week.
+2. **Stub `$NEXT_WEEK_NUM.md`** (upcoming week) — write the forward sections for the coming week. Retrospective sections remain empty until next end-week.
+
+Both writes use the same template: `3_Resources/Obsidian Templates/Weekly Note Template.md`. Resolve VAULT_PATH:
 
 ```bash
-obsidian create vault=$VAULT path="4_Archive/Weekly Notes/$WEEK_NUM.md" content="[retrospective content]" silent
+VAULT_PATH=$(obsidian eval vault=$VAULT code="app.vault.adapter.basePath" | sed 's/^=> //; s/^"//; s/"$//')
 ```
 
-Structure:
+### Placeholders in the template
 
-```markdown
----
-tags:
-  - weekly-note
-week: YYYY-WW
----
+| Placeholder | Set by | Content |
+|---|---|---|
+| `<!-- week -->` (frontmatter) | both | `$WEEK_NUM` or `$NEXT_WEEK_NUM` matching the file. |
+| `<!-- weekly-focus -->` | stub run | Verbatim WEEKLY_FOCUS sentence from Phase 2b. If empty, leave the placeholder unfilled; **start-day** will skip the splice. |
+| `<!-- decisions-needed -->` | stub run | Numbered list of forward-looking decisions blocking next week's work. |
+| `<!-- projects-focused -->` | amend run | One `**[[Project Name]]** — why it was picked + brief framing` line per project with executed work. |
+| `<!-- work-produced -->` | amend run | Bulleted list of `- [[Note title]] — one-sentence description`. If zero work products: `None — by user choice.` |
+| `<!-- not-selected -->` | amend run | Candidates surfaced in Phase 2d but not picked. Leave empty if all selected or none generated. |
+| `<!-- week-in-brief -->` | amend run | 2-3 sentences synthesizing the week from daily-note distillations. |
+| `<!-- domain-gaps -->` | amend run | **[personal-vault only]** Life Domains with zero activity. In non-personal mode, leave empty (or delete the `## Domain Gaps` section entirely if rendering bothers you). |
+| `<!-- archive-candidates -->` | amend run | Projects untouched 60+ days, or `None — all active projects have recent activity.` |
+| `<!-- stale-context -->` | amend run | Stale agent-context files, or `All agent-context files are within the 60-day window.` |
+| `<!-- prev-week -->` | both | ISO week before the file's week. |
+| `<!-- next-week -->` | both | ISO week after the file's week. |
 
-## Projects Focused
+### Operation 1 — Amend `$WEEK_NUM.md` (past week retrospective)
 
-For each project that had work products selected and executed:
+Read the file first:
 
-**[[Project Name]]** — [why it was picked + brief framing]
-
-## Work Produced
-
-- [[Note title]] — [one sentence on what it is and which project]
-
-(If user selected zero work products: write "None — by user choice." instead of a list.)
-
-## Not Selected This Week
-
-Candidate work products surfaced in the multi-select but not picked. Listed for next week's scoring memory and for your reference if priorities shift.
-
-- **[[Project Name]]:** [Work product label] — [one-line description]
-
-(Omit this section if all candidates were selected, or if no candidates were generated.)
-
-## Week in Brief
-
-[2-3 sentences: what moved this week, what didn't, dominant themes from daily distillations]
-
-## Domain Gaps **[personal-vault only]**
-
-Domains from Life Domains with zero activity in the week's daily notes:
-- [Domain name] — no mentions in any daily note this week
-
-(Omit this section if all domains had at least some representation. **Omit entirely in non-personal-vault mode** — Life Domains is a personal-vault construct.)
-
-## Archive Candidates
-
-Projects not touched in 60+ days with no clear pause signal:
-- [[Project Name]] — last activity: YYYY-MM-DD. Still active?
-
-(Omit if no candidates.)
-
-## Stale Context
-
-Agent-context files (vault/project/area scope) with `last-reviewed` 60+ days old or missing. These shape automatic agent framing — drift here misdirects everything downstream. Run `/refresh-context` to walk through them.
-
-- [[File path]] — last-reviewed: YYYY-MM-DD (or "never")
-
-(Omit if all agent-context files are within 60 days.)
-
-## See also
-
-- Forward plan for the upcoming week: [[$NEXT_WEEK_NUM]]
+```bash
+obsidian read vault=$VAULT path="4_Archive/Weekly Notes/$WEEK_NUM.md"
 ```
 
-### File 2 — Upcoming-week forward plan (`$NEXT_WEEK_NUM.md`)
+- **If it exists** (normal case — last week's end-week run stubbed it): use Python to replace just the retrospective placeholders (`<!-- projects-focused -->`, `<!-- work-produced -->`, `<!-- not-selected -->`, `<!-- week-in-brief -->`, `<!-- domain-gaps -->`, `<!-- archive-candidates -->`, `<!-- stale-context -->`) in-place. Preserve the forward half and everything else. Operate on `$VAULT_PATH/4_Archive/Weekly Notes/$WEEK_NUM.md` directly.
+- **If it does not exist** (bootstrap — first end-week ever, or the prior week's stub was skipped): render the full template fresh with retrospective placeholders filled and forward placeholders left empty (no `Weekly Focus`/`Decisions Needed` were captured for that bygone week).
 
-**Check first** whether the file already exists:
+### Operation 2 — Stub `$NEXT_WEEK_NUM.md` (upcoming week forward plan)
+
+Read the file first:
 
 ```bash
 obsidian read vault=$VAULT path="4_Archive/Weekly Notes/$NEXT_WEEK_NUM.md"
 ```
 
-- **If it does not exist:** create it from scratch with the structure below.
-- **If it already exists** (e.g. multi-week backlog catch-up, or a prior stub): preserve everything outside the two managed sections. Replace just the contents of `## Weekly Focus` and `## Decisions Needed` (or append them if absent). Use direct file editing via VAULT_PATH for in-place section replacement if needed — do not blindly overwrite the whole file.
+- **If it does not exist** (normal case): render the full template with forward placeholders filled (`<!-- weekly-focus -->`, `<!-- decisions-needed -->`, `<!-- week -->`, `<!-- prev-week -->`, `<!-- next-week -->`). Retrospective placeholders stay as unfilled `<!-- foo -->` markers — they'll be filled at next week's end-week run.
+- **If it already exists** (catch-up runs or manual prior creation): replace just the forward-section placeholders in-place. Never overwrite retrospective content that might have been hand-edited.
 
-Structure for the fresh-create case:
+### Render pattern (Python heredoc, same as start-day Step 2d)
 
-```markdown
----
-tags:
-  - weekly-note
-week: YYYY-WW
----
-
-## Weekly Focus
-
-[WEEKLY_FOCUS sentence — verbatim from Phase 2b]
-
-(Omit this section if WEEKLY_FOCUS is empty. Keep it as a single line — `start-day` reads it and substitutes it into each daily note.)
-
-## Decisions Needed
-
-Questions requiring your input before next week's work can continue:
-
-1. [Specific decision with enough context to answer it]
-
-(Omit this section if no decisions surfaced. To resolve a decision, edit it in place — strikethrough or add **Decided:** inline. start-day reads this section as ambient context.)
-
-## See also
-
-- Retrospective for the past week: [[$WEEK_NUM]]
+```python
+python3 << 'PYEOF'
+vault_path = "$VAULT_PATH"
+template = f"{vault_path}/3_Resources/Obsidian Templates/Weekly Note Template.md"
+out = f"{vault_path}/4_Archive/Weekly Notes/$WEEK_NUM.md"  # or $NEXT_WEEK_NUM.md
+with open(template, 'r', encoding='utf-8') as f:
+    content = f.read()
+# Embed each substitution string directly in the heredoc — do not interpolate from shell,
+# the replacement strings may contain characters that break shell quoting.
+content = content.replace('<!-- week -->', 'WEEK_NUM_VALUE')
+content = content.replace('<!-- weekly-focus -->', 'WEEKLY_FOCUS_VALUE')
+# … and so on for each placeholder
+with open(out, 'w', encoding='utf-8') as f:
+    f.write(content)
+PYEOF
 ```
 
-Both files share the same `tags: weekly-note` and `week: YYYY-WW` frontmatter, with the week value matching the filename.
+For the **amend** case (file already exists), read the existing content first, then run the same `.replace()` calls — they'll only replace placeholders that are still present. Forward-half placeholders that were already filled out by the prior week's stub run will be plain text by now, so the amend run's `.replace()` calls for retrospective placeholders won't touch them.
 
 ---
 
