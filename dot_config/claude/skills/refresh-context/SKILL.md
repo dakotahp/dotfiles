@@ -6,7 +6,17 @@ allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
 
 Agent-context files (frontmatter `agent-context: vault | project | area`) are loaded automatically by start-day, end-week, and per-folder sessions. They drift silently — Life Domains, project Index.md, area files — and that drift miscalibrates every downstream agent decision. This skill makes the drift visible and easy to fix.
 
-Vault: ObsidianPersonal. All obsidian commands use `vault=ObsidianPersonal` immediately after the subcommand.
+---
+
+## Vault resolution (always do this first)
+
+```bash
+obsidian vaults
+```
+
+- If one vault: use it for all subsequent commands as `vault=<name>`
+- If multiple vaults: ask the user which one via `AskUserQuestion` (single-select), then use the chosen vault
+- All obsidian commands in this skill use `vault=<resolved-vault>` immediately after the subcommand
 
 ---
 
@@ -22,7 +32,7 @@ If no argument, run **sweep mode**.
 ### Step 1 — Inventory
 
 ```bash
-obsidian vault=ObsidianPersonal search query="[agent-context]" format=json
+obsidian vault=<resolved-vault> search query="[agent-context]" format=json
 ```
 
 For each returned path, read the frontmatter and capture two fields:
@@ -75,7 +85,7 @@ User invoked with a filename argument (e.g. `/refresh-context Life Domains` or a
 
 1. Resolve the file:
    ```bash
-   obsidian vault=ObsidianPersonal search query="<arg>" format=json
+   obsidian vault=<resolved-vault> search query="<arg>" format=json
    ```
    If multiple matches, ask the user which one (AskUserQuestion, single-select). If zero matches, report and exit.
 
