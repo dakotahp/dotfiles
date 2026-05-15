@@ -1,5 +1,4 @@
 ---
-context: conversation
 description: Save a structured session log to your project's Session Logs folder via Obsidian CLI
 model: sonnet
 allowed-tools: Bash, AskUserQuestion
@@ -58,25 +57,32 @@ Use AskUserQuestion with multi-select:
 6. **Pending Tasks** — unfinished work, next steps, blockers
 7. **Errors & Workarounds** — problems encountered and how they were solved
 
-### Step 3: Ask for Custom Notes (Optional)
+### Step 3: Ask for Topic Name and Outcome
 
-Ask: "Anything specific you want to highlight or remember? (Type 'skip' to continue)"
+Ask the following questions **one at a time** using AskUserQuestion:
 
-### Step 4: Suggest Topic Name
+1. "What's a short topic name for this session? (3-5 words, e.g. `api-auth-refactor`)"
+2. "One sentence: what was the outcome of this session?"
 
-Analyze the conversation and suggest a concise topic name (3-5 words, lowercase, hyphens):
+### Step 4: Gather Section Content
 
-```
-Based on this session, I suggest the topic name: **api-auth-refactor**
+For each section the user selected in Step 2, ask a focused question using AskUserQuestion. Ask all selected sections **one at a time**:
 
-Accept this, or type your preferred topic name:
-```
+- **Key Learnings:** "What were the key learnings or insights? (one per line, or 'skip')"
+- **Solutions & Fixes:** "What solutions or fixes worked? Include commands or code snippets. (one per line, or 'skip')"
+- **Decisions Made:** "What decisions were made, and why? (one per line, or 'skip')"
+- **Files Modified:** "Which files were created or changed, and what did you do to each? (one per line, or 'skip')"
+- **Setup & Config:** "Any environment setup, paths, or config to record? (one per line, or 'skip')"
+- **Pending Tasks:** "What's unfinished or needs follow-up? (one per line, or 'skip')"
+- **Errors & Workarounds:** "Any errors encountered and how you resolved them? (one per line, or 'skip')"
 
-The user can accept with "ok"/"yes" or provide their own.
+After gathering all sections, ask: "Anything else specific you want to highlight or remember? (or 'skip')" — this becomes **Custom Notes**.
+
+Finally ask: "Any keywords to tag this session? (project names, tools, action types — space-separated, or 'skip')"
 
 ### Step 5: Generate Session Log Content
 
-Create the session log with this structure:
+Assemble the session log from the user's answers. Create the session log with this structure:
 
 ```markdown
 # Session Log: YYYY-MM-DD HH:MM - {Topic Name}
@@ -130,17 +136,9 @@ Create the session log with this structure:
 - Preserve exact values — don't paraphrase specific configs, IDs, or identifiers
 - If something depends on something else, note the relationship
 
-### Step 6: Extract Keywords
+### Step 6: Finalize Keywords
 
-For the Quick Reference **Keywords** field, extract from the conversation:
-- Project/product names
-- Technical terms (auth, middleware, migration, deploy)
-- Action types (refactor, fix, create, update)
-- Tool/framework names (React, PostgreSQL, Docker)
-- Ticket/issue identifiers (JIRA-123, #456)
-- People mentioned (if relevant to decisions)
-
-These keywords enable `/resume` to find relevant sessions via search.
+Use the keywords the user provided in Step 4. If the user skipped, derive a minimal set from the topic name and outcome sentence only — do not analyze conversation history.
 
 ### Step 7: Save the Session Log
 
