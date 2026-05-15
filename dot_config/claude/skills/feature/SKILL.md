@@ -148,7 +148,8 @@ To conserve cost, speed, and context window hygiene, use the `model` parameter w
 | 5 | **Code quality reviewer** | `sonnet` | Judgment needed but well-scoped to a single task's diff |
 | 6 | **Code simplifier** | `sonnet` | Refinement within clear conventions, not invention |
 | 7 | **Prove verifier** | `haiku` | Rote command execution: run command, check output, record pass/fail |
-| 8 | **Code reviewer** | `sonnet` | Judgment needed but scoped to a known diff with clear conventions |
+| 8a | **Adversarial diff reviewer** | `sonnet` | Cold review of full branch diff — needs reasoning to spot behavior changes and architectural regressions |
+| 8b | **Code-quality reviewer** | `sonnet` | Warm review with full context — judgment scoped to a known diff with clear conventions |
 | 9 | **Cleanup & PR creator** | `sonnet` | Linting, removing debug code, calling `gh pr create` is mechanical |
 
 **Escalation:** If any subagent returns BLOCKED and the cause is reasoning difficulty (not missing context), re-dispatch with `model: opus`.
@@ -213,9 +214,45 @@ Address any failures before proceeding. Each statement must be backed by capture
 
 ## Step 8 — Code review
 
-Invoke `superpowers:requesting-code-review` as a sub-step (with `model: sonnet` for the reviewer agent). It will spawn a code-reviewer covering all files modified in this session and check for: correctness, edge cases, security vulnerabilities, performance concerns, unclear naming, and missing error handling.
+This step runs **two distinct review passes** with different framings. Both are required. They catch different classes of issues and one cannot substitute for the other.
 
-Address every issue raised. If you disagree with a suggestion and the reasoning is non-obvious, leave a brief inline comment explaining why. Re-run the test suite after any changes from this step. **After the review is addressed, return to this pipeline. Continue to Step 9.**
+### 8a — Adversarial diff review (big-picture)
+
+The goal of this pass is to catch the kind of show-stopper issues a cold PR reviewer would catch: unintended behavior changes, scope creep, architectural regressions, missing coverage for edge cases the implementation silently introduced, contract/API changes the author didn't realize they made.
+
+Dispatch a `sonnet` subagent with **no session context, no plan, no spec, no prove statements** — only the diff against `master` and the ability to read the repo as it stands. The subagent must not be told what the feature is "supposed" to do; it must infer intent from the code itself, the way a PR reviewer does. This cold framing is the entire point — do not include the plan file path, the spec, or a description of the feature in the prompt.
+
+The subagent prompt must include verbatim:
+
+> You are reviewing a branch diff against `master` as a skeptical, cold reviewer. You have no prior context on this change. Your job is to find **big-picture problems**, not style nits.
+>
+> Run `git diff master...HEAD` and read whatever files you need from the working tree.
+>
+> Specifically look for:
+> - **Behavior changes** in code paths that don't appear central to the change — did this PR quietly alter something it shouldn't have?
+> - **Scope creep** — code that doesn't belong with the apparent purpose of the change.
+> - **Contract / API changes** — function signatures, return types, error shapes, schema fields, public exports that downstream callers may rely on.
+> - **Missing tests** for behaviors the diff introduces or changes, especially edge cases and failure paths.
+> - **Architectural regressions** — does the change cut against the patterns already established in the surrounding code? Does it duplicate something that already exists?
+> - **Risk of production incidents** — anything that could fail silently, lose data, change auth/permission behavior, alter performance characteristics, or affect migrations.
+>
+> Do NOT report on: formatting, naming preferences, comment style, idiomatic refactors, or code-quality opinions. Those are handled separately. Only report findings where you can articulate **what specifically could go wrong in production or in a downstream caller**.
+>
+> For each finding, output: (1) the file and line, (2) what the code does, (3) what could go wrong, (4) confidence (high / medium / low).
+>
+> If you find nothing material, say so explicitly — do not invent findings to seem useful.
+
+Address every high- and medium-confidence finding. For low-confidence findings, use judgment. If you disagree with a finding, you must articulate why — disagreement requires reasoning, not dismissal. Re-run the test suite after any changes.
+
+### 8b — Code-quality review (small-picture)
+
+After 8a is fully addressed, dispatch a second `sonnet` subagent for a conventional quality review. This pass has full session context (plan, spec, modified files) and focuses on: correctness within the intended design, edge cases, security vulnerabilities, performance, unclear naming, missing error handling, deprecated APIs, idiomatic patterns.
+
+Address every issue raised. If you disagree with a suggestion and the reasoning is non-obvious, leave a brief inline comment explaining why. Re-run the test suite after any changes from this step.
+
+**Why two passes:** 8a runs cold to mimic the mindset of a PR reviewer who has no investment in the change — this is what surfaces show-stoppers like accidental behavior changes and scope creep. 8b runs warm because code-quality judgments (naming, idioms, edge cases within the intended design) benefit from understanding what the code is trying to do. Collapsing them into one pass produces sycophantic reviews that catch nits but miss architecture.
+
+**After both passes are addressed, return to this pipeline. Continue to Step 9.**
 
 ---
 
