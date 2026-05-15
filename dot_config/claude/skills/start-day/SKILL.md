@@ -276,7 +276,10 @@ Skip if a rolled-over todo already references that project. Skip if everything i
 **CONTEXT_CONTENT:**
 - **Line 1 (personal-vault only):** One sentence from Life Domains `## Current Context` — the single most time-sensitive or seasonally relevant point. Skip in non-personal mode.
 - **Line 2 (conditional):** Only if any Radar item is 14+ days old: `Overdue: [item name] (N days), [item name] (N days).` Omit entirely if nothing qualifies.
-- **Line 3 (conditional):** Only if CALENDAR_EVENTS is non-empty: `**Meetings:** HH:MM Event title, HH:MM Event title` — list each event's start time (12-hour, no seconds) and summary, comma-separated. Omit entirely if no events.
+
+**MEETINGS_CONTENT** — derived separately from CALENDAR_EVENTS:
+- If CALENDAR_EVENTS is non-empty: `**Meetings:** HH:MM Event title, HH:MM Event title` — list each event's start time (12-hour, no seconds) and summary, comma-separated.
+- If CALENDAR_EVENTS is empty: substitute an empty string for `<!-- meetings -->`.
 
 ### Step 2d — Write to today's note
 
@@ -287,17 +290,17 @@ obsidian daily:path vault=ObsidianPersonal
 
 Full filesystem path: `$VAULT_PATH/` + returned path (reuse **VAULT_PATH** from Step 1a).
 
-**In non-personal vault mode**, skip the Python template-rewrite block entirely. Instead, run `obsidian daily vault=$VAULT` to create today's note from whatever default template the vault has, then append two sections: `## Rolled-over Todos` (PRIORITIES_CONTENT) and `## Morning Context` (CONTEXT_CONTENT, omitting any empty lines). Append the yesterday-nav footer the same way.
-
-**In personal vault mode**, use a single Python script to do all substitutions and write the final file. Always read from the **template file directly** — do not patch the `obsidian daily`-created file, which has a known CLI bug that double-encodes multibyte characters (emoji, `°`, curly quotes) and will corrupt the note.
+Use a single Python script to do all substitutions and write the final file for **all vaults**. Always read from the **template file directly** — do not patch the `obsidian daily`-created file, which has a known CLI bug that double-encodes multibyte characters (emoji, `°`, curly quotes) and will corrupt the note.
 
 Template path: `$VAULT_PATH/3_Resources/Obsidian Templates/Daily Note Template.md`
 
-`INSPIRATION_FILENAME` is the bare note name (no path, no `.md`) for the wikilink. The `*italics*` wrapper around the quote placeholder is already in the template. If **WEATHER_FORECAST** is empty/null, substitute an empty string for `<!-- weather -->`.
+`replace()` calls are no-ops when a placeholder isn't present in the template, so the same script works across vaults. Personal-vault-only placeholders (`<!-- quote -->`, `<!-- inspiration -->`) simply go unused in non-personal templates. If a value is empty/null, substitute an empty string.
 
 **WEEKLY_FOCUS_LINE** — derive from WEEKLY_FOCUS_CONTENT (extracted in Step 2b):
-- If WEEKLY_FOCUS_CONTENT is non-empty: `WEEKLY_FOCUS_LINE = f"{WEEKLY_FOCUS_CONTENT} — [[{CURRENT_WEEK}]]"` — this puts the focus sentence followed by a wikilink to the weekly note for one-click access.
-- If WEEKLY_FOCUS_CONTENT is empty (no weekly note, or no `## Weekly Focus` section in it): substitute an empty string. The surrounding callout still has quote/inspiration/weather, so the missing line collapses gracefully.
+- If WEEKLY_FOCUS_CONTENT is non-empty: `WEEKLY_FOCUS_LINE = f"{WEEKLY_FOCUS_CONTENT} — [[{CURRENT_WEEK}]]"` — focus sentence followed by a wikilink to the weekly note.
+- If empty (no weekly note, or no `## Weekly Focus` section): substitute an empty string.
+
+**INSPIRATION_FILENAME** is the bare note name (no path, no `.md`) for the wikilink. The `*italics*` wrapper around `<!-- quote -->` is already in the personal template.
 
 ```python
 python3 << 'PYEOF'
@@ -314,6 +317,7 @@ content = content.replace('<!-- inspiration -->', '[[INSPIRATION_FILENAME]] — 
 content = content.replace('<!-- weather -->', 'WEATHER_FORECAST')
 content = content.replace('<!-- priorities -->', 'PRIORITIES_CONTENT')
 content = content.replace('<!-- context -->', 'CONTEXT_CONTENT')
+content = content.replace('<!-- meetings -->', 'MEETINGS_CONTENT')
 content += '\n\n---\n← [[YESTERDAY-DATE]]'
 
 with open(note_path, 'w', encoding='utf-8') as f:
