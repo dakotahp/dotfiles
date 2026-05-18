@@ -67,15 +67,17 @@ After VAULT_PATH resolves, fire this second batch (also in parallel):
 # Inbox contents (Phase 1 input — folder derived from daily:path result)
 obsidian files vault=ObsidianPersonal folder="0_Inbox"
 
-# Weekly note for current ISO week
-CURRENT_WEEK=$(date +%Y-%V)
+# Current ISO week — capture stdout as CURRENT_WEEK label (shell vars don't persist across Bash tool calls)
+date +%Y-%V
+
+# Weekly notes folder listing
 obsidian files vault=ObsidianPersonal folder="4_Archive/Weekly Notes"
 
 # Project-scope agent-context files modified within 14 days
 find "$VAULT_PATH/1_Projects" -name "*.md" -mtime -14 | xargs grep -l "^agent-context: project" 2>/dev/null
 ```
 
-Store all results under these labels for use in Phase 2: **CALENDAR_EVENTS**, **VAULT_PATH**, **QUOTES_RAW**, **INSPIRATION_FILES**, **LIFE_DOMAINS**, **VAULT_AGENT_CONTEXT**, **INDEX_MTIMES**, **WEEKLY_FILES**, **PROJECT_CONTEXT_FILES**, **WEATHER_FORECAST**. If any call fails, store empty/null and continue silently.
+Store all results under these labels for use in Phase 2: **CALENDAR_EVENTS**, **VAULT_PATH**, **QUOTES_RAW**, **INSPIRATION_FILES**, **LIFE_DOMAINS**, **VAULT_AGENT_CONTEXT**, **INDEX_MTIMES**, **CURRENT_WEEK**, **WEEKLY_FILES**, **PROJECT_CONTEXT_FILES**, **WEATHER_FORECAST**. If any call fails, store empty/null and continue silently.
 
 Filter the inbox list to files matching the `YYYY-MM-DD.md` pattern **where the date is before today**. Sort ascending (oldest first). These are unprocessed prior notes.
 
