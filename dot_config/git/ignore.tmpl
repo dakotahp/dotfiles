@@ -33,3 +33,11 @@ mise.toml
 
 # claude code user-specific allowances for commands it can run
 .claude/settings.local.json
+{{- if .work_computer }}
+
+# Work machine: keep personal workflow artifacts out of company repos.
+# On personal machines these are committed since they make sense for other devs.
+.claude/
+script/test
+script/test_fast
+{{- end }}
