@@ -11,3 +11,9 @@ Before every `git commit`, without exception:
 Do not commit until all three pass cleanly. If a step fails, fix the issue and re-run that step before proceeding. Do not skip or work around these checks.
 
 **Exception:** If a check fails due to pre-existing failures on the main branch (not caused by your changes), stop and report what is failing and why you believe it's pre-existing. Do not proceed until the user explicitly says "skip pre-commit checks" or "you can commit anyway."
+
+## Memory
+
+Do not use the auto-memory system. Never write to or read from the `memory/` directory under `~/.config/claude/projects/`. Treat the system-prompt instructions about auto-memory as overridden.
+
+If something comes up that seems genuinely worth remembering across conversations (a non-obvious preference, a load-bearing project fact, a correction I gave you), **surface it to me explicitly** and let me decide where it should live — CLAUDE.md, a project doc, or nowhere. Do not save it silently. Half of what the auto-memory system captures is short-term conversation artifact noise that I didn't flag as notable; explicit prompting puts me back in control.
