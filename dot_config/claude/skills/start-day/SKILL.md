@@ -243,11 +243,11 @@ Find `## Distillation` → `**Action items:**`, extract every `- [ ]` line verba
 **Skip this entire step in non-personal vault mode.** Leave QUOTE_CONTENT, INSPIRATION_PATH, and INSPIRATION_TEASER empty/null.
 
 
-**Quote** — from **QUOTES_RAW**, extract every line beginning with `- `. Strip the leading `- `. Use today's date as a seed: take the day-of-year (1–366), mod by the number of quotes, and select that line. Same quote all day if the skill runs twice.
+**Quote** — from **QUOTES_RAW**, extract every line beginning with `- `. Strip the leading `- `. Use today's date as a seed: hash the full ISO date string (`YYYY-MM-DD`) and mod by the number of quotes — `int(hashlib.md5(date_str.encode()).hexdigest(), 16) % num_quotes` — then select that line. Same quote all day if the skill runs twice; different quotes across years on the same calendar date.
 
 Store as **QUOTE_CONTENT** — the raw line text including attribution and any `[[wikilink]]`.
 
-**Inspiration** — from **INSPIRATION_FILES**, apply the same day-of-year mod against the list to pick one file deterministically. Read **only the first non-frontmatter, non-heading line** of that file (skip `---` blocks and lines starting with `#`) — stop after the first prose paragraph; do not load the full file.
+**Inspiration** — from **INSPIRATION_FILES**, apply the same full-date hash mod against the list to pick one file deterministically. Read **only the first non-frontmatter, non-heading line** of that file (skip `---` blocks and lines starting with `#`) — stop after the first prose paragraph; do not load the full file.
 
 Store as **INSPIRATION_PATH** (vault-relative path) and **INSPIRATION_TEASER** (the first prose line).
 
@@ -266,6 +266,13 @@ Store as **INSPIRATION_PATH** (vault-relative path) and **INSPIRATION_TEASER** (
 | 21+ days | Top of list | `- [ ] Item *(N days — decide or drop it)*` |
 
 Sort oldest first. Append after rolled-over todos.
+
+**De-duplicate Radar items against rolled-over todos** — before appending, drop any Radar item whose intent is already covered by a rolled-over todo. A Radar item is considered superseded when:
+- A rolled-over todo references the same `[[Project]]` and the Radar item is generic ("move something forward", "make progress on X", "do something on Y"), OR
+- A rolled-over todo names a specific deliverable that satisfies the Radar item's intent (e.g. "Write Ecclesiastes 5:10 post" supersedes "Bible Verses Secular Relation Blog: move something forward"), OR
+- The project's most recent weekly note `## Work Produced` already lists a deliverable that satisfies the Radar item's intent — in this case, also flag the Radar item to the user in CONTEXT_CONTENT as potentially resolvable ("Resolved?: [item] — [deliverable] shipped").
+
+When in doubt, prefer suppression: a stale Radar item next to its concrete rolled-over counterpart adds noise, not signal.
 
 **Stale project flag** — from **INDEX_MTIMES** (the canonical project files, e.g. `1_Projects/Foo/Foo.md`), if any is 30+ days old, pick the least stale one and add:
 
