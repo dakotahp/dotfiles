@@ -54,7 +54,7 @@ If a ticket is being referenced, use the appropriate MCP to assign the ticket to
 
 Invoke `superpowers:brainstorming` as a sub-step to explore requirements and design space. When doing so, instruct it to **skip the "User Review Gate" for the written spec** — the plan approval at the end of this step serves as the combined spec+plan gate, so asking the user to separately review the spec file is redundant here. After brainstorming writes the spec, it should proceed directly to invoking writing-plans without pausing for spec review.
 
-**Do NOT commit the spec file or the plan file.** These planning documents are not part of the feature implementation and must not appear in the git history. Write them to disk but skip any commit step that would include them.
+**Do NOT commit the spec file or the plan file.** These planning documents are working artifacts — they are not part of the feature implementation and must not appear in the git history. Write them to disk, reference them throughout the pipeline, but never `git add` or commit them. They will be deleted in Step 9 once their purpose is served.
 
 After brainstorming completes, invoke `superpowers:writing-plans` to produce the implementation plan. The plan must cover:
 
@@ -261,8 +261,9 @@ Address every issue raised. If you disagree with a suggestion and the reasoning 
 Complete all of the following before creating the PR:
 
 1. Remove debug logs, development TODOs, and any commented-out code left from the implementation
-2. Run the project linter and fix all issues (e.g. `npm run lint`, `eslint .`, `ruff check --fix .`, or whatever is configured for this project)
-3. Create the pull request in a draft state:
+2. **Discard the planning artifacts.** The spec file and plan file from Step 2 have served their purpose — implementation is done, both review passes are complete, and the PR body (next step) will capture the lasting context. Delete both files from disk now. If the conversation needs to revisit design decisions later, the chat history and PR body are sufficient.
+3. Run the project linter and fix all issues (e.g. `npm run lint`, `eslint .`, `ruff check --fix .`, or whatever is configured for this project)
+4. Create the pull request in a draft state:
 
    ```
    gh pr create --draft --title "<concise imperative title>" --body "<what changed, why, and how to verify it>"
@@ -275,9 +276,9 @@ Complete all of the following before creating the PR:
    ```
 
    The PR body must reference the prove statements from Step 3 and link to their evidence.
-4. Open the PR with `open <url>` (macOS) or `xdg-open <url>` (Linux) in the default browser.
+5. Open the PR with `open <url>` (macOS) or `xdg-open <url>` (Linux) in the default browser.
 
-**Delegation:** Steps 1-2 (cleanup and linting) can be dispatched to a `sonnet` subagent. The subagent prompt must include: the branch name, the list of modified files, the lint command for the project, and instructions to fix any issues and commit the cleanup. Step 3 (PR creation) should stay in the main session — the PR title and body require understanding the full feature context, and the user needs to see the PR URL immediately.
+**Delegation:** Steps 1-3 (cleanup, planning-artifact deletion, linting) can be dispatched to a `sonnet` subagent. The subagent prompt must include: the branch name, the list of modified files, the paths to the spec and plan files to delete, the lint command for the project, and instructions to fix any issues and commit the cleanup (the deleted planning files were never tracked, so they will simply disappear from disk — no git operation needed for them). Step 4 (PR creation) should stay in the main session — the PR title and body require understanding the full feature context, and the user needs to see the PR URL immediately.
 
 ---
 
