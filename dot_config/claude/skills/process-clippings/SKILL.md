@@ -1,6 +1,5 @@
 ---
-name: clippings-process
-description: Processes web clippings from an Obsidian vault — summarizes each clipping, files it into the appropriate 2_Areas/ subfolder in the personal vault based on tags, and removes the original. Use this skill whenever the user says "process clippings", "sort clippings", "clean up clippings", or asks to organize saved/clipped articles. Also trigger when the user runs /clippings-process.
+description: Processes web clippings from an Obsidian vault — summarizes each clipping, files it into the appropriate 2_Areas/ subfolder in the personal vault based on tags, and removes the original. Use this skill whenever the user says "process clippings", "sort clippings", "clean up clippings", or asks to organize saved/clipped articles. Also trigger when the user runs /process-clippings.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 ---
 
