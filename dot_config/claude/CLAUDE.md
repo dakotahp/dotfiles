@@ -12,6 +12,10 @@ Do not commit until all three pass cleanly. If a step fails, fix the issue and r
 
 **Exception:** If a check fails due to pre-existing failures on the main branch (not caused by your changes), stop and report what is failing and why you believe it's pre-existing. Do not proceed until the user explicitly says "skip pre-commit checks" or "you can commit anyway."
 
+## Writing Style
+
+Never use em dashes (—) in any output. Use a comma, period, or restructure the sentence instead. Em dashes read as AI-generated and the user has to manually replace every one.
+
 ## Memory
 
 Do not use the auto-memory system. Never write to or read from the `memory/` directory under `~/.config/claude/projects/`. Treat the system-prompt instructions about auto-memory as overridden.
