@@ -123,6 +123,8 @@ If a match is found in either folder and is not already in the project context m
 
 Items under `## Today's Priorities` are hard todos by default (unchecked only — skip `- [x]`).
 
+**Completed work** — also collect all `- [x]` items from `## Today's Priorities` as a separate list. These are NOT rolled over, but ARE used to resolve open Avoidance Radar items in Step 1b-ii/iii/iv.
+
 **Project attribution** — for each hard todo, fuzzy-match its text against project names in the project context map. A direct name mention, a wikilink to the project, or a domain clearly owned by one project all count. Tag each todo internally with its matched project, or mark it "unattributed" if no match.
 
 #### Step 1b-ii/iii/iv — Create stubs, log avoidance, file learnings (parallel)
@@ -153,7 +155,19 @@ If the Radar file doesn't exist, create it first:
 ```bash
 obsidian create vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md" content="---\nagent-context: vault\n---\n\nThings that keep coming up but keep getting deferred. Reviewed weekly.\n" silent
 ```
-**When running as a subagent (multi-note dispatch):** skip writing to the Radar entirely — return avoidance items as output to the main thread instead.
+**When running as a subagent (multi-note dispatch):** skip writing to the Radar entirely — return avoidance items (new) and completed todos (for resolution matching) as output to the main thread instead.
+
+*Radar resolutions* — for each completed `[x]` todo collected in Step 1b-i, fuzzy-match against open `- [ ]` Radar items. A completed todo resolves a Radar item when:
+- It references the same project and the Radar item is generic ("move something forward", "make progress on X", "do something on Y"), OR
+- It names a specific deliverable that satisfies the Radar item's intent (e.g. "Write Ecclesiastes 5:10 post" resolves "Bible Verses Secular Relation Blog: move something forward")
+
+When a match is found, update the Radar entry in-place — check the box and append the resolution annotation:
+```bash
+perl -i -pe 's|^- \[ \] (MATCHED_ITEM_PREFIX.*)|"- [x] $1, resolved: YYYY-MM-DD (completed in [[NOTE-DATE]])"|e' "$VAULT_PATH/2_Areas/Personal Knowledge Management/Avoidance Radar.md"
+```
+Use a literal prefix long enough to uniquely identify the line (avoid regex special chars). Fire resolution writes in the same batch as new avoidance appends — both target the Radar file but perl edits are safe to batch with appends since they operate on different lines.
+
+**When running as a subagent:** skip all Radar writes — return completed todos alongside avoidance items for the main thread to process.
 
 *Learnings* — match each learning semantically to a `2_Areas/` subfolder (from the files list). **Clear match:** proceed without asking. **No match:** suggest top 2 candidates or offer to create a new folder — this is the **only** pause point. Once answered, continue:
 ```bash
