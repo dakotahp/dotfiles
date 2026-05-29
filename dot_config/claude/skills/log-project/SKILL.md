@@ -1,28 +1,28 @@
 ---
-description: Save a structured session log to your project's Session Logs folder via Obsidian CLI
+description: Save a structured session log to a project's or area's Session Logs folder via Obsidian CLI
 model: sonnet
 allowed-tools: Bash, AskUserQuestion
 ---
 
 # /log - Save Structured Session Log
 
-Captures key session content into a searchable log file in the project's `Session Logs/` folder. No raw conversation transcript — only structured, extracted insights.
+Captures key session content into a searchable log file in the project's or area's `Session Logs/` folder. No raw conversation transcript — only structured, extracted insights. Works identically for `1_Projects/<name>/` and `2_Areas/<name>/` — only the surrounding labels differ.
 
 **Independent skill.** Can run alone or after `/snapshot`. Does not depend on or trigger any other skill.
 
 ## Instructions for Claude
 
-### Step 1: Resolve Project Context
+### Step 1: Resolve Project/Area Context
 
 This skill operates on a **project** under `1_Projects/` or an **area** under `2_Areas/`. Both must be folder-form: `<category>/<name>/<name>.md`. Other top-level folders (`0_Inbox/`, `3_Resources/`, `4_Archive/`) are not supported.
 
-**1a. Determine the project name:**
+**1a. Determine the project/area name:**
 
-- If `$ARGUMENTS` is provided, treat the entire argument string as the project name.
-- Otherwise, derive from `pwd`: walk up from cwd. If an ancestor folder is named `1_Projects` or `2_Areas`, the immediate child folder is the project name.
-- If neither yields a project, error and stop:
+- If `$ARGUMENTS` is provided, treat the entire argument string as the project/area name.
+- Otherwise, derive from `pwd`: walk up from cwd. If an ancestor folder is named `1_Projects` or `2_Areas`, the immediate child folder is the project/area name. If cwd is the vault root and the user's recent activity in the conversation clearly identifies a single project or area folder, you may use that as the inferred target — but only when it's unambiguous; otherwise error.
+- If neither yields a target, error and stop:
   ```
-  No project specified. Run from inside a 1_Projects/ or 2_Areas/ folder, or pass the project name: /log "Project Name"
+  No project or area specified. Run from inside a 1_Projects/ or 2_Areas/ folder, or pass the name: /log "Name"
   ```
 
 **1b. Determine the vault and category:**
@@ -39,8 +39,9 @@ This skill operates on a **project** under `1_Projects/` or an **area** under `2
 
 - `{Vault}` — resolved vault name
 - `{Category}` — `1_Projects` or `2_Areas`
-- `{ProjectName}` — the project/area name
+- `{ProjectName}` — the project/area name (kept as `ProjectName` for placeholder continuity; refers to either)
 - `{ProjectPath}` — `{Category}/{ProjectName}` (vault-relative)
+- `{CategoryLabel}` — `Project` if `{Category}` is `1_Projects`, else `Area`. Used in user-facing confirmation output.
 
 ### Step 2: Ask What to Capture
 
@@ -164,7 +165,7 @@ The `obsidian create` command will create the `Session Logs/` folder if it doesn
 
 ### Step 7.25: Update `last-touched` Frontmatter on Canonical File
 
-Stamp the canonical project file with today's date. Authoritative engagement signal consumed by `/resume` (stale-warning) and `/end-week` (neglect scoring).
+Stamp the canonical project/area file with today's date. Authoritative engagement signal consumed by `/resume` (stale-warning) and `/end-week` (neglect scoring). Applies equally to projects and areas — both have a canonical `{ProjectName}.md` at the root of their folder.
 
 **Never use `obsidian property:set`** — it is known to destroy the file body on success. Instead, do an atomic read → modify-frontmatter-in-memory → write-back, mirroring `/snapshot` Step 6:
 
@@ -211,16 +212,16 @@ obsidian daily:append vault="{Vault}" content="
 
 ### Step 8: Confirm
 
-Output confirmation:
+Output confirmation, substituting `{CategoryLabel}` (e.g. `Project:` or `Area:`):
 
 ```
 Session Saved
 
-File: Session Logs/{filename}
-Project: {project name}
-Topic: {topic-name}
-Sections: {list of selected sections}
-Keywords: {confidence keywords}
+File:        Session Logs/{filename}
+{CategoryLabel}: {ProjectName}
+Topic:       {topic-name}
+Sections:    {list of selected sections}
+Keywords:    {keywords}
 
 Use /resume to load context from this and other sessions.
 ```

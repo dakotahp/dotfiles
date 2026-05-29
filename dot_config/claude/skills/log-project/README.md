@@ -1,12 +1,12 @@
 # /log
 
-Saves a structured session log to your project's `Session Logs/` folder.
+Saves a structured session log to a project's (`1_Projects/<name>/`) or area's (`2_Areas/<name>/`) `Session Logs/` folder.
 
 ## What it does
 
 Creates a dated, keyword-tagged markdown file capturing the important parts of a session — decisions, learnings, solutions, files changed, pending tasks. No raw conversation transcript; only structured, extracted insights.
 
-Files are saved as `Session Logs/YYYY-MM-DD-HH_MM-topic-name.md` within the project folder. The YYYY-MM-DD prefix means files sort chronologically in both the filesystem and Obsidian.
+Files are saved as `Session Logs/YYYY-MM-DD-HH_MM-topic-name.md` within the project or area folder. The YYYY-MM-DD prefix means files sort chronologically in both the filesystem and Obsidian.
 
 ## When to use
 
@@ -26,7 +26,7 @@ Files are saved as `Session Logs/YYYY-MM-DD-HH_MM-topic-name.md` within the proj
 ## Requirements
 
 - Obsidian desktop app must be running
-- Working directory must be inside a project folder
+- Working directory must be inside a project (`1_Projects/<name>/`) or area (`2_Areas/<name>/`) folder, or pass the name as an argument (e.g. `/log-project "Resume Items"`)
 - Default vault: `ObsidianWork`
 
 ## Relationship to other skills
