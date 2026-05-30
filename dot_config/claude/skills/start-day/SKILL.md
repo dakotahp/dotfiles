@@ -51,11 +51,12 @@ obsidian search vault=ObsidianPersonal query="tag:#inspiration" format=json
 obsidian read vault=ObsidianPersonal path="2_Areas/Life Domains.md"
 obsidian search vault=ObsidianPersonal query="[agent-context:vault]" format=json
 
-# Project canonical-file modification times for staleness check (vault API).
+# Project canonical-file last-touched dates for staleness check.
 # Convention: a project's canonical file is named after its folder, e.g.
-# `1_Projects/Foo Project/Foo Project.md`. (The legacy `Index.md` naming is no
-# longer used — wikilinking to a verbose project name is more readable than to `[[Index]]`.)
-obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().filter(f => f.path.startsWith('1_Projects/') && f.parent && f.basename === f.parent.name).map(f => ({path: f.path, mtime: f.stat.mtime})).sort((a,b) => a.mtime - b.mtime))"
+# `1_Projects/Foo Project/Foo Project.md`. The `last-touched` frontmatter field
+# is the source of truth — maintained by /log-project and /compress skills.
+# Projects with no last-touched field are skipped (no fallback to mtime).
+obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().filter(f => f.path.startsWith('1_Projects/') && f.parent && f.basename === f.parent.name).map(f => {const lt = app.metadataCache.getFileCache(f)?.frontmatter?.['last-touched'] ?? null; return {path: f.path, last_touched: lt};}).filter(f => f.last_touched).sort((a,b) => a.last_touched < b.last_touched ? -1 : 1))"
 
 # Today's weather forecast — requires $WEATHER_LAT_LONG and $WEATHER_TZ env vars
 curl -sf "https://api.open-meteo.com/v1/forecast?${WEATHER_LAT_LONG}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&${WEATHER_TZ}&forecast_days=1&temperature_unit=fahrenheit&precipitation_unit=inch" | jq -er '"High \(.daily.temperature_2m_max[0])°F, Low \(.daily.temperature_2m_min[0])°F, with a \(.daily.precipitation_probability_max[0])% chance of precipitation"'
@@ -77,7 +78,7 @@ obsidian files vault=ObsidianPersonal folder="4_Archive/Weekly Notes"
 find "$VAULT_PATH/1_Projects" -name "*.md" -mtime -14 | xargs grep -l "^agent-context: project" 2>/dev/null
 ```
 
-Store all results under these labels for use in Phase 2: **CALENDAR_EVENTS**, **VAULT_PATH**, **QUOTES_RAW**, **INSPIRATION_FILES**, **LIFE_DOMAINS**, **VAULT_AGENT_CONTEXT**, **INDEX_MTIMES**, **CURRENT_WEEK**, **WEEKLY_FILES**, **PROJECT_CONTEXT_FILES**, **WEATHER_FORECAST**. If any call fails, store empty/null and continue silently.
+Store all results under these labels for use in Phase 2: **CALENDAR_EVENTS**, **VAULT_PATH**, **QUOTES_RAW**, **INSPIRATION_FILES**, **LIFE_DOMAINS**, **VAULT_AGENT_CONTEXT**, **PROJECT_LAST_TOUCHED**, **CURRENT_WEEK**, **WEEKLY_FILES**, **PROJECT_CONTEXT_FILES**, **WEATHER_FORECAST**. If any call fails, store empty/null and continue silently.
 
 Filter the inbox list to files matching the `YYYY-MM-DD.md` pattern **where the date is before today**. Sort ascending (oldest first). These are unprocessed prior notes.
 
@@ -188,21 +189,6 @@ obsidian append vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md" content="## 
 
 Omit any subsection with nothing to show. For **Action items**: group todos under their attributed project as a subheading. If all todos are unattributed, skip the grouping and list flat. If only one project is represented, skip the project subheading and annotate each item inline with `*(→ [[Project Name]])*`. Omit the *Unattributed* heading if everything is attributed.
 
-**Navigation footer** — the note may already have a `← [[PREV-DATE]]` line (added by Phase 2 when today's note was primed). If so, replace it with the full bidirectional footer using a direct file edit on the full filesystem path (`$VAULT_PATH/0_Inbox/YYYY-MM-DD.md`):
-
-```bash
-perl -i -pe 's|\Q← [[PREV-DATE]]\E|← [[PREV-DATE]] \| [[NEXT-DATE]] →|' "$VAULT_PATH/0_Inbox/YYYY-MM-DD.md"
-```
-
-If no footer line exists yet (note was never primed by Phase 2), append instead:
-
-```bash
-obsidian append vault=ObsidianPersonal path="0_Inbox/YYYY-MM-DD.md" content="\n\n---\n← [[PREV-DATE]] | [[NEXT-DATE]] →"
-```
-
-- `PREV-DATE`: calendar day before this note's date
-- `NEXT-DATE`: calendar day after this note's date
-
 **Archive:**
 
 ```bash
@@ -288,11 +274,11 @@ Sort oldest first. Append after rolled-over todos.
 
 When in doubt, prefer suppression: a stale Radar item next to its concrete rolled-over counterpart adds noise, not signal.
 
-**Stale project flag** — from **INDEX_MTIMES** (the canonical project files, e.g. `1_Projects/Foo/Foo.md`), if any is 30+ days old, pick the least stale one and add:
+**Stale project flag** — from **PROJECT_LAST_TOUCHED** (canonical project files with a `last-touched` frontmatter field), compare each `last_touched` date string to today. If any is 30+ days old, pick the least stale qualifying project and add:
 
-`- [ ] [[Project name]]: no activity in N days — worth a push?`
+`- [ ] [[Project name]]: no activity in N days, worth a push?`
 
-Skip if a rolled-over todo already references that project. Skip if everything is under 30 days.
+Skip if a rolled-over todo already references that project. Skip if all projects with a `last-touched` field are under 30 days. Projects with no `last-touched` field are ignored entirely.
 
 **Cap** — if PRIORITIES_CONTENT exceeds 6 items, remove from the bottom: youngest Radar items first, then stale flag. Never drop rolled-over todos.
 
@@ -325,6 +311,8 @@ Template path: `$VAULT_PATH/3_Resources/Obsidian Templates/Daily Note Template.m
 
 **INSPIRATION_FILENAME** is the bare note name (no path, no `.md`) for the wikilink. The `*italics*` wrapper around `<!-- quote -->` is already in the personal template.
 
+**YESTERDAY_DATE** / **TOMORROW_DATE** — `YYYY-MM-DD` strings for the calendar day before and after today. Compute from today's date (e.g. `(date.today() - timedelta(days=1)).isoformat()`).
+
 ```python
 python3 << 'PYEOF'
 vault = "$VAULT_PATH"
@@ -341,14 +329,15 @@ content = content.replace('<!-- weather -->', 'WEATHER_FORECAST')
 content = content.replace('<!-- priorities -->', 'PRIORITIES_CONTENT')
 content = content.replace('<!-- context -->', 'CONTEXT_CONTENT')
 content = content.replace('<!-- meetings -->', 'MEETINGS_CONTENT')
-content += '\n\n---\n← [[YESTERDAY-DATE]]'
+content = content.replace('<!-- prev-date -->', 'YESTERDAY_DATE')
+content = content.replace('<!-- next-date -->', 'TOMORROW_DATE')
 
 with open(note_path, 'w', encoding='utf-8') as f:
     f.write(content)
 PYEOF
 ```
 
-Embed all content values directly into the heredoc before running — do not use shell variable interpolation for the replacement strings, as they may contain characters that break shell quoting. If the note already contains a nav footer line (starts with `←`), the skill already ran today — skip the write entirely.
+Embed all content values directly into the heredoc before running — do not use shell variable interpolation for the replacement strings, as they may contain characters that break shell quoting. If the note does **not** contain `<!-- prev-date -->`, the placeholders have already been replaced and the skill already ran today — skip the write entirely.
 
 ---
 
