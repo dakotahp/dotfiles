@@ -73,7 +73,7 @@ obsidian vault=$VAULT search query="[agent-context:vault]" format=json
 obsidian files vault=$VAULT folder="4_Archive/Daily Notes"
 
 # Project velocity — prefer authoritative `last-touched` frontmatter, fall back to canonical-file mtime.
-# `last-touched` is written by /snapshot and /log. Files without it haven't had a session-skill
+# `last-touched` is written by /update-project-state and /log-project-session. Files without it haven't had a session-skill
 # run yet — fall back to mtime via the Obsidian API (cross-platform — no GNU `find -printf`).
 # Canonical file convention: `1_Projects/<Foo>/<Foo>.md` (folder-named note; legacy `Index.md` no longer used).
 obsidian vault=$VAULT search query="[last-touched]" format=json
@@ -117,7 +117,7 @@ Score each project against four signals. Higher score = stronger case to focus h
 | Signal | How to score |
 |--------|-------------|
 | **Strategic priority** | **[personal-vault only]** Read from Life Domains — use each project's described priority/cadence as the weight. **In non-personal mode**, weight by the canonical file's frontmatter `status:` value instead (active/in-progress > planning > investigation > idea), defaulting to medium when absent. Idea stubs rank below active projects unless flagged otherwise. |
-| **Neglect duration** | Prefer the canonical file's `last-touched` frontmatter (authoritative — written by `/snapshot` and `/log`). Fall back to the mtime from the `obsidian eval` block in Phase 1 if `last-touched` is absent. More days since last touch = higher score. A project touched yesterday scores 0 here. |
+| **Neglect duration** | Prefer the canonical file's `last-touched` frontmatter (authoritative — written by `/update-project-state` and `/log-project-session`). Fall back to the mtime from the `obsidian eval` block in Phase 1 if `last-touched` is absent. More days since last touch = higher score. A project touched yesterday scores 0 here. |
 | **Idea stubs waiting** | Count stubs from `0_Inbox` whose content is semantically about this project. Each related stub adds to the score. |
 | **Phase readiness** | Can useful work happen right now without the user present? A project waiting on an external reply scores low. A project with clear gaps in documentation or strategy scores high. |
 
@@ -210,6 +210,8 @@ After the user responds:
 
 For each work product the user selected, execute it as a standalone task. If multiple were selected, do them sequentially.
 
+### Phase 3a — Per work product
+
 For each selected item:
 
 1. Re-anchor on the project's diagnosis from Phase 2b (already in memory)
@@ -225,13 +227,69 @@ For each selected item:
    - `tags: agent-work` in frontmatter
    - An empty `## Feedback` section at the bottom
 
-5. **Update the project's canonical file** (`1_Projects/<project>/<project>.md`):
+### Phase 3b — Per project (after all work products for that project are created)
+
+After every work product for a single project has been written, do **one** session-log write and **one** `last-touched` stamp for that project. Replaces an earlier pattern that appended `**Last worked:**` footers directly onto the canonical file — those bloated the canonical file with event history that belongs in session logs.
+
+5. **Write the per-project session log:**
+
+   One log per project per end-week run, covering every work product produced for that project this week. Mirrors the structure that `/log-project-session` writes (Quick Reference, Decisions Made, Files Modified, Pending Tasks, Quick Resume Context), assembled automatically from what end-week just did — no AskUserQuestion prompts.
 
    ```bash
-   obsidian append vault=$VAULT path="1_Projects/<project>/<project>.md" content="\n---\n\n**Last worked: YYYY-MM-DD** (via /end-week) — [one sentence describing what was produced]"
+   LOG_TIMESTAMP=$(date +%Y-%m-%d-%H_%M)
+   LOG_FILENAME="${LOG_TIMESTAMP}-end-week-${WEEK_NUM}.md"
    ```
 
-If the same project has multiple selected work products, append one canonical-file update per work product (don't batch).
+   Compose the log content using this template (substitute placeholders):
+
+   ```markdown
+   # Session Log: YYYY-MM-DD HH:MM - End Week ${WEEK_NUM} Review
+
+   ## Quick Reference
+   **Keywords:** end-week weekly-review ${WEEK_NUM} <project-slug> <work-product-keywords>
+   **Outcome:** <one-sentence summary of what was produced for this project this week>
+
+   ## Decisions Made
+   - <decision driving each work product, if any — pulled from Phase 2c diagnosis>
+
+   ## Files Modified
+   - `<work product path>`: <one-line description of what it contains and why>
+   - (one bullet per work product produced for this project)
+
+   ## Pending Tasks
+   - <follow-ups the work product surfaced, if any>
+
+   ## Quick Resume Context
+   <2-3 sentences a future session would want: which work products landed this week, which diagnosis they came from, and what they leave the project ready to do next>
+   ```
+
+   Save it:
+
+   ```bash
+   obsidian create path="1_Projects/<project>/Session Logs/${LOG_FILENAME}" vault=$VAULT content="<full log content>" silent
+   ```
+
+   The `obsidian create` command creates the `Session Logs/` folder if it doesn't exist.
+
+6. **Stamp `last-touched` on the canonical file** (atomic read → modify-frontmatter → write-back; mirrors `/log-project-session` Step 7.25). **Never use `obsidian property:set`** — it destroys the file body on success.
+
+   ```bash
+   # a. Read
+   obsidian read path="1_Projects/<project>/<project>.md" vault=$VAULT
+   ```
+
+   - b. In memory: if a `---`-delimited frontmatter block exists at top of file, set (or add) `last-touched: YYYY-MM-DD`. If no frontmatter block, prepend one containing only that property. Preserve every other frontmatter key and the entire file body exactly as-is.
+   - c. Write back:
+
+   ```bash
+   obsidian create path="1_Projects/<project>/<project>.md" vault=$VAULT content="<full reconstructed content>" overwrite silent
+   ```
+
+   - d. **Verify the write was not destructive** by reading the file back and confirming the body length matches what was reconstructed. If anything looks wrong, **stop and report to the user** — a truncated canonical file is worse than a missing date stamp.
+
+   Do **not** append `**Last worked:**` footers to the canonical file. Event history belongs in `Session Logs/`.
+
+If the same project has multiple selected work products, still produce **one** session log and **one** `last-touched` stamp per project per end-week run, not one per work product.
 
 ---
 
