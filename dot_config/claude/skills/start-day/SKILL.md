@@ -59,7 +59,7 @@ obsidian search vault=ObsidianPersonal query="[agent-context:vault]" format=json
 obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().filter(f => f.path.startsWith('1_Projects/') && f.parent && f.basename === f.parent.name).map(f => {const lt = app.metadataCache.getFileCache(f)?.frontmatter?.['last-touched'] ?? null; return {path: f.path, last_touched: lt};}).filter(f => f.last_touched).sort((a,b) => a.last_touched < b.last_touched ? -1 : 1))"
 
 # Today's weather forecast — requires $WEATHER_LAT_LONG and $WEATHER_TZ env vars
-curl -sf "https://api.open-meteo.com/v1/forecast?${WEATHER_LAT_LONG}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&${WEATHER_TZ}&forecast_days=1&temperature_unit=fahrenheit&precipitation_unit=inch" | jq -er '"High \(.daily.temperature_2m_max[0])°F, Low \(.daily.temperature_2m_min[0])°F, with a \(.daily.precipitation_probability_max[0])% chance of precipitation"'
+curl -s "https://api.open-meteo.com/v1/forecast?${WEATHER_LAT_LONG}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&${WEATHER_TZ}&forecast_days=1&temperature_unit=fahrenheit&precipitation_unit=inch" | jq -er '"High \(.daily.temperature_2m_max[0])°F, Low \(.daily.temperature_2m_min[0])°F, with a \(.daily.precipitation_probability_max[0])% chance of precipitation"'
 ```
 
 After VAULT_PATH resolves, fire this second batch (also in parallel):
