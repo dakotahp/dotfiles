@@ -1,6 +1,6 @@
-# /log
+# /log-project-session
 
-Saves a structured session log to a project's (`1_Projects/<name>/`) or area's (`2_Areas/<name>/`) `Session Logs/` folder.
+Saves a structured session log to a project's (`1_Projects/<name>/`) or area's (`2_Areas/<name>/`) `Session Logs/` folder. Captures **events** (what happened in a session). For **state** (where the project is now), use `/update-project-state`.
 
 ## What it does
 
@@ -19,18 +19,18 @@ Files are saved as `Session Logs/YYYY-MM-DD-HH_MM-topic-name.md` within the proj
 1. Asks what to capture (multi-select: learnings, solutions, decisions, files modified, etc.)
 2. Optionally takes custom notes
 3. Suggests a topic name based on the conversation (you can override)
-4. Extracts keywords for future search via `/resume`
+4. Extracts keywords for future search via `/continue-project`
 5. Generates structured session log content
 6. Saves to `Session Logs/` via Obsidian CLI
 
 ## Requirements
 
 - Obsidian desktop app must be running
-- Working directory must be inside a project (`1_Projects/<name>/`) or area (`2_Areas/<name>/`) folder, or pass the name as an argument (e.g. `/log-project "Resume Items"`)
+- Working directory must be inside a project (`1_Projects/<name>/`) or area (`2_Areas/<name>/`) folder, or pass the name as an argument (e.g. `/log-project-session "Resume Items"`)
 - Default vault: `ObsidianWork`
 
 ## Relationship to other skills
 
-- **Independent** — can run alone or after `/snapshot`
-- `/resume` reads these session logs to restore context in future sessions
-- `/snapshot` updates the summary file's current state; `/log` creates historical records
+- **Independent.** Can run alone or alongside `/update-project-state`
+- `/continue-project` reads these session logs to restore context in future sessions
+- `/update-project-state` writes state (where the project is now); `/log-project-session` writes events (what happened in a session). State vs events

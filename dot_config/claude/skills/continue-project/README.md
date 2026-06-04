@@ -1,6 +1,6 @@
-# /resume
+# /continue-project
 
-Loads project context and recent session history at the start of a new session.
+Loads project context and recent session history at the start of a new session. Reads both **state** (Session Context, written by `/update-project-state`) and **events** (session logs, written by `/log-project-session`).
 
 ## What it does
 
@@ -11,10 +11,10 @@ Supports loading a configurable number of recent sessions and searching past ses
 ## Usage
 
 ```
-/resume              # summary file + last 3 session logs
-/resume 5            # summary file + last 5 session logs
-/resume auth         # summary file + last 3 + search for "auth"
-/resume 10 migration # summary file + last 10 + search for "migration"
+/continue-project              # summary file + last 3 session logs
+/continue-project 5            # summary file + last 5 session logs
+/continue-project auth         # summary file + last 3 + search for "auth"
+/continue-project 10 migration # summary file + last 10 + search for "migration"
 ```
 
 ## When to use
@@ -39,7 +39,7 @@ Supports loading a configurable number of recent sessions and searching past ses
 
 ## Relationship to other skills
 
-- **Independent** — reads what `/snapshot` and `/log` write
-- Reads the `## Session Context` section written by `/snapshot`
-- Reads session log files created by `/log`
-- Works without either — gracefully handles missing session context or logs
+- **Independent.** Reads what `/update-project-state` and `/log-project-session` write
+- Reads the `## Session Context` section written by `/update-project-state` (current state)
+- Reads session log files created by `/log-project-session` (event history)
+- Works without either. Gracefully handles missing session context or logs

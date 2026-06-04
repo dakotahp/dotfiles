@@ -4,17 +4,17 @@ model: opus
 allowed-tools: Bash
 ---
 
-# /resume - Resume Work with Full Context
+# /continue-project - Continue Work with Full Context
 
 Loads the project's canonical summary file and recent session logs to get up to speed quickly.
 
 **Usage:**
-- `/resume` — summary file + last 3 session logs (project derived from cwd)
-- `/resume 5` — summary file + last 5 session logs
-- `/resume auth` — summary file + last 3 + search for "auth" in past sessions
-- `/resume 10 migration` — summary file + last 10 + search for "migration"
-- `/resume "Real Estate Operating Company"` — explicit project, last 3 logs (works from anywhere)
-- `/resume "Real Estate Operating Company" 5 migration` — explicit project + N + topic
+- `/continue-project` — summary file + last 3 session logs (project derived from cwd)
+- `/continue-project 5` — summary file + last 5 session logs
+- `/continue-project auth` — summary file + last 3 + search for "auth" in past sessions
+- `/continue-project 10 migration` — summary file + last 10 + search for "migration"
+- `/continue-project "Real Estate Operating Company"` — explicit project, last 3 logs (works from anywhere)
+- `/continue-project "Real Estate Operating Company" 5 migration` — explicit project + N + topic
 
 ## Instructions for Claude
 
@@ -27,12 +27,12 @@ Loads the project's canonical summary file and recent session logs to get up to 
 3. **Topic keyword:** Search for related sessions beyond the last N
 
 Examples:
-- `/resume` → project from cwd, N=3, no topic
-- `/resume 5` → project from cwd, N=5, no topic
-- `/resume auth` → project from cwd, N=3, topic="auth"
-- `/resume 10 jira` → project from cwd, N=10, topic="jira"
-- `/resume "My Project"` → project="My Project", N=3, no topic
-- `/resume "My Project" 5 auth` → project="My Project", N=5, topic="auth"
+- `/continue-project` → project from cwd, N=3, no topic
+- `/continue-project 5` → project from cwd, N=5, no topic
+- `/continue-project auth` → project from cwd, N=3, topic="auth"
+- `/continue-project 10 jira` → project from cwd, N=10, topic="jira"
+- `/continue-project "My Project"` → project="My Project", N=3, no topic
+- `/continue-project "My Project" 5 auth` → project="My Project", N=5, topic="auth"
 
 ### Step 2: Resolve Project Context
 
@@ -44,7 +44,7 @@ This skill operates on a **project** under `1_Projects/` or an **area** under `2
 - Otherwise, derive from `pwd`: walk up from cwd. If an ancestor folder is named `1_Projects` or `2_Areas`, the immediate child folder is the project name.
 - If neither yields a project, error and stop:
   ```
-  No project specified. Run from inside a 1_Projects/ or 2_Areas/ folder, or pass the project name: /resume "Project Name"
+  No project specified. Run from inside a 1_Projects/ or 2_Areas/ folder, or pass the project name: /continue-project "Project Name"
   ```
 
 **2b. Determine the vault and category:**
@@ -77,7 +77,7 @@ No summary file "{ProjectPath}/{ProjectName}.md" found.
 
 Options:
 1. Tell me about this project and I'll help create one
-2. Just start working and run /snapshot later
+2. Just start working and run /update-project-state later
 
 What would you like to do?
 ```
@@ -102,7 +102,7 @@ Files are named `YYYY-MM-DD-HH_MM-{topic}.md`, so reverse-sorted `ls` gives newe
 
 **If no session logs exist** (folder missing or empty):
 - Skip all session log sections
-- Note: "No session logs yet. Run /log to start building session history."
+- Note: "No session logs yet. Run /log-project-session to start building session history."
 
 ### Step 4: Read Last N Session Logs
 

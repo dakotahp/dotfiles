@@ -47,14 +47,14 @@ mcp__claude_ai_Google_Calendar__list_events(
   timeZone="America/Los_Angeles"
 )
 obsidian read vault=ObsidianPersonal path="2_Areas/Quotes.md"
-obsidian search vault=ObsidianPersonal query="tag:#inspiration" format=json
+obsidian search vault=ObsidianPersonal folder="2_Areas" query="tag:#inspiration" format=json
 obsidian read vault=ObsidianPersonal path="2_Areas/Life Domains.md"
 obsidian search vault=ObsidianPersonal query="[agent-context:vault]" format=json
 
 # Project canonical-file last-touched dates for staleness check.
 # Convention: a project's canonical file is named after its folder, e.g.
 # `1_Projects/Foo Project/Foo Project.md`. The `last-touched` frontmatter field
-# is the source of truth — maintained by /log-project and /compress skills.
+# is the source of truth — maintained by /log-project-session and /update-project-state skills.
 # Projects with no last-touched field are skipped (no fallback to mtime).
 obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().filter(f => f.path.startsWith('1_Projects/') && f.parent && f.basename === f.parent.name).map(f => {const lt = app.metadataCache.getFileCache(f)?.frontmatter?.['last-touched'] ?? null; return {path: f.path, last_touched: lt};}).filter(f => f.last_touched).sort((a,b) => a.last_touched < b.last_touched ? -1 : 1))"
 
