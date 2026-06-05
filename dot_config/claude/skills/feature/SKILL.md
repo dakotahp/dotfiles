@@ -132,6 +132,10 @@ Do not proceed until failing tests are confirmed. If tests pass before implement
 
 Implement only what is needed to satisfy the prove statements and pass the tests. Do not over-engineer or add unrequested functionality.
 
+### Code comments
+
+Default to no comments. Well-named identifiers and clear structure should make the code self-explanatory to both humans and agents reading it later. Only add a comment when something is genuinely counter-intuitive on a rare basis — for example, a more idiomatic approach exists but cannot be used here for a specific reason, or a future reader would otherwise be likely to "fix" the code without realizing why it is written this way. If a comment merely restates what the code does, delete it. **Every subagent prompt in this step must include this rule verbatim**, because agents otherwise default to writing verbose, redundant comments.
+
 **Always invoke `superpowers:subagent-driven-development`** to implement the plan task-by-task. This is not optional — inline implementation in the main session has no per-task commit discipline and no review checkpoints between tasks, which defeats the pipeline's purpose regardless of feature size. Give each sub-agent a specific, self-contained scope (one task from the plan) so their changes do not conflict.
 
 **Every subagent prompt must include the feature branch name** created in Step 0 and an explicit instruction to commit only to that branch — never to `main` or `master`. Subagents do not inherit your branch context; you must tell them. Example line to include in each subagent prompt: *"All commits must go to branch `feature/my-feature`. Verify with `git branch --show-current` before committing."*
