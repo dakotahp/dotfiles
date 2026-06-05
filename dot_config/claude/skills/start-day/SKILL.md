@@ -62,7 +62,8 @@ obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().f
 curl -s "https://api.open-meteo.com/v1/forecast?${WEATHER_LAT_LONG}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&${WEATHER_TZ}&forecast_days=1&temperature_unit=fahrenheit&precipitation_unit=inch" | jq -er '"High \(.daily.temperature_2m_max[0])°F, Low \(.daily.temperature_2m_min[0])°F, with a \(.daily.precipitation_probability_max[0])% chance of precipitation."'
 
 # Today's max air quality index — requires $WEATHER_LAT_LONG env var
-curl -s "https://air-quality-api.open-meteo.com/v1/air-quality?${WEATHER_LAT_LONG}&hourly=us_aqi&forecast_days=1" | jq -er '"Air quality \(.hourly.us_aqi | map(select(. != null)) | max)"'
+# Outputs a warning string only when AQI > 100 (Unhealthy for Sensitive Groups or worse); empty string otherwise
+curl -s "https://air-quality-api.open-meteo.com/v1/air-quality?${WEATHER_LAT_LONG}&hourly=us_aqi&forecast_days=1" | jq -er '(.hourly.us_aqi | map(select(. != null)) | max) as $aqi | if $aqi <= 100 then "" elif $aqi <= 150 then "Air quality \($aqi) (unhealthy for sensitive groups)" elif $aqi <= 200 then "Air quality \($aqi) (unhealthy)" elif $aqi <= 300 then "Air quality \($aqi) (very unhealthy)" else "Air quality \($aqi) (hazardous)" end'
 ```
 
 After VAULT_PATH resolves, fire this second batch (also in parallel):
