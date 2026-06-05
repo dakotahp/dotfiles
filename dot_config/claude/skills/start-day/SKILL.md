@@ -59,7 +59,10 @@ obsidian search vault=ObsidianPersonal query="[agent-context:vault]" format=json
 obsidian eval vault=ObsidianPersonal code="JSON.stringify(app.vault.getFiles().filter(f => f.path.startsWith('1_Projects/') && f.parent && f.basename === f.parent.name).map(f => {const lt = app.metadataCache.getFileCache(f)?.frontmatter?.['last-touched'] ?? null; return {path: f.path, last_touched: lt};}).filter(f => f.last_touched).sort((a,b) => a.last_touched < b.last_touched ? -1 : 1))"
 
 # Today's weather forecast — requires $WEATHER_LAT_LONG and $WEATHER_TZ env vars
-curl -s "https://api.open-meteo.com/v1/forecast?${WEATHER_LAT_LONG}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&${WEATHER_TZ}&forecast_days=1&temperature_unit=fahrenheit&precipitation_unit=inch" | jq -er '"High \(.daily.temperature_2m_max[0])°F, Low \(.daily.temperature_2m_min[0])°F, with a \(.daily.precipitation_probability_max[0])% chance of precipitation"'
+curl -s "https://api.open-meteo.com/v1/forecast?${WEATHER_LAT_LONG}&daily=temperature_2m_max,temperature_2m_min,precipitation_probability_max&${WEATHER_TZ}&forecast_days=1&temperature_unit=fahrenheit&precipitation_unit=inch" | jq -er '"High \(.daily.temperature_2m_max[0])°F, Low \(.daily.temperature_2m_min[0])°F, with a \(.daily.precipitation_probability_max[0])% chance of precipitation."'
+
+# Today's max air quality index — requires $WEATHER_LAT_LONG env var
+curl -s "https://air-quality-api.open-meteo.com/v1/air-quality?${WEATHER_LAT_LONG}&hourly=us_aqi&forecast_days=1" | jq -er '"Air quality \(.hourly.us_aqi | map(select(. != null)) | max)"'
 ```
 
 After VAULT_PATH resolves, fire this second batch (also in parallel):
@@ -78,7 +81,7 @@ obsidian files vault=ObsidianPersonal folder="4_Archive/Weekly Notes"
 find "$VAULT_PATH/1_Projects" -name "*.md" -mtime -14 | xargs grep -l "^agent-context: project" 2>/dev/null
 ```
 
-Store all results under these labels for use in Phase 2: **CALENDAR_EVENTS**, **VAULT_PATH**, **QUOTES_RAW**, **INSPIRATION_FILES**, **LIFE_DOMAINS**, **VAULT_AGENT_CONTEXT**, **PROJECT_LAST_TOUCHED**, **CURRENT_WEEK**, **WEEKLY_FILES**, **PROJECT_CONTEXT_FILES**, **WEATHER_FORECAST**. If any call fails, store empty/null and continue silently.
+Store all results under these labels for use in Phase 2: **CALENDAR_EVENTS**, **VAULT_PATH**, **QUOTES_RAW**, **INSPIRATION_FILES**, **LIFE_DOMAINS**, **VAULT_AGENT_CONTEXT**, **PROJECT_LAST_TOUCHED**, **CURRENT_WEEK**, **WEEKLY_FILES**, **PROJECT_CONTEXT_FILES**, **WEATHER_FORECAST**, **AIR_QUALITY**. If any call fails, store empty/null and continue silently.
 
 Filter the inbox list to files matching the `YYYY-MM-DD.md` pattern **where the date is before today**. Sort ascending (oldest first). These are unprocessed prior notes.
 
@@ -326,6 +329,7 @@ content = content.replace('<!-- weekly-focus -->', 'WEEKLY_FOCUS_LINE')
 content = content.replace('<!-- quote -->', 'QUOTE_CONTENT')
 content = content.replace('<!-- inspiration -->', '[[INSPIRATION_FILENAME]] — INSPIRATION_TEASER')
 content = content.replace('<!-- weather -->', 'WEATHER_FORECAST')
+content = content.replace('<!-- air -->', 'AIR_QUALITY')
 content = content.replace('<!-- priorities -->', 'PRIORITIES_CONTENT')
 content = content.replace('<!-- context -->', 'CONTEXT_CONTENT')
 content = content.replace('<!-- meetings -->', 'MEETINGS_CONTENT')
