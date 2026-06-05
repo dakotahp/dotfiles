@@ -1,15 +1,15 @@
 ---
 context: conversation
-description: Snapshot the project's current state into its canonical summary file via Obsidian CLI
+description: Update the project's current state (phase, decisions, blockers, next steps) in its canonical summary file. Replaces, does not accumulate. Use when state has changed; for events (what happened in a session) use /log-project-session.
 model: opus
 allowed-tools: Bash, AskUserQuestion
 ---
 
-# /snapshot - Snapshot Current Project State
+# /update-project-state - Update Project State
 
-Updates the project's canonical summary file with the current state of understanding. Writes a `## Session Context` section that represents where the project stands now — replaced (not accumulated) on each run.
+Updates the project's canonical summary file with the current state of understanding. Writes a `## Session Context` section that represents where the project stands *now*, replaced (not accumulated) on each run. This captures **state** (where the project is). For **events** (what happened in a session), use `/log-project-session`.
 
-**Independent skill.** Can run alone or before `/log`. Does not depend on or trigger any other skill.
+**Independent skill.** Can run alone or alongside `/log-project-session`. Does not depend on or trigger any other skill.
 
 ## Instructions for Claude
 
@@ -23,7 +23,7 @@ This skill operates on a **project** under `1_Projects/` or an **area** under `2
 - Otherwise, derive from `pwd`: walk up from cwd. If an ancestor folder is named `1_Projects` or `2_Areas`, the immediate child folder is the project name.
 - If neither yields a project, error and stop:
   ```
-  No project specified. Run from inside a 1_Projects/ or 2_Areas/ folder, or pass the project name: /snapshot "Project Name"
+  No project specified. Run from inside a 1_Projects/ or 2_Areas/ folder, or pass the project name: /update-project-state "Project Name"
   ```
 
 **1b. Determine the vault and category:**
@@ -194,7 +194,7 @@ obsidian daily:append vault="{Vault}" content="
 
 (If `## Sessions` already exists but doesn't contain the project link, append just `- [[{ProjectName}]]` under it via `obsidian daily:append` — the CLI's append behavior controls placement; if precise section insertion isn't possible, appending the bullet to the end of the daily note is acceptable.)
 
-**7d. On any error in this step, swallow it.** This is a side effect, not the primary purpose of `/snapshot`.
+**7d. On any error in this step, swallow it.** This is a side effect, not the primary purpose of `/update-project-state`.
 
 ### Step 8: Confirm
 
@@ -214,7 +214,7 @@ Last updated: {date}
 
 ## Guidelines
 
-- **Context efficiency is paramount.** This section is loaded every session via `/resume`
+- **Context efficiency is paramount.** This section is loaded every session via `/continue-project`
 - **Signal over noise.** The "why" matters more than the "what"
 - **Point, don't duplicate.** Reference files instead of copying content
 - **Respect the existing file.** Match the style already in use; only touch `## Session Context`
