@@ -8,12 +8,12 @@ model: haiku
 Move a file to `4_Archive/`, preserving its full vault-relative path so it stays findable without searching.
 
 **Destination rule:** prepend `4_Archive/` to the file's existing path. That's it.
-- `1_Projects/Job Search/Interview Notes.md` → `4_Archive/1_Projects/Job Search/Interview Notes.md`
-- `2_Areas/Career/Old Review 2024.md` → `4_Archive/2_Areas/Career/Old Review 2024.md`
+- `1_Projects/My Project/Some Note.md` → `4_Archive/1_Projects/My Project/Some Note.md`
+- `2_Areas/My Area/Old Note.md` → `4_Archive/2_Areas/My Area/Old Note.md`
 
 **Usage:**
 - `/archive` — archive the file currently open in the Obsidian app
-- `/archive "Interview Notes"` — find and archive a named file (safer if there's a gap between opening and running)
+- `/archive "Note Name"` — find and archive a named file (safer if there's a gap between opening and running)
 - `/archive --folder "Project Name"` — archive an entire project/area folder
 
 ---
