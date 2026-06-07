@@ -5,7 +5,7 @@ allowed-tools: Bash, Read, Edit, Write, WebSearch, WebFetch, AskUserQuestion
 model: claude-opus-4-7
 ---
 
-Weekly review session. Works through four phases: survey the week, score top-candidate projects + capture a weekly focus + diagnose and present a multi-select menu of candidate work products, execute the user's selections, then write the weekly summary note. Two checkpoints in the middle (focus picker, work-product curation); everything else runs autonomously.
+Weekly review session. Works through four phases: survey the week, score top-candidate projects + capture a weekly focus + diagnose and present a multi-select menu of candidate work products + review idea fragments for development, execute the user's selections, then write the weekly summary note. Three checkpoints in the middle (focus picker, work-product curation, idea fragment triage); everything else runs autonomously.
 
 **Vault resolution** — at the top of the run, determine which vault is active:
 
@@ -201,14 +201,70 @@ options:
 ```
 
 After the user responds:
-- **One or more selected:** proceed to Phase 3, looping over each selected work product
-- **Zero selected:** skip Phase 3 entirely, proceed straight to Phase 4. The weekly summary still gets written; `## Work Produced` shows "None — by user choice."
+- **One or more selected:** proceed to Phase 2e, then Phase 3, looping over each selected work product
+- **Zero selected:** proceed to Phase 2e; if nothing is selected there either, skip Phase 3 entirely and go straight to Phase 4. The weekly summary still gets written; `## Work Produced` shows "None — by user choice."
+
+### Phase 2e — Idea Fragment Review
+
+This phase runs after Phase 2d regardless of whether any work products were selected. It gives every idea fragment a chance to be developed before the session ends.
+
+**If no stubs were found in Phase 1, skip this phase entirely.**
+
+**Read stub contents.** For each stub path returned by the Phase 1 search, read the file to get full content. Extract from each:
+- Title: the `<Short Title>` portion of the filename `Idea - <Short Title>.md`
+- Teaser: first non-frontmatter, non-blank line of the body
+- Source date: value of the `source:` frontmatter field (e.g. `[[2026-05-14]]` → `2026-05-14`)
+
+**Cap at 4.** If more than 4 stubs exist, select the 4 with the most recent source dates. Note the count of remaining stubs in your response after the question resolves — they are not lost, just deferred to a future session.
+
+**Present the multi-select.** Use `AskUserQuestion` with `multiSelect: true`:
+
+```
+Question: "Which idea fragments do you want to develop this session?"
+multiSelect: true
+options:
+  - label: "<Short Title>"
+    description: "<Teaser> (captured <source date>)"
+  # … up to 4 stubs
+```
+
+If the user selects none, skip the per-stub direction questions and proceed directly to Phase 3. There is nothing to execute for stubs.
+
+**Per selected stub — direction picker.** For each selected stub (sequentially, not in parallel — each answer informs the next question if needed):
+
+1. Re-read the stub content (already in memory)
+2. Analyze the idea. Generate exactly **3 development directions** that are specific to this idea's content — not generic category labels. Each direction should describe a concrete output and why it's the right next move for this particular idea. Use these direction shapes as guides (pick the 3 most applicable):
+
+   | Direction shape | When to use |
+   |---|---|
+   | Flesh out the concept structure | Idea is promising but underdeveloped — needs scaffolding before any action |
+   | Research comparables or prior art | Idea's viability depends on what already exists — external grounding needed |
+   | Map and connect to an existing project | Idea clearly belongs to an active project; output is a note in that project's folder |
+   | Draft a project proposal with scope | Idea is concrete enough to stand alone as a project — needs a framing note |
+   | Generate scoping questions | Idea is genuinely open-ended; the right next step is clarifying what it even means |
+   | Write up as a reference resource | Idea is a concept worth knowing, not an action — belongs in `3_Resources/` |
+
+3. Present via `AskUserQuestion` (single-select, 3 options). Labels should be concrete and idea-specific. The automatic "Other" option covers ad-hoc prompts.
+
+   Example shape (illustrative — actual labels are idea-specific):
+   ```
+   Question: "How should I develop '<Idea Title>'?"
+   options:
+     - label: "Flesh out the core structure with current context"
+       description: "Expand using recent notes and project state as source material."
+     - label: "Research comparable approaches or prior art"
+       description: "Find 3-4 real examples; identify what makes each useful; adapt to your context."
+     - label: "Design it as a recurring practice, not a one-time exercise"
+       description: "Frame it as an ongoing area under 2_Areas — with a cadence and update convention."
+   ```
+
+4. Store `(stub_path, direction_or_prompt)` for execution in Phase 3c. If the user selects "Other" and types a prompt, use that verbatim as the direction.
 
 ---
 
-## Phase 3 — Execute Selected Work Products
+## Phase 3 — Execute Selected Work Products and Idea Fragments
 
-For each work product the user selected, execute it as a standalone task. If multiple were selected, do them sequentially.
+For each selected item (work products from Phase 2d, then idea fragments from Phase 2e), execute sequentially. Work products first, then stubs.
 
 ### Phase 3a — Per work product
 
@@ -291,6 +347,32 @@ After every work product for a single project has been written, do **one** sessi
 
 If the same project has multiple selected work products, still produce **one** session log and **one** `last-touched` stamp per project per end-week run, not one per work product.
 
+### Phase 3c — Idea Fragment Development
+
+For each `(stub_path, direction_or_prompt)` pair from Phase 2e, execute the development work and write back to the stub file. Do them sequentially.
+
+**For each stub:**
+
+1. Re-read the stub content (already in memory; re-read only if needed)
+2. Execute the chosen direction — synthesize, draft, research, or map as instructed. Use web research (WebSearch, WebFetch) when the direction calls for external context.
+3. **Write the developed content back to the stub file in place:**
+
+   ```bash
+   obsidian create vault=$VAULT path="<stub_path>" content="---\ntags:\n  - idea\n  - agent-work\nsource: \"<original source value>\"\n---\n\n[developed content]\n\n## Feedback\n" overwrite silent
+   ```
+
+   Key rules for the in-place rewrite:
+   - Keep the `idea` tag. Remove the `stub` tag (the idea is no longer a sparse capture).
+   - Add `agent-work` tag to mark this as agent-developed content.
+   - Preserve the original `source:` frontmatter value.
+   - Append an empty `## Feedback` section — this is where the owner steers future development.
+   - If the direction was "map to existing project," also create a linked note in that project's folder pointing back to this stub. Do not move the stub itself — routing is the owner's call.
+   - If the direction was "draft a project proposal," write the proposal content into the stub (same rules above). The owner decides whether to promote it to a `1_Projects/` folder.
+
+4. **Do NOT write a session log or stamp `last-touched` on any project** for stub development, unless the direction explicitly mapped the stub into a project folder. In that case, include the stub-development note in that project's Phase 3b session log.
+
+5. Add the developed stub to the `<!-- work-produced -->` list in Phase 4 with a one-line description of what was done.
+
 ---
 
 ## Phase 4 — Weekly Notes (one note per week, two operations per run)
@@ -319,7 +401,7 @@ VAULT_PATH=$(obsidian eval vault=$VAULT code="app.vault.adapter.basePath" | sed 
 | `<!-- weekly-focus -->` | stub run | Verbatim WEEKLY_FOCUS sentence from Phase 2b. If empty, leave the placeholder unfilled; **start-day** will skip the splice. |
 | `<!-- decisions-needed -->` | stub run | Numbered list of forward-looking decisions blocking next week's work. |
 | `<!-- projects-focused -->` | amend run | One `**[[Project Name]]** — why it was picked + brief framing` line per project with executed work. |
-| `<!-- work-produced -->` | amend run | Bulleted list of `- [[Note title]] — one-sentence description`. If zero work products: `None — by user choice.` |
+| `<!-- work-produced -->` | amend run | Bulleted list of `- [[Note title]] — one-sentence description`. Include both project work products (Phase 3a) and developed idea fragments (Phase 3c). If zero in both: `None — by user choice.` |
 | `<!-- not-selected -->` | amend run | Candidates surfaced in Phase 2d but not picked. Leave empty if all selected or none generated. |
 | `<!-- week-in-brief -->` | amend run | 2-3 sentences synthesizing the week from daily-note distillations. |
 | `<!-- domain-gaps -->` | amend run | **[personal-vault only]** Life Domains with zero activity. In non-personal mode, leave empty (or delete the `## Domain Gaps` section entirely if rendering bothers you). |
