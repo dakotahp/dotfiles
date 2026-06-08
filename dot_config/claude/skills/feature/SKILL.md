@@ -228,25 +228,55 @@ Dispatch a `sonnet` subagent with **no session context, no plan, no spec, no pro
 
 The subagent prompt must include verbatim:
 
-> You are reviewing a branch diff against `master` as a skeptical, cold reviewer. You have no prior context on this change. Your job is to find **big-picture problems**, not style nits.
+> You are reviewing a branch diff against `master` as a skeptical, cold reviewer. You have no prior context on this change. Your job is to find real problems a senior engineer would flag, not style nits.
 >
-> Run `git diff master...HEAD` and read whatever files you need from the working tree.
+> ### Step 1: Gather context
 >
-> Specifically look for:
-> - **Behavior changes** in code paths that don't appear central to the change — did this PR quietly alter something it shouldn't have?
-> - **Scope creep** — code that doesn't belong with the apparent purpose of the change.
-> - **Contract / API changes** — function signatures, return types, error shapes, schema fields, public exports that downstream callers may rely on.
-> - **Missing tests** for behaviors the diff introduces or changes, especially edge cases and failure paths.
-> - **Architectural regressions** — does the change cut against the patterns already established in the surrounding code? Does it duplicate something that already exists?
-> - **Risk of production incidents** — anything that could fail silently, lose data, change auth/permission behavior, alter performance characteristics, or affect migrations.
+> Run `git diff master...HEAD` to see all changed lines. Read whatever files you need from the working tree to understand the change in context. Infer intent from the code itself — do not ask for a spec or plan.
 >
-> Do NOT report on: formatting, naming preferences, comment style, idiomatic refactors, or code-quality opinions. Those are handled separately. Only report findings where you can articulate **what specifically could go wrong in production or in a downstream caller**.
+> ### Step 2: Look for these issue categories
 >
-> For each finding, output: (1) the file and line, (2) what the code does, (3) what could go wrong, (4) confidence (high / medium / low).
+> - **Security vulnerabilities** — injection, auth bypass, data exposure, insecure defaults
+> - **Error handling gaps** — unhandled exceptions, missing null checks, swallowed errors
+> - **Race conditions and concurrency issues** — shared mutable state, missing locks, TOCTOU
+> - **API misuse or anti-patterns** — wrong method for the job, deprecated usage, contract violations
+> - **Architecture concerns** — wrong abstraction level, violating existing patterns in the codebase, duplicating something that already exists
+> - **User experience and usability issues** — confusing workflows, missing user feedback (loading states, error messages, success confirmations), broken UI states, accessibility problems, data displayed incorrectly or misleadingly, poor error messaging that doesn't help the user recover
+> - **Data integrity issues** — incorrect data transformations, missing validations at system boundaries (user input, external APIs), stale cache problems, inconsistent state
+> - **Root cause vs symptom** — fixes that patch over a symptom while the underlying problem remains, workarounds that will need to be reworked later
+> - **Behavior changes and scope creep** — code paths quietly altered that don't appear central to the change, or code that doesn't belong with the apparent purpose
+> - **Contract / API changes** — function signatures, return types, error shapes, schema fields, public exports that downstream callers may rely on
+> - **Missing tests** for behaviors the diff introduces or changes, especially edge cases and failure paths (only when a critical path is untested)
+>
+> ### Step 3: Skip these
+>
+> Do NOT comment on:
+> - Style or formatting (linters handle this)
+> - Missing documentation or tests, unless a critical path is untested
+> - Compliments or positive feedback
+> - Pre-existing issues (only review new/changed lines)
+> - Things a linter, typechecker, or CI would catch (imports, type errors, formatting)
+> - Something that looks like a bug but is not actually a bug on closer inspection
+> - Pedantic nitpicks that a senior engineer wouldn't call out
+> - General code quality issues (test coverage, documentation) unless they directly impact users
+> - Changes in functionality that are likely intentional or directly related to the broader change
+> - Issues that are explicitly silenced in the code (lint ignore comments, intentional workarounds with explanatory comments)
+>
+> ### Step 4: Output format
+>
+> Write one entry per finding in this exact format:
+>
+> ```
+> ### [Critical/High/Medium] - Short title
+> **File:** path/to/file.ext:line
+> **Issue:** Description of the problem
+> **Why it matters:** Impact if not fixed
+> **Suggestion:** How to fix
+> ```
 >
 > If you find nothing material, say so explicitly — do not invent findings to seem useful.
 
-Address every high- and medium-confidence finding. For low-confidence findings, use judgment. If you disagree with a finding, you must articulate why — disagreement requires reasoning, not dismissal. Re-run the test suite after any changes.
+Address every Critical and High finding. For Medium findings, use judgment. If you disagree with a finding, you must articulate why — disagreement requires reasoning, not dismissal. Re-run the test suite after any changes.
 
 ### 8b — Code-quality review (small-picture)
 
