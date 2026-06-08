@@ -1,9 +1,9 @@
 ---
-description: Processes web clippings from an Obsidian vault — summarizes each clipping, files it into the appropriate 2_Areas/ subfolder in the personal vault based on tags, and removes the original. Use this skill whenever the user says "process clippings", "sort clippings", "clean up clippings", or asks to organize saved/clipped articles. Also trigger when the user runs /process-clippings.
+description: Processes web clippings from an Obsidian vault, summarizes each clipping, files it into the appropriate 2_Areas/ subfolder in the personal vault based on tags, and removes the original. Use this skill whenever the user says "process clippings" or the user runs /process-clippings.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion
 ---
 
-Process web clippings from Obsidian vaults into summarized notes filed in the personal vault. Clippings are identified by the `#clippings` tag — they can live anywhere in either vault.
+Process web clippings from Obsidian vaults into summarized notes filed in the personal vault. Clippings are identified by the `#clipping` tag, they can live anywhere in either vault.
 
 The user has two Obsidian vaults synced via Syncthing, always siblings in the same parent directory:
 - **ObsidianWork** — work vault
@@ -45,16 +45,16 @@ If ObsidianWork cannot be found, tell the user and stop.
 
 ## Step 2 — Find clippings to process
 
-Search for files tagged `#clippings` in the personal vault:
+Search for files tagged `#clipping` in the personal vault:
 
 ```bash
-obsidian search vault=ObsidianPersonal query="tag:#clippings" format=json
+obsidian search vault=ObsidianPersonal query="tag:#clipping" format=json
 ```
 
-Search for files tagged `#clippings` in the work vault via filesystem grep. Use POSIX character classes (`[[:space:]]`) instead of `\s` — macOS BSD grep doesn't support `\s`:
+Search for files tagged `#clipping` in the work vault via filesystem grep. Use POSIX character classes (`[[:space:]]`) instead of `\s`, since macOS BSD grep doesn't support `\s`:
 
 ```bash
-grep -rEl "^[[:space:]]*-[[:space:]]*['\"]?clippings['\"]?" "<work_vault_path>" --include="*.md"
+grep -rEl "^[[:space:]]*-[[:space:]]*['\"]?clipping['\"]?" "<work_vault_path>" --include="*.md"
 ```
 
 If no tagged clippings are found in either vault, tell the user there's nothing to process and stop.
@@ -76,7 +76,7 @@ For **ObsidianPersonal** clippings, read via the CLI using the path returned fro
 Extract from the YAML frontmatter:
 - `title` — the article/post title
 - `source` — the original URL (preserve this)
-- `tags` — list of tags (drop the generic `clippings` tag, keep the rest)
+- `tags` — list of tags (drop the generic `clipping` tag, keep the rest)
 - `author`, `created`, `description` — retain if present
 
 Read the body content below the frontmatter.
