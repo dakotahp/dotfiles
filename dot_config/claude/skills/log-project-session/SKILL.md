@@ -1,6 +1,5 @@
 ---
 description: Save a structured session log to a project's or area's Session Logs folder via Obsidian CLI
-model: sonnet
 allowed-tools: Bash, AskUserQuestion
 ---
 
