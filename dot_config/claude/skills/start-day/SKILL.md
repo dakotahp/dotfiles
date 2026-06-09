@@ -183,6 +183,14 @@ obsidian append vault=ObsidianPersonal file="<Note Name>" content="\n---\n\n<lea
 obsidian create vault=ObsidianPersonal path="2_Areas/<Subfolder>/<Title>.md" content="---\ntags:\n  - <tag>\n---\n\n<learning content>\n\nSource: [[YYYY-MM-DD]]" silent
 ```
 
+When a learning is tagged `#inspiration`, include `summary:` in the frontmatter at creation time:
+
+```bash
+obsidian create vault=ObsidianPersonal path="2_Areas/<Subfolder>/<Title>.md" content="---\ntags:\n  - <tag>\nsummary: \"<1-sentence declarative insight>\"\n---\n\n<learning content>\n\nSource: [[YYYY-MM-DD]]" silent
+```
+
+Write the summary as a 1-sentence declarative insight. See `Vault Conventions ## The summary: Field` for guidance.
+
 #### Step 1b-v — Write Distillation, navigation footer, archive
 
 **Distillation** — append before archiving:
@@ -251,7 +259,7 @@ Find `## Distillation` → `**Action items:**`, extract every `- [ ]` line verba
 
 Store as **QUOTE_CONTENT** — the raw line text including attribution and any `[[wikilink]]`.
 
-**Inspiration** — from **INSPIRATION_FILES**, apply the same full-date hash mod against the list to pick one file deterministically. Read **only the first non-frontmatter, non-heading line** of that file (skip `---` blocks and lines starting with `#`) — stop after the first prose paragraph; do not load the full file.
+**Inspiration** — from **INSPIRATION_FILES**, apply the same full-date hash mod against the list to pick one file deterministically. Read `summary:` from the file's frontmatter if present -- use it verbatim as INSPIRATION_TEASER without loading the file body. If `summary:` is absent (pre-convention note), fall back to the first non-frontmatter, non-heading line (skip `---` blocks and lines starting with `#`) -- stop after the first prose paragraph; do not load the full file.
 
 Store as **INSPIRATION_PATH** (vault-relative path) and **INSPIRATION_TEASER** (the first prose line).
 
