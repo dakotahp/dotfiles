@@ -107,10 +107,7 @@ tags:
 source: (original URL)
 author: (if available)
 clipped: (original created date)
----
-
-(1–2 sentence spark summary)
-
+summary: "(1 sentence declarative insight)"
 ---
 
 (Detail content here — bullets, sections, etc.)
@@ -119,13 +116,9 @@ clipped: (original created date)
 *Source: [Original Title](url)*
 ```
 
-**The first line after frontmatter is always a 1–2 sentence spark summary**, separated from the detail content by a `---` divider. This block exists solely as a daily teaser — it should stand alone without the rest of the note.
+**The `summary:` frontmatter field** holds a 1-sentence declarative insight used verbatim by `/start-day` as the daily teaser. See `Vault Conventions ## The summary: Field` for writing guidance.
 
-- Aim for 1 sentence; use 2 only if one sentence can't carry the idea
-- Write it as a declarative insight, not a description of the article ("Over-apologizing erodes credibility" not "This post is about apologizing at work")
-- If the content has a memorable phrase or reframe, lead with that
-
-**The detail content** after the divider is independent — format it however best fits the source:
+**The detail content** is the note body — format it however best fits the source:
 
 - **Short content** (like a LinkedIn post): distill into a clean bulleted list. Get to the point — the user wants quick-reference notes, not a rehash of the original prose.
 - **Long content** (full articles, detailed guides): bulleted details organized by theme or section. The goal is that the user can glance and get 80% of the value without re-reading the source.
