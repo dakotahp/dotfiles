@@ -162,46 +162,10 @@ mkdir -p "$VAULT_PATH/4_Archive/$CATEGORY"
 mv "$SRC_DIR" "$VAULT_PATH/4_Archive/$CATEGORY/$NAME"
 ```
 
-### F5: Update status on canonical file (projects only, not areas)
+### F5: Confirm
 
-Skip for `2_Areas`.
-
-Canonical file path: `$VAULT_PATH/4_Archive/$CATEGORY/$NAME/$NAME.md`
-
-If it exists, update `status: archived` via Python. Do NOT use `obsidian property:set` — known bug that destroys the file body.
-
-```python
-python3 << 'PYEOF'
-import re
-
-path = "CANONICAL_FILE_PATH"
-
-with open(path, 'r', encoding='utf-8') as f:
-    content = f.read()
-
-if content.startswith('---'):
-    end = content.index('---', 3)
-    fm = content[3:end]
-    body = content[end:]
-    if re.search(r'^status:', fm, re.MULTILINE):
-        fm = re.sub(r'^status:.*$', 'status: archived', fm, flags=re.MULTILINE)
-    else:
-        fm = fm.rstrip() + '\nstatus: archived\n'
-    result = '---' + fm + body
-else:
-    result = '---\nstatus: archived\n---\n\n' + content
-
-with open(path, 'w', encoding='utf-8') as f:
-    f.write(result)
-print("ok")
-PYEOF
-```
-
-Embed `CANONICAL_FILE_PATH` directly in the heredoc — do not use shell variable interpolation inside the Python string.
-
-### F6: Confirm
+The canonical file's `status:` is intentionally **left alone**. The `4_Archive/` folder location is the signal that the project is archived; the existing `status:` (`done`, `paused`, `active`, or absent) preserves the historical record of how the project ended — finished vs. shelved vs. abandoned mid-flight. Queries for active work should filter out anything under `4_Archive/` by path, not by status.
 
 ```
 Archived: $CATEGORY/$NAME → 4_Archive/$CATEGORY/$NAME
-  Status: archived  (set on canonical file — or omit this line if skipped)
 ```
