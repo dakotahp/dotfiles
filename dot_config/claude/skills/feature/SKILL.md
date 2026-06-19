@@ -65,7 +65,28 @@ After brainstorming completes, invoke `superpowers:writing-plans` to produce the
 
 **IMPORTANT:** Skip the writing-plans "Execution Handoff" section entirely — do NOT ask the user which execution approach to use. This pipeline controls execution flow; the writing-plans skill is a sub-routine here. Execution will use subagent-driven-development in Step 5.
 
-**After writing-plans saves the plan file**, immediately present a summary of the plan to the user and ask for explicit approval. Example: *"Implementation plan saved to `docs/superpowers/plans/<file>.md`. Here's a summary: [brief overview of tasks]. Approve the plan to continue, or give feedback to revise."* Do NOT end your message without this prompt — the writing-plans skill's natural ending is an execution handoff that you are skipping, so you must replace it with your own approval request.
+### Adversarial plan review (run BEFORE asking for approval)
+
+Stress-test the plan the way Step 8 stress-tests the diff, but catch the blind spots now, when they cost a sentence to fix instead of a rewrite. Scale to plan size: skip for a trivial single-file plan; run both passes for anything spanning multiple files, surfaces, or subsystems. Both passes are read-only `sonnet` subagents, dispatched in parallel.
+
+**Hard rules (each learned by getting it wrong):**
+- **Run this before any implementation exists.** Once code is written, the reviewers rediscover your code instead of independently re-deriving intent, and the signal collapses.
+- **Feed the reviewer the actual plan + spec files, not a hand-written summary.** A compressed summary makes the reviewer flag things the plan already covers ("the plan never mentions X" when it did).
+- **Scope both reviewers to falsifiable claims and coverage gaps, not design taste.** Divergent-but-valid design is noise; false assumptions and missing risks are signal.
+
+**Pass 1 — Assumption falsification (grounded).** Give it the plan + spec + the repo. Prompt verbatim:
+
+> You are stress-testing a TECHNICAL PLAN before it is implemented, against the real codebase. Read the plan and spec at <paths> and explore the repo. (1) Enumerate every assumption the plan makes about the existing system, including implicit ones it never states. (2) For each, verify against actual code/schema/config and mark VERIFIED (file:line), FALSE (file:line), or UNVERIFIABLE-WITHOUT-RUNTIME (a genuine unknown needing a spike). (3) Flag anything that would make a step fail as written — a seam that does not exist, an export/data path that is not what the plan assumes, an aggregation that cannot be added where claimed. Focus on falsifiable facts about the existing system, not design taste. End with a ranked "biggest blind spots / verify before building" list.
+
+**Pass 2 — Blind re-derivation.** Give it ONLY the spec/ticket requirements + the repo, NOT the plan. Prompt verbatim:
+
+> Produce an independent technical plan for the requirements below, from scratch. Do not assume an existing plan exists; derive everything from the requirements and the codebase, verifying claims in code. Cover: what each key term actually maps to in this codebase (trace it, cite file:line; watch for similarly-named decoys), whether the needed data already exists or must be built, the backend/frontend/export seam for each requirement, risks and unknowns you could not confirm, and a build order. Requirements: <verbatim ticket/spec text>.
+
+Then **you** diff Pass 2's plan against yours: anything it surfaced that yours omitted — a missed approach, an unstated risk, a whole affected area — is a blind spot. Pass 1 finds "this specific thing will break"; Pass 2 finds "you framed this wrong or missed an area." They are complementary; run both.
+
+Fold validated findings back into the plan and spec before presenting them. Convert each UNVERIFIABLE assumption into an explicit spike/verification task rather than an optimistic claim. Discard contamination artifacts and any finding that attacks a strawman of the plan.
+
+**After writing-plans saves the plan file and the plan review above is folded in**, present a summary of the plan to the user and ask for explicit approval. Example: *"Implementation plan saved to `docs/superpowers/plans/<file>.md`. Here's a summary: [brief overview of tasks]. Approve the plan to continue, or give feedback to revise."* Do NOT end your message without this prompt — the writing-plans skill's natural ending is an execution handoff that you are skipping, so you must replace it with your own approval request.
 
 Approval means the user says something like "approved", "looks good", "proceed", or an unambiguous equivalent. **Feedback without approval is NOT approval** — incorporate the feedback, update the plan, and re-present it. Do not interpret silence or partial responses as approval. **After approval, immediately continue to Step 3 in the same response — do not wait for another user message.**
 
@@ -146,6 +167,8 @@ To conserve cost, speed, and context window hygiene, use the `model` parameter w
 
 | Step | Role | Model | Rationale |
 |------|------|-------|-----------|
+| 2.5 | **Plan assumption-falsifier** | `sonnet` | Codebase-grounded verification of the plan's claims |
+| 2.5 | **Plan re-deriver** | `sonnet` | Independent plan from the spec; reasoning, but well-scoped |
 | 4 | **Test writer** | `sonnet` | Plan contains exact test code; writing + verifying failure is mechanical |
 | 5 | **Implementer** | `sonnet` | Mechanical work with clear specs from the plan |
 | 5 | **Spec compliance reviewer** | `haiku` | Pure checklist comparison — does code match spec? |
@@ -158,7 +181,7 @@ To conserve cost, speed, and context window hygiene, use the `model` parameter w
 
 **Escalation:** If any subagent returns BLOCKED and the cause is reasoning difficulty (not missing context), re-dispatch with `model: opus`.
 
-**When NOT to delegate:** Steps 2 (planning) and 3 (prove statements) require understanding the design spec and translating requirements into falsifiable claims. These stay in the main session.
+**When NOT to delegate:** Steps 2 (planning) and 3 (prove statements) require understanding the design spec and translating requirements into falsifiable claims. These stay in the main session. The one exception inside Step 2 is the plan-review pair: delegate the two read-only reviewers, but keep the diff/synthesis and the plan revision with you.
 
 **Context window benefit:** Subagent results return as short summaries, not raw tool output. A haiku agent running 10 prove_it commands keeps ~50 lines of test output out of the main opus context. Over a full pipeline run, this compounds significantly.
 
@@ -353,5 +376,6 @@ Do not self-declare the loop complete. The exit condition requires evidence from
 | "I'm already on a branch, subagents will use it" | Subagents start fresh — they do not inherit your branch. Pass the branch name explicitly in every subagent prompt. |
 | "I'll create the branch after planning" | By then a subagent may have already committed to master. Create the branch in Step 0, before anything else. |
 | "This feature is small, inline execution is fine" | Feature size is irrelevant. Inline execution has no per-task commits and no review checkpoints. Always use subagent-driven-development. |
+| "The plan is obviously right, skip the plan review" | Plan-stage blind spots are the cheapest to fix and the most expensive to discover mid-implementation. Run the Step 2 plan review before approval, on the full plan, before any code exists. |
 
 **This pipeline is complete only when Step 10 has been executed. All steps are required.**
