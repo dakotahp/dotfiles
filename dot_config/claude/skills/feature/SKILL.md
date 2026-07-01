@@ -247,7 +247,11 @@ This step runs **two distinct review passes** with different framings. Both are 
 
 The goal of this pass is to catch the kind of show-stopper issues a cold PR reviewer would catch: unintended behavior changes, scope creep, architectural regressions, missing coverage for edge cases the implementation silently introduced, contract/API changes the author didn't realize they made.
 
-Dispatch a `sonnet` subagent with **no session context, no plan, no spec, no prove statements** — only the diff against `master` and the ability to read the repo as it stands. The subagent must not be told what the feature is "supposed" to do; it must infer intent from the code itself, the way a PR reviewer does. This cold framing is the entire point — do not include the plan file path, the spec, or a description of the feature in the prompt.
+Dispatch a `sonnet` subagent with **no session context, no plan, no spec, no prove statements** — only the diff against the default branch and the ability to read the repo as it stands. The subagent must not be told what the feature is "supposed" to do; it must infer intent from the code itself, the way a PR reviewer does. This cold framing is the entire point — do not include the plan file path, the spec, or a description of the feature in the prompt.
+
+**Dispatch it read-only.** Scope the subagent to `tools: Read, Grep, Glob, Bash` with `disallowedTools: Edit, Write, Agent`. The reviewer only diffs, reads, and runs verification (tests, greps, builds); with no Edit/Write tool it structurally cannot alter the branch, which is what makes its verification commands safe to run autonomously without you approving each one (see the read-only settings note at the end of this step).
+
+**Diff base:** the prompt below says `master`; use whatever the repo's default branch actually is (`git remote show origin | sed -n 's/.*HEAD branch: //p'`, commonly `main`). Substitute it everywhere the prompt says `master`.
 
 The subagent prompt must include verbatim:
 
@@ -305,9 +309,28 @@ Address every Critical and High finding. For Medium findings, use judgment. If y
 
 After 8a is fully addressed, dispatch a second `sonnet` subagent for a conventional quality review. This pass has full session context (plan, spec, modified files) and focuses on: correctness within the intended design, edge cases, security vulnerabilities, performance, unclear naming, missing error handling, deprecated APIs, idiomatic patterns.
 
+Dispatch it read-only too — same scoping as 8a (`tools: Read, Grep, Glob, Bash`, `disallowedTools: Edit, Write, Agent`) so its verification runs autonomously and it cannot mutate the branch. The controller (main session), not the reviewer, applies any fixes.
+
 Address every issue raised. If you disagree with a suggestion and the reasoning is non-obvious, leave a brief inline comment explaining why. Re-run the test suite after any changes from this step.
 
 **Why two passes:** 8a runs cold to mimic the mindset of a PR reviewer who has no investment in the change — this is what surfaces show-stoppers like accidental behavior changes and scope creep. 8b runs warm because code-quality judgments (naming, idioms, edge cases within the intended design) benefit from understanding what the code is trying to do. Collapsing them into one pass produces sycophantic reviews that catch nits but miss architecture.
+
+### Autonomous verification without approval-babysitting
+
+Both reviewers run *arbitrary* verification code (diffs, greps, test suites, ad-hoc one-liners), so a static command allowlist can never cover all of it — and a `dontAsk` mode would auto-DENY anything unlisted and break the review mid-run. Two mechanisms keep the reviewers autonomous AND safe; they compose:
+
+1. **Read-only tool scoping** (above): with no `Edit`/`Write`/`Agent` tool, a reviewer cannot mutate the branch no matter what it runs, so auto-approving its reads/tests is safe by construction.
+2. **Sandbox mode** for the Bash it does run: OS-level confinement (writes limited to the workspace, network denied) lets contained commands execute without a prompt; only network/escaping commands fall back to asking. The user's `~/.claude/settings.json` should carry, once:
+   ```json
+   {
+     "sandbox": { "enabled": true, "autoAllowBashIfSandboxed": true },
+     "permissions": {
+       "allow": ["Read","Grep","Glob","Bash(git diff *)","Bash(git log *)","Bash(git show *)","Bash(git status *)","Bash(npm test *)","Bash(go test *)","Bash(pytest *)","Bash(gh pr view *)","Bash(gh pr checks *)","Bash(gh api *)"],
+       "deny": ["Bash(git push *)","Bash(git commit *)","Bash(git reset *)","Bash(rm *)","Bash(gh pr merge *)"]
+     }
+   }
+   ```
+   Deny always wins over allow, so write/destructive gates hold. Never use `bypassPermissions` for reviewers (containers only).
 
 **After both passes are addressed, return to this pipeline. Continue to Step 9.**
 
@@ -341,24 +364,32 @@ Complete all of the following before creating the PR:
 
 ## Step 10 — Review loop
 
-After the PR is created, check for review comments:
+After the PR is created, check for review feedback. **Do NOT use `gh pr view --comments`** — the pretty format is truncated and unparseable, and it silently omits line-anchored review comments, so it forces a re-run. Review feedback lives on three separate surfaces; pull all of them directly as JSON in two calls:
 
 ```
-gh pr view --comments
+# 1) Top-level conversation comments + formal review summaries + the merge-gate decision:
+gh pr view <n> --json reviewDecision,comments,reviews \
+  --jq '{reviewDecision,
+         comments:[.comments[]|{author:.author.login, at:.createdAt, body}],
+         reviews:[.reviews[]|{author:.author.login, state, at:.submittedAt, body}]}'
+
+# 2) Inline (line-anchored) review comments — NOT returned by `gh pr view`:
+gh api repos/{owner}/{repo}/pulls/<n>/comments \
+  --jq '.[]|{author:.user.login, path, line, body}'
 ```
+(`{owner}/{repo}` auto-substitute from the current repo; no interpolation.)
 
-For each unresolved review comment:
+**Repo review setups differ — the same two calls cover all of them, but interpret results accordingly:**
+- Some repos' Claude reviewer posts **one big top-level comment** (surface 1); others post **inline comments on specific lines** (surface 2). Always read both surfaces; do not assume which one a repo uses.
+- Some reviewers **post a new comment per commit** (compare by `createdAt`; the newest is current). Others **amend the same comment in place** (`createdAt` never changes across re-reviews — fetch the latest **body** by author, e.g. `select(.author.login=="claude")`, rather than trusting timestamps). Handle both by keying on author + newest body, not on comment count or time.
 
-1. Address the feedback
-2. Re-run tests to confirm nothing is broken
-3. Push the updated branch
-4. Re-check for new comments
+For each unresolved item: address it, re-run the tests covering the change, push, then re-fetch with the two calls above (add `select(.createdAt > "<last-check-ISO>")` to see only what is new).
 
 Repeat until **both** conditions are true:
-1. `gh pr view --comments` shows no unresolved review threads
-2. The PR has a GitHub approval (visible in `gh pr view`) **or** the user explicitly says "merge it", "ship it", or equivalent
+1. No unresolved review threads across **both** surfaces above.
+2. `reviewDecision` is `APPROVED` **or** the user explicitly says "merge it", "ship it", or equivalent. (`reviewDecision` is the machine-readable gate; `REVIEW_REQUIRED`/`CHANGES_REQUESTED` means not yet.)
 
-Do not self-declare the loop complete. The exit condition requires evidence from the above commands, not inference.
+Do not self-declare the loop complete. The exit condition requires evidence from the commands above, not inference.
 
 ---
 
