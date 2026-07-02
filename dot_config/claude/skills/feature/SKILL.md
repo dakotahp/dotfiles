@@ -10,6 +10,18 @@ Implement the feature described in $ARGUMENTS by following every step below in o
 
 ---
 
+## Standing rules for every subagent
+
+These rules apply across the entire pipeline. They are defined once here; the steps below reference them by number instead of restating them. When you dispatch a subagent, include the rules relevant to its job in its prompt, because subagents do not inherit this skill's text. Fill in concrete values (the actual branch name, etc.) at dispatch time.
+
+**Rule 1 — Commit only to the feature branch.** Applies to every subagent that writes or commits. Tell it the feature branch name created in Step 0 and instruct it to commit only to that branch, never to `main` or `master`. Include a line like: *"All commits must go to branch `feature/<name>`. Verify with `git branch --show-current` before committing."*
+
+**Rule 2 — One shell action per Bash call.** Applies to the main session and every subagent. Issue each shell action as its own Bash call. Do not join independent steps with `&&`, `;`, or a pipe just to save a round-trip (for example `git add -A && git commit -m ... && git push`, or `npm run lint && npm test && git commit`). The permission system matches commands against your allow and deny rules one command at a time; a chained command becomes a single compound command the matcher usually cannot decompose into its allowlisted parts, so it falls back to prompting for the whole thing, and you can never pre-approve just the safe half of a chain. Atomic calls let allowlisted reads, tests, and builds run automatically while you are prompted only for genuinely sensitive actions like commit, push, and merge. Chaining is acceptable only for a genuine atomic unit whose parts are all individually permitted, such as `cd <dir> && <cmd>`; never bundle a gated command with others.
+
+**Rule 3 — Default to no code comments.** Applies to every subagent that writes or edits code. Well-named identifiers and clear structure should make the code self-explanatory. Only add a comment when something is genuinely counter-intuitive on a rare basis, for example when a more idiomatic approach exists but cannot be used here for a specific reason, or when a future reader would otherwise be likely to "fix" the code without realizing why it is written this way. If a comment merely restates what the code does, delete it. Agents otherwise default to writing verbose, redundant comments.
+
+---
+
 ## Step 0 — Check and install dependencies
 
 Check that the following tools are available on PATH:
@@ -133,7 +145,7 @@ Write tests that directly exercise each prove statement from Step 3. Then run th
 
 Do not proceed until failing tests are confirmed. If tests pass before implementation, the tests are not testing the right thing — fix them first.
 
-**Delegation:** If the plan contains exact test code (copy-paste ready), dispatch a `sonnet` subagent to write the test files and verify they fail. The subagent prompt must include: the branch name, the exact test code from the plan, the command to run tests, and the instruction to confirm tests fail with specific error messages. If the plan does NOT contain exact test code (only describes behaviors), write the tests in the main session — test design requires judgment.
+**Delegation:** If the plan contains exact test code (copy-paste ready), dispatch a `sonnet` subagent to write the test files and verify they fail. The subagent prompt must include: the Standing Rules (see top of skill) with the branch name filled in, the exact test code from the plan, the command to run tests, and the instruction to confirm tests fail with specific error messages. If the plan does NOT contain exact test code (only describes behaviors), write the tests in the main session — test design requires judgment.
 
 **Red flags — STOP if you are thinking any of these:**
 
@@ -155,11 +167,11 @@ Implement only what is needed to satisfy the prove statements and pass the tests
 
 ### Code comments
 
-Default to no comments. Well-named identifiers and clear structure should make the code self-explanatory to both humans and agents reading it later. Only add a comment when something is genuinely counter-intuitive on a rare basis — for example, a more idiomatic approach exists but cannot be used here for a specific reason, or a future reader would otherwise be likely to "fix" the code without realizing why it is written this way. If a comment merely restates what the code does, delete it. **Every subagent prompt in this step must include this rule verbatim**, because agents otherwise default to writing verbose, redundant comments.
+Every implementer subagent prompt must carry Standing Rule 3 (default to no code comments), verbatim. See "Standing rules for every subagent" at the top of this skill.
 
 **Always invoke `superpowers:subagent-driven-development`** to implement the plan task-by-task. This is not optional — inline implementation in the main session has no per-task commit discipline and no review checkpoints between tasks, which defeats the pipeline's purpose regardless of feature size. Give each sub-agent a specific, self-contained scope (one task from the plan) so their changes do not conflict.
 
-**Every subagent prompt must include the feature branch name** created in Step 0 and an explicit instruction to commit only to that branch — never to `main` or `master`. Subagents do not inherit your branch context; you must tell them. Example line to include in each subagent prompt: *"All commits must go to branch `feature/my-feature`. Verify with `git branch --show-current` before committing."*
+Every subagent prompt must carry Standing Rule 1 (commit only to the feature branch) with the actual branch name filled in, and Standing Rule 2 (one shell action per Bash call). See the top of this skill.
 
 ### Subagent model tiers
 
@@ -235,7 +247,7 @@ prove_it signal done
 
 Address any failures before proceeding. Each statement must be backed by captured evidence.
 
-**Delegation:** Dispatch a `haiku` subagent to handle prove verification. The subagent prompt must include: the full contents of `.claude/prove_statements.md`, the branch name, and instructions to run each verification command, check the output, and call `prove_it record` + `prove_it signal done`. If any statement fails, the subagent must report BLOCKED with the failure details so the main session can diagnose and fix. This is pure command execution — haiku is sufficient and keeps test output out of the main context.
+**Delegation:** Dispatch a `haiku` subagent to handle prove verification. The subagent prompt must include: the full contents of `.claude/prove_statements.md`, the Standing Rules (see top of skill) with the branch name filled in, and instructions to run each verification command, check the output, and call `prove_it record` + `prove_it signal done`. If any statement fails, the subagent must report BLOCKED with the failure details so the main session can diagnose and fix. This is pure command execution — haiku is sufficient and keeps test output out of the main context.
 
 ---
 
@@ -358,7 +370,7 @@ Complete all of the following before creating the PR:
    The PR body must reference the prove statements from Step 3 and link to their evidence.
 5. Open the PR with `open <url>` (macOS) or `xdg-open <url>` (Linux) in the default browser.
 
-**Delegation:** Steps 1-3 (cleanup, planning-artifact deletion, linting) can be dispatched to a `sonnet` subagent. The subagent prompt must include: the branch name, the list of modified files, the paths to the spec and plan files to delete, the lint command for the project, and instructions to fix any issues and commit the cleanup (the deleted planning files were never tracked, so they will simply disappear from disk — no git operation needed for them). Step 4 (PR creation) should stay in the main session — the PR title and body require understanding the full feature context, and the user needs to see the PR URL immediately.
+**Delegation:** Steps 1-3 (cleanup, planning-artifact deletion, linting) can be dispatched to a `sonnet` subagent. The subagent prompt must include: the Standing Rules (see top of skill) with the branch name filled in, the list of modified files, the paths to the spec and plan files to delete, the lint command for the project, and instructions to fix any issues and commit the cleanup (the deleted planning files were never tracked, so they will simply disappear from disk — no git operation needed for them). Step 4 (PR creation) should stay in the main session — the PR title and body require understanding the full feature context, and the user needs to see the PR URL immediately.
 
 ---
 
@@ -408,5 +420,6 @@ Do not self-declare the loop complete. The exit condition requires evidence from
 | "I'll create the branch after planning" | By then a subagent may have already committed to master. Create the branch in Step 0, before anything else. |
 | "This feature is small, inline execution is fine" | Feature size is irrelevant. Inline execution has no per-task commits and no review checkpoints. Always use subagent-driven-development. |
 | "The plan is obviously right, skip the plan review" | Plan-stage blind spots are the cheapest to fix and the most expensive to discover mid-implementation. Run the Step 2 plan review before approval, on the full plan, before any code exists. |
+| "Chaining commands into one Bash call is faster" | Compound commands stop matching your per-command permission rules, so every step needs manual approval and unattended runs stall. Standing Rule 2: one shell action per Bash call. |
 
 **This pipeline is complete only when Step 10 has been executed. All steps are required.**
