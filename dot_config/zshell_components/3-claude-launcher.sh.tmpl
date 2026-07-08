@@ -1,0 +1,15 @@
+# Launch Claude Code with mise shims at the front of PATH.
+#
+# Claude Code snapshots PATH at launch and runs its Bash tool in non-interactive
+# shells that never re-source .zshrc, so `mise activate` (which rewrites PATH per
+# directory via a chpwd hook) never fires for agent commands. Without this, agents
+# working across sibling repos must prepend the shims dir to every single command
+# (`cd repo && export PATH=... && cmd`), and that inline `export` makes the whole
+# chain unmatchable by the permission allowlist, forcing a prompt every time.
+#
+# Prepending the shims dir here lets mise resolve each repo's pinned tool versions
+# (e.g. abodo-rails' node 22 vs the global node 24) with no per-command export.
+# Guarded on the shims dir so it is a no-op on machines without mise.
+if [ -d "$HOME/.local/share/mise/shims" ]; then
+  claude() { PATH="$HOME/.local/share/mise/shims:$PATH" command claude "$@"; }
+fi

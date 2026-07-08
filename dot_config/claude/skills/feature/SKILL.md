@@ -16,7 +16,7 @@ These rules apply across the entire pipeline. They are defined once here; the st
 
 **Rule 1 — Commit only to the feature branch.** Applies to every subagent that writes or commits. Tell it the feature branch name created in Step 0 and instruct it to commit only to that branch, never to `main` or `master`. Include a line like: *"All commits must go to branch `feature/<name>`. Verify with `git branch --show-current` before committing."*
 
-**Rule 2 — One shell action per Bash call.** Applies to the main session and every subagent. Issue each shell action as its own Bash call. Do not join independent steps with `&&`, `;`, or a pipe just to save a round-trip (for example `git add -A && git commit -m ... && git push`, or `npm run lint && npm test && git commit`). The permission system matches commands against your allow and deny rules one command at a time; a chained command becomes a single compound command the matcher usually cannot decompose into its allowlisted parts, so it falls back to prompting for the whole thing, and you can never pre-approve just the safe half of a chain. Atomic calls let allowlisted reads, tests, and builds run automatically while you are prompted only for genuinely sensitive actions like commit, push, and merge. Chaining is acceptable only for a genuine atomic unit whose parts are all individually permitted, such as `cd <dir> && <cmd>`; never bundle a gated command with others.
+**Rule 2 — Never bundle a gated command with others in one Bash call.** Applies to the main session and every subagent. The permission system *does* decompose compound commands: it splits on `&&`, `||`, `;`, `|`, and newlines and matches each segment against your allow/deny/ask rules independently. A chain auto-approves only when **every** segment matches an allow rule; if **any** segment is gated (commit, push, merge) or unmatchable, the whole chain prompts and you cannot approve just the safe half. So the rule is not "never chain" — it is: never join a gated or unmatchable step to safe ones. Concretely: (a) keep `git commit`/`git push`/`gh pr merge` in their own Bash calls, never chained after `git add`, tests, or a build; (b) `cd <repo> && <cmd>` is fine and encouraged when working from a parent dir, provided `<cmd>` is allowlisted — `cd` into the project tree or an `additionalDirectories` entry is auto-approved as read-only; (c) do not inline an `export VAR="...$HOME..."` or other expansion-bearing segment into a chain — it is unmatchable and forces a prompt for the whole chain (fix the environment at launch instead so the export is unnecessary). This keeps allowlisted reads, tests, lint, and builds running automatically while prompting only for genuinely sensitive actions.
 
 **Rule 3 — Default to no code comments.** Applies to every subagent that writes or edits code. Well-named identifiers and clear structure should make the code self-explanatory. Only add a comment when something is genuinely counter-intuitive on a rare basis, for example when a more idiomatic approach exists but cannot be used here for a specific reason, or when a future reader would otherwise be likely to "fix" the code without realizing why it is written this way. If a comment merely restates what the code does, delete it. Agents otherwise default to writing verbose, redundant comments.
 
@@ -171,7 +171,7 @@ Every implementer subagent prompt must carry Standing Rule 3 (default to no code
 
 **Always invoke `superpowers:subagent-driven-development`** to implement the plan task-by-task. This is not optional — inline implementation in the main session has no per-task commit discipline and no review checkpoints between tasks, which defeats the pipeline's purpose regardless of feature size. Give each sub-agent a specific, self-contained scope (one task from the plan) so their changes do not conflict.
 
-Every subagent prompt must carry Standing Rule 1 (commit only to the feature branch) with the actual branch name filled in, and Standing Rule 2 (one shell action per Bash call). See the top of this skill.
+Every subagent prompt must carry Standing Rule 1 (commit only to the feature branch) with the actual branch name filled in, and Standing Rule 2 (never bundle a gated or unmatchable step with others in one Bash call). See the top of this skill.
 
 ### Subagent model tiers
 
@@ -332,17 +332,19 @@ Address every issue raised. If you disagree with a suggestion and the reasoning 
 Both reviewers run *arbitrary* verification code (diffs, greps, test suites, ad-hoc one-liners), so a static command allowlist can never cover all of it — and a `dontAsk` mode would auto-DENY anything unlisted and break the review mid-run. Two mechanisms keep the reviewers autonomous AND safe; they compose:
 
 1. **Read-only tool scoping** (above): with no `Edit`/`Write`/`Agent` tool, a reviewer cannot mutate the branch no matter what it runs, so auto-approving its reads/tests is safe by construction.
-2. **Sandbox mode** for the Bash it does run: OS-level confinement (writes limited to the workspace, network denied) lets contained commands execute without a prompt; only network/escaping commands fall back to asking. The user's `~/.claude/settings.json` should carry, once:
+2. **Sandbox mode** for the Bash it does run: OS-level confinement (writes limited to the workspace, network denied) lets contained commands execute without a prompt; only network/escaping commands fall back to asking. Your user settings (`~/.claude/settings.json`, or `$CLAUDE_CONFIG_DIR/settings.json` if that is set) should carry, once:
    ```json
    {
      "sandbox": { "enabled": true, "autoAllowBashIfSandboxed": true },
      "permissions": {
-       "allow": ["Read","Grep","Glob","Bash(git diff *)","Bash(git log *)","Bash(git show *)","Bash(git status *)","Bash(npm test *)","Bash(go test *)","Bash(pytest *)","Bash(gh pr view *)","Bash(gh pr checks *)","Bash(gh api *)"],
-       "deny": ["Bash(git push *)","Bash(git commit *)","Bash(git reset *)","Bash(rm *)","Bash(gh pr merge *)"]
+       "allow": ["Read","Grep","Glob","Bash(git diff *)","Bash(git log *)","Bash(git show *)","Bash(git status *)","Bash(npm test *)","Bash(go test *)","Bash(pytest *)","Bash(gh pr view *)","Bash(gh pr checks *)","Bash(gh api *)","Bash(gh pr diff:*)","Bash(bin/rubocop:*)","Bash(bin/rails:*)","Bash(bin/rake:*)","Bash(bundle exec:*)","Bash(yarn:*)"],
+       "ask": ["Bash(git push:*)","Bash(git commit:*)"],
+       "deny": ["Bash(git reset *)","Bash(rm *)","Bash(gh pr merge *)"],
+       "additionalDirectories": ["/absolute/path/to/repo-a","/absolute/path/to/repo-b"]
      }
    }
    ```
-   Deny always wins over allow, so write/destructive gates hold. Never use `bypassPermissions` for reviewers (containers only).
+   Deny always wins over allow, so destructive gates hold; `ask` on commit/push keeps those in the loop without a hard block. **When running this pipeline from a parent dir above sibling repos**, list each repo in `additionalDirectories` (this makes `cd <repo>` auto-approved as read-only and lets file tools operate there) and allowlist the per-repo dev commands (`bin/rubocop`, `bin/rails`, `yarn`, etc.) as bare prefixes, so `cd <repo> && <cmd>` chains auto-approve segment by segment. Also ensure the launcher's PATH already carries what commands need (e.g. mise shims) so agents never inline an `export` — see Rule 2. Never use `bypassPermissions` for reviewers (containers only).
 
 **After both passes are addressed, return to this pipeline. Continue to Step 9.**
 
@@ -420,6 +422,6 @@ Do not self-declare the loop complete. The exit condition requires evidence from
 | "I'll create the branch after planning" | By then a subagent may have already committed to master. Create the branch in Step 0, before anything else. |
 | "This feature is small, inline execution is fine" | Feature size is irrelevant. Inline execution has no per-task commits and no review checkpoints. Always use subagent-driven-development. |
 | "The plan is obviously right, skip the plan review" | Plan-stage blind spots are the cheapest to fix and the most expensive to discover mid-implementation. Run the Step 2 plan review before approval, on the full plan, before any code exists. |
-| "Chaining commands into one Bash call is faster" | Compound commands stop matching your per-command permission rules, so every step needs manual approval and unattended runs stall. Standing Rule 2: one shell action per Bash call. |
+| "Chaining commands into one Bash call is faster" | Fine for all-allowlisted segments (`cd <repo> && <allowlisted cmd>`), but the moment one segment is gated (commit/push) or unmatchable (an inline `export`), the whole chain prompts and unattended runs stall. Standing Rule 2: never bundle a gated or unmatchable step with others. |
 
 **This pipeline is complete only when Step 10 has been executed. All steps are required.**
