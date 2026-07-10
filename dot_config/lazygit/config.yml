@@ -5,8 +5,8 @@ gui:
     "Dakotah Peña": "#b4befe"
     "*": "#23446d"
   branchColorPatterns:
-    "main": "red"
-    "master": "red"
+    "main$": "red"
+    "master$": "red"
   # https://github.com/catppuccin/lazygit/tree/main/themes/mocha
   theme:
     activeBorderColor:
