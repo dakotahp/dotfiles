@@ -1,6 +1,6 @@
 ---
-name: feature-plan-falsifier
-description: Read-only plan stress-tester dispatched by the /feature pipeline at Step 2 to verify a technical plan's assumptions against the real codebase before any code is written. Not for direct invocation.
+name: plan-falsifier
+description: Read-only plan stress-tester. Enumerates every assumption a technical plan makes about the existing system and verifies each against the real codebase, citing file:line, before any code is written. Use on any draft plan, and note that the /feature pipeline dispatches it automatically at Step 2.
 model: sonnet
 effort: high
 color: orange

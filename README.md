@@ -73,15 +73,25 @@ Claude Code writes interactive `/model` and effort changes back into `settings.j
 
 The defaults live in `3-claude-launcher.sh` instead, passed as `--model` and `--effort`. Command-line flags outrank settings files and apply to a single invocation, so every launch starts from a known baseline no matter what the previous session persisted. Change them for one shell with `CLAUDE_DEFAULT_MODEL` and `CLAUDE_DEFAULT_EFFORT`, or edit the launcher to move the baseline.
 
-### Running one session at a different tier
+### Mode agents
 
-Switching with `/model` mid-session still works, and still persists; it just no longer decides what the next session starts as. To get a stronger model for a single task without touching any default, prefix an agent-view prompt with an agent name:
+Three agents in `agents/` exist to pick a tier by naming the kind of work rather than by remembering a model and an effort level. Prefix an agent-view prompt with one:
 
 ```
-deep refactor the auth module
+plan turn PROJ-88 into a technical plan and TRD
+build PROJ-91: add the CSV export endpoint
+quick rename the stale `apiV1` constant everywhere
 ```
 
-`deep` is an agent definition that pins Opus at xhigh effort. It applies to that one dispatch and leaves nothing behind. Typing `/model opus` as its own input in the agent view also works, but it stays in effect for later dispatches until cleared with `/model default`.
+| Agent | Tier | For |
+|---|---|---|
+| `plan` | opus / xhigh | Producing a plan, design, or decision. Errors here multiply into every ticket downstream. |
+| `build` | sonnet / high | Implementing one already-planned ticket. |
+| `quick` | haiku / low | A task you already know is easy. Abandon it rather than pushing through if it turns out not to be. |
+
+Each applies to that single dispatch and leaves nothing behind. Typing `/model opus` as its own input in the agent view also works, but it stays in effect for later dispatches until cleared with `/model default`, which is the behavior the launcher defaults exist to avoid.
+
+Two read-only helpers pair with `plan`: `plan-falsifier` verifies a draft plan's assumptions against the real code and cites `file:line`, and `plan-rederiver` derives an independent plan from the requirements alone so you can diff it for blind spots. Run both on a draft before cutting tickets, since a flaw in the plan propagates into all of them.
 
 ## Packages
 

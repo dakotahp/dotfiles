@@ -92,9 +92,9 @@ Stress-test the plan the way Step 8 stress-tests the diff, but catch the blind s
 - **Feed the reviewer the actual plan + spec files, not a hand-written summary.** A compressed summary makes the reviewer flag things the plan already covers ("the plan never mentions X" when it did).
 - **Scope both reviewers to falsifiable claims and coverage gaps, not design taste.** Divergent-but-valid design is noise; false assumptions and missing risks are signal.
 
-**Pass 1: Assumption falsification (grounded).** Dispatch `feature-plan-falsifier`. Pass it only the paths to the plan file and the spec file. Its methodology lives in its definition; your prompt supplies the paths and nothing more.
+**Pass 1: Assumption falsification (grounded).** Dispatch `plan-falsifier`. Pass it only the paths to the plan file and the spec file. Its methodology lives in its definition; your prompt supplies the paths and nothing more.
 
-**Pass 2: Blind re-derivation.** Dispatch `feature-plan-rederiver`. Pass it the verbatim ticket or spec requirements **and nothing else**. Do not pass the plan file path, a summary of the plan, or any hint of the approach you chose. Its whole value is deriving the plan independently, and a single sentence describing your intended design collapses the comparison. The role will flag contamination if it sees any, but do not rely on that; get the dispatch right.
+**Pass 2: Blind re-derivation.** Dispatch `plan-rederiver`. Pass it the verbatim ticket or spec requirements **and nothing else**. Do not pass the plan file path, a summary of the plan, or any hint of the approach you chose. Its whole value is deriving the plan independently, and a single sentence describing your intended design collapses the comparison. The role will flag contamination if it sees any, but do not rely on that; get the dispatch right.
 
 Then **you** diff Pass 2's plan against yours: anything it surfaced that yours omitted, a missed approach, an unstated risk, a whole affected area, is a blind spot. Pass 1 finds "this specific thing will break"; Pass 2 finds "you framed this wrong or missed an area." They are complementary; run both.
 
@@ -183,8 +183,8 @@ Every dispatch prompt must carry Standing Rule 1 (commit only to the feature bra
 
 | Step | Role | `subagent_type` | Model + effort |
 |------|------|-----------------|----------------|
-| 2.5 | Plan assumption-falsifier | `feature-plan-falsifier` | sonnet / high |
-| 2.5 | Plan re-deriver | `feature-plan-rederiver` | sonnet / high |
+| 2.5 | Plan assumption-falsifier | `plan-falsifier` | sonnet / high |
+| 2.5 | Plan re-deriver | `plan-rederiver` | sonnet / high |
 | 4 | Test writer | `feature-test-writer` | sonnet / medium |
 | 5 | Implementer | `feature-implementer` | sonnet / high |
 | 5 | Spec compliance reviewer | `feature-spec-compliance` | haiku / low |

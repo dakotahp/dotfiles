@@ -1,6 +1,6 @@
 ---
-name: feature-plan-rederiver
-description: Read-only independent planner dispatched by the /feature pipeline at Step 2 to derive a technical plan from requirements alone, so the caller can diff it against their own plan and find blind spots. Must never be shown the existing plan. Not for direct invocation.
+name: plan-rederiver
+description: Read-only independent planner. Derives a technical plan from requirements alone so you can diff it against your own and find blind spots, missed areas, and unstated risks. Must never be shown the existing plan. Use on any draft plan, and note that the /feature pipeline dispatches it automatically at Step 2.
 model: sonnet
 effort: high
 color: cyan
