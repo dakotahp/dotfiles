@@ -29,6 +29,12 @@ The most up-to-date info is on the [quick start guide](https://www.chezmoi.io/qu
 
 The repo is at `chezmoi cd` to be able to commit changes for the remote repo.
 
+### Two chezmoi behaviors that cost time if you forget them
+
+**Deleting from the source does not delete the target.** Remove a file or directory from this repo and `chezmoi apply` leaves the deployed copy in place, so a rename produces two live copies and the old one keeps working. This matters most for skills and agents, where the stale copy still registers and shows up alongside the new one. Delete the target by hand, or use `chezmoi destroy <target>`.
+
+**A drifted file can silently halt the rest of the apply.** If a target has changed since chezmoi last wrote it, apply stops to ask before overwriting. With no terminal to prompt on it aborts at that file, and since it walks paths in order, everything alphabetically after it never applies. `~/.config/claude/settings.json` triggers this routinely because Claude Code writes to it. If an apply seems to have done nothing, resolve that file first with `chezmoi apply --force <path>`, then apply normally.
+
 ## Shell Architecture
 
 Shell configuration is modular. Rather than a monolithic `.zshrc`, interactive shell config is split into numbered files under `~/.config/zshell_components/` that are sourced in sort order:
@@ -73,9 +79,13 @@ These are meant to be run in order, the first two usually in the same session:
 
 1. `/technical-plan`: a short human-facing overview. Approach, the decisions that mattered and their rejected alternatives, blast radius, risks, sequencing. Deliberately excludes schemas and signatures so it stays readable.
 2. `/technical-requirements-document`: the detailed spec, run straight afterward so it inherits the plan's context. Ends in a ticket-by-ticket breakdown and offers to create the tickets in Linear.
-3. `/feature` or a `build` session per ticket. Each starts cold, which is why the TRD's governing rule is that every ticket must be implementable without having seen the planning conversation.
+3. `/feature <ticket>` per ticket, in its own session. Each starts cold, which is why the TRD's governing rule is that every ticket must be implementable without having seen the planning conversation.
 
 `/product-requirements` writes a PRD if a product spec is needed first, though that is usually a PM's job now.
+
+**`/feature` expects a defined task and will refuse a vague one.** Its Step 2 validates a specification you give it rather than designing one, so an investigation that happened to find a bug is not sufficient input; it will offer to write the ticket first. That refusal is deliberate, since promoting an informal session to a spec turns unreviewed assumptions into implemented code.
+
+**`build` and `/feature` are alternatives, not layers.** Do not dispatch one through the other. `/feature` runs the full pipeline (spec validation, TDD, two review passes, draft PR) and needs no agent prefix, because its subagents pin their own tiers. `build` is for a scoped change that does not warrant all of that.
 
 ### Model and effort are deliberately not in settings.json
 
