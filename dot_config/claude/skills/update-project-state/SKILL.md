@@ -38,10 +38,10 @@ This skill operates on a **project** under `1_Projects/` or an **area** under `2
 
 **1c. Set the placeholders used in later steps:**
 
-- `{Vault}` — resolved vault name (e.g., `ObsidianPersonal`, `ObsidianWork`)
-- `{Category}` — `1_Projects` or `2_Areas`
-- `{ProjectName}` — the project/area name
-- `{ProjectPath}` — `{Category}/{ProjectName}` (vault-relative)
+- `{Vault}`: resolved vault name (e.g., `ObsidianPersonal`, `ObsidianWork`)
+- `{Category}`: `1_Projects` or `2_Areas`
+- `{ProjectName}`: the project/area name
+- `{ProjectPath}`: `{Category}/{ProjectName}` (vault-relative)
 
 **1d. Verify the summary file exists:**
 
@@ -59,12 +59,12 @@ Use AskUserQuestion with multi-select:
 **Question:** "What should this snapshot capture?"
 
 **Options:**
-1. **Phase/Status Changes** — what moved forward, what's now complete
-2. **Key Decisions** — choices made and why (for future reference)
-3. **New Files/Structure** — what was created or changed
-4. **Patterns/Insights** — reusable learnings, "aha" moments
-5. **Blockers/Warnings** — issues for future sessions
-6. **Next Steps** — clear action items
+1. **Phase/Status Changes**, what moved forward, what's now complete
+2. **Key Decisions**, choices made and why (for future reference)
+3. **New Files/Structure**, what was created or changed
+4. **Patterns/Insights**, reusable learnings, "aha" moments
+5. **Blockers/Warnings**, issues for future sessions
+6. **Next Steps**, clear action items
 
 ### Step 3: Ask for Custom Notes (Optional)
 
@@ -118,13 +118,13 @@ Based on the user's selections, generate the section content:
 
 ### Step 6: Replace the Session Context Section and Stamp Frontmatter
 
-This step performs **one atomic write** that both replaces the Session Context section and stamps the `last-touched` frontmatter property. Never use `obsidian property:set` — it is known to destroy the file body on success.
+This step performs **one atomic write** that both replaces the Session Context section and stamps the `last-touched` frontmatter property. Never use `obsidian property:set`, it is known to destroy the file body on success.
 
 **6a. Prepare the updated frontmatter:**
 
 Take the frontmatter block from the file read in Step 4. Set (or add) the `last-touched` property to today's date (`YYYY-MM-DD`). Keep all other frontmatter properties exactly as-is.
 
-Example — if the existing frontmatter is:
+Example, if the existing frontmatter is:
 ```
 ---
 tags: [project]
@@ -160,13 +160,13 @@ Immediately read the file back:
 ```bash
 obsidian read path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
 ```
-Confirm that the file body (non-frontmatter content) is present and matches the reconstructed content. If the body is missing or shorter than expected, **stop and report the issue to the user** — do not proceed silently.
+Confirm that the file body (non-frontmatter content) is present and matches the reconstructed content. If the body is missing or shorter than expected, **stop and report the issue to the user**, do not proceed silently.
 
-**Critical:** Preserve ALL other content in the file exactly as-is. The summary file is manually curated — only touch the Session Context section and the `last-touched` frontmatter property.
+**Critical:** Preserve ALL other content in the file exactly as-is. The summary file is manually curated, only touch the Session Context section and the `last-touched` frontmatter property.
 
 ### Step 7: Link to Today's Daily Note (Side Effect)
 
-Build a passive event log of project engagement so backlinks on the project file naturally accumulate "when did I touch this." This step is best-effort and silent on failure — never block the main flow.
+Build a passive event log of project engagement so backlinks on the project file naturally accumulate "when did I touch this." This step is best-effort and silent on failure, never block the main flow.
 
 **7a. Check whether today's daily note exists in `{Vault}`:**
 
@@ -174,12 +174,12 @@ Build a passive event log of project engagement so backlinks on the project file
 obsidian daily vault="{Vault}"
 ```
 
-- If the command errors or indicates no daily note exists, **skip the rest of this step silently**. Do NOT create the daily note — that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes at all.
+- If the command errors or indicates no daily note exists, **skip the rest of this step silently**. Do NOT create the daily note, that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes at all.
 - If it returns content, capture it.
 
 **7b. Idempotency check:**
 
-If the daily note content already contains the substring `[[{ProjectName}]]` anywhere, skip — the project is already logged for today.
+If the daily note content already contains the substring `[[{ProjectName}]]` anywhere, skip, the project is already logged for today.
 
 **7c. Append the link:**
 
@@ -192,7 +192,7 @@ obsidian daily:append vault="{Vault}" content="
 - [[{ProjectName}]]"
 ```
 
-(If `## Sessions` already exists but doesn't contain the project link, append just `- [[{ProjectName}]]` under it via `obsidian daily:append` — the CLI's append behavior controls placement; if precise section insertion isn't possible, appending the bullet to the end of the daily note is acceptable.)
+(If `## Sessions` already exists but doesn't contain the project link, append just `- [[{ProjectName}]]` under it via `obsidian daily:append`, the CLI's append behavior controls placement; if precise section insertion isn't possible, appending the bullet to the end of the daily note is acceptable.)
 
 **7d. On any error in this step, swallow it.** This is a side effect, not the primary purpose of `/update-project-state`.
 

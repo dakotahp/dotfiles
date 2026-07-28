@@ -36,11 +36,11 @@ curl -L -o ~/.cache/whisper.cpp/ggml-large-v3.bin \
   https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-large-v3.bin
 ```
 
-Do not substitute `ggml-large-v3-turbo.bin` or a `-q5`/`-q8` quantized file for this — they trade accuracy for speed, which is the wrong tradeoff here. Tell the user if a large download is about to start before kicking it off.
+Do not substitute `ggml-large-v3-turbo.bin` or a `-q5`/`-q8` quantized file for this, they trade accuracy for speed, which is the wrong tradeoff here. Tell the user if a large download is about to start before kicking it off.
 
 ---
 
-## Step 1 — Download audio + metadata
+## Step 1: Download audio + metadata
 
 Work in a scratch directory so cleanup is trivial:
 
@@ -50,11 +50,11 @@ yt-dlp -x --audio-format mp3 -o "$WORKDIR/audio.%(ext)s" "<url>"
 yt-dlp --print "%(title)s|||%(uploader)s|||%(upload_date)s" "<url>"
 ```
 
-Parse the title/uploader/upload_date line for use in the note's frontmatter later (`upload_date` is `YYYYMMDD` — reformat to `YYYY-MM-DD`).
+Parse the title/uploader/upload_date line for use in the note's frontmatter later (`upload_date` is `YYYYMMDD`, reformat to `YYYY-MM-DD`).
 
 ---
 
-## Step 2 — Convert to whisper.cpp's required format
+## Step 2: Convert to whisper.cpp's required format
 
 whisper.cpp needs 16kHz mono WAV:
 
@@ -64,9 +64,9 @@ ffmpeg -i "$WORKDIR/audio.mp3" -ar 16000 -ac 1 -c:a pcm_s16le "$WORKDIR/audio.wa
 
 ---
 
-## Step 3 — Split on silence, then transcribe each segment separately
+## Step 3: Split on silence, then transcribe each segment separately
 
-**Do not run whisper.cpp on the full audio file in one shot.** Extended pauses/silence (dramatic pauses, thinking pauses, edit gaps) push whisper.cpp into a repetition-loop hallucination, where it gets stuck emitting the same line over and over instead of transcribing what's actually said. This can silently destroy the majority of a video's content while still exiting cleanly (exit code 0, no error) — the only tell is repeated/near-duplicate lines in the output. Splitting on silence first keeps each chunk too short to loop.
+**Do not run whisper.cpp on the full audio file in one shot.** Extended pauses/silence (dramatic pauses, thinking pauses, edit gaps) push whisper.cpp into a repetition-loop hallucination, where it gets stuck emitting the same line over and over instead of transcribing what's actually said. This can silently destroy the majority of a video's content while still exiting cleanly (exit code 0, no error), the only tell is repeated/near-duplicate lines in the output. Splitting on silence first keeps each chunk too short to loop.
 
 Detect silence boundaries:
 
@@ -93,17 +93,17 @@ Transcribe each segment independently:
 whisper-cli -m ~/.cache/whisper.cpp/ggml-large-v3.bin -f "$WORKDIR/segments/seg_<NNN>.wav" -otxt -of "$WORKDIR/segments/seg_<NNN>" -np
 ```
 
-(Use `main` in place of `whisper-cli` if that's what Step 0 found.) Before concatenating, sanity-check each segment's `.txt` for repeated/near-duplicate lines (e.g. `sort file | uniq -c | sort -rn | head -1` — a high count means it still looped, and that segment may need splitting further). Then concatenate all segment `.txt` files in order into `$WORKDIR/full_transcript.txt` and read that.
+(Use `main` in place of `whisper-cli` if that's what Step 0 found.) Before concatenating, sanity-check each segment's `.txt` for repeated/near-duplicate lines (e.g. `sort file | uniq -c | sort -rn | head -1`, a high count means it still looped, and that segment may need splitting further). Then concatenate all segment `.txt` files in order into `$WORKDIR/full_transcript.txt` and read that.
 
 ---
 
-## Step 4 — Summarize
+## Step 4: Summarize
 
-Read the transcript and write a **terse, scannable bullet-list summary** — not a rehash of the transcript prose. Match the density and format established in `2_Areas/Communication/Moving Past Small Talk.md`: lead with the core framework/thesis as a bolded one-liner, then bullets for the key structural pieces, then a short "how it works" sequence if the content is procedural. Strip filler, repetition, and rambling — keep only what the user would actually reference later. Keep the original YouTube URL as the first line so the full source is one click away if the summary isn't enough.
+Read the transcript and write a **terse, scannable bullet-list summary**, not a rehash of the transcript prose. Match the density and format established in `2_Areas/Communication/Moving Past Small Talk.md`: lead with the core framework/thesis as a bolded one-liner, then bullets for the key structural pieces, then a short "how it works" sequence if the content is procedural. Strip filler, repetition, and rambling, keep only what the user would actually reference later. Keep the original YouTube URL as the first line so the full source is one click away if the summary isn't enough.
 
 ---
 
-## Step 5 — File it
+## Step 5: File it
 
 Same folder-matching approach as `/process-clippings`:
 
@@ -123,16 +123,16 @@ File name: descriptive, no date prefix (e.g. `Moving Past Small Talk.md`, not `2
 
 ---
 
-## Step 6 — Clean up
+## Step 6: Clean up
 
 ```bash
 rm -rf "$WORKDIR"
 ```
 
-Delete the scratch audio/wav/transcript files. Do not delete anything from the vault itself in this step — that's `/process-clippings`' job, not this skill's.
+Delete the scratch audio/wav/transcript files. Do not delete anything from the vault itself in this step, that's `/process-clippings`' job, not this skill's.
 
 ---
 
 ## Final output
 
-Tell the user the file path created and which folder it landed in. If Step 0 triggered a fresh install or a large model download, mention that too — it only happens once.
+Tell the user the file path created and which folder it landed in. If Step 0 triggered a fresh install or a large model download, mention that too, it only happens once.

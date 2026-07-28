@@ -30,6 +30,6 @@ module.
 
 ## Notes
 
-- Read-only — makes no changes to the codebase
+- Read-only, makes no changes to the codebase
 - Collects all findings before outputting, so the report arrives as a single structured document
 - Run from the root of the repository you want to understand

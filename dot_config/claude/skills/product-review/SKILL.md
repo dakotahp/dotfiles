@@ -1,16 +1,16 @@
 ---
 name: product-review
-description: Reviews a PRD like a senior product leader — reads the spec, fetches linked assets, systematically identifies gaps across key dimensions, asks clarifying questions one at a time, and outputs a structured Q&A report with answered and unanswered items. Pass a URL, file path, or paste the PRD content directly.
+description: Reviews a PRD like a senior product leader: reads the spec, fetches linked assets, systematically identifies gaps across key dimensions, asks clarifying questions one at a time, and outputs a structured Q&A report with answered and unanswered items. Pass a URL, file path, or paste the PRD content directly.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, WebFetch, Task
 ---
 
-Review the product requirements document provided in $ARGUMENTS. Act as a **senior product management leader** — skeptical, thorough, focused on shipping clarity. Your job is to poke holes in the plan until every important detail is either answered or explicitly flagged for stakeholder input.
+Review the product requirements document provided in $ARGUMENTS. Act as a **senior product management leader**, skeptical, thorough, focused on shipping clarity. Your job is to poke holes in the plan until every important detail is either answered or explicitly flagged for stakeholder input.
 
 Do not skip steps. Do not move to the next step until the current one is fully complete.
 
 ---
 
-## Step 0 — Resolve the PRD input
+## Step 0: Resolve the PRD input
 
 Detect what $ARGUMENTS contains and load the PRD content:
 
@@ -22,7 +22,7 @@ If the PRD references external assets (mockups, diagrams, linked documents, Figm
 
 ---
 
-## Step 1 — Comprehend and summarize
+## Step 1: Comprehend and summarize
 
 Before generating questions, output a brief **comprehension summary** to the user covering:
 
@@ -35,11 +35,11 @@ This is a sanity check. Ask the user to confirm the summary is accurate before c
 
 ---
 
-## Step 2 — Category-driven gap analysis
+## Step 2: Category-driven gap analysis
 
-Analyze the PRD against the categories below. Skip any category that is clearly not applicable to this feature — but err on the side of including rather than skipping.
+Analyze the PRD against the categories below. Skip any category that is clearly not applicable to this feature, but err on the side of including rather than skipping.
 
-For each applicable category, identify **specific, concrete questions** about what is missing, ambiguous, or under-specified. Do not generate vague questions like "have you thought about error handling?" — instead ask "what should happen when the payment API returns a 429 rate limit error during checkout?"
+For each applicable category, identify **specific, concrete questions** about what is missing, ambiguous, or under-specified. Do not generate vague questions like "have you thought about error handling?", instead ask "what should happen when the payment API returns a 429 rate limit error during checkout?"
 
 ### Categories
 
@@ -61,7 +61,7 @@ Collect all questions before proceeding to Step 3.
 
 ---
 
-## Step 3 — One-at-a-time Q&A
+## Step 3: One-at-a-time Q&A
 
 Present each question to the user **one at a time** using `AskUserQuestion`.
 
@@ -74,11 +74,11 @@ For each question:
 
 Track each question's outcome as either **answered** (with the answer) or **deferred** (needs stakeholder input).
 
-Order questions from most impactful to least impactful — ask about the gaps that would cause the most rework first.
+Order questions from most impactful to least impactful, ask about the gaps that would cause the most rework first.
 
 ---
 
-## Step 4 — Output the report
+## Step 4: Output the report
 
 Save the report to `docs/product-reviews/YYYY-MM-DD-<slugified-feature-name>.md` using this structure:
 
@@ -92,7 +92,7 @@ Save the report to `docs/product-reviews/YYYY-MM-DD-<slugified-feature-name>.md`
 
 ## Comprehension Summary
 
-<From Step 1 — what the feature is, target user, assets reviewed>
+<From Step 1, what the feature is, target user, assets reviewed>
 
 ---
 
@@ -112,7 +112,7 @@ Save the report to `docs/product-reviews/YYYY-MM-DD-<slugified-feature-name>.md`
 ### <Category Name>
 
 - **Q:** <question>
-  **Context:** <why this matters — what risk or ambiguity it creates>
+  **Context:** <why this matters, what risk or ambiguity it creates>
 
 <Repeat for each deferred question, grouped by category>
 

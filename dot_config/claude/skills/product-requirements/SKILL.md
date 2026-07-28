@@ -1,31 +1,31 @@
 ---
 name: product-requirements
-description: Writes a well-structured product requirements document (PRD) from a feature idea or brief. Use whenever someone wants to spec out a feature, document requirements, write user stories, define acceptance criteria, create a PRD, or plan product work before development starts. Even partial or rough ideas can be turned into a solid PRD — invoke this whenever the user has an idea they want to formalize, mentions wanting to "write up" or "spec out" a feature, or says things like "I want to build X" before any implementation has started.
+description: Writes a well-structured product requirements document (PRD) from a feature idea or brief. Use whenever someone wants to spec out a feature, document requirements, write user stories, define acceptance criteria, create a PRD, or plan product work before development starts. Even partial or rough ideas can be turned into a solid PRD, invoke this whenever the user has an idea they want to formalize, mentions wanting to "write up" or "spec out" a feature, or says things like "I want to build X" before any implementation has started.
 allowed-tools: Read, Write, Glob, AskUserQuestion
 ---
 
 Write a product requirements document from the feature idea in $ARGUMENTS.
 
-Act as a **senior product manager** — clear-eyed about user value, ruthless about scope, specific enough that a developer could build from this document without follow-up meetings.
+Act as a **senior product manager**, clear-eyed about user value, ruthless about scope, specific enough that a developer could build from this document without follow-up meetings.
 
 ---
 
-## Step 0 — Clarify if anything critical is missing
+## Step 0: Clarify if anything critical is missing
 
 Quickly assess whether $ARGUMENTS contains enough to write a useful PRD. You need at minimum:
 
-1. **What** — what the feature does at a high level
-2. **Who** — which type of user benefits (e.g. end users, admins, new visitors)
+1. **What**, what the feature does at a high level
+2. **Who**, which type of user benefits (e.g. end users, admins, new visitors)
 
-If either is missing or ambiguous, ask a single, direct question using `AskUserQuestion` before continuing. Don't ask for anything beyond what you truly need — if you can make a reasonable assumption, make it and state it in the PRD rather than asking.
+If either is missing or ambiguous, ask a single, direct question using `AskUserQuestion` before continuing. Don't ask for anything beyond what you truly need, if you can make a reasonable assumption, make it and state it in the PRD rather than asking.
 
 If both are clear enough, skip Step 0 entirely and write immediately.
 
 ---
 
-## Step 1 — Write the PRD
+## Step 1: Write the PRD
 
-Produce a complete PRD using the structure below. Be specific and concrete — vague language like "improve the experience" or "handle errors gracefully" has no place in a PRD. Every statement should be actionable or testable.
+Produce a complete PRD using the structure below. Be specific and concrete, vague language like "improve the experience" or "handle errors gracefully" has no place in a PRD. Every statement should be actionable or testable.
 
 Save the document to `docs/plans/YYYY-MM-DD-<slugified-feature-name>.md`.
 
@@ -44,7 +44,7 @@ Save the document to `docs/plans/YYYY-MM-DD-<slugified-feature-name>.md`.
 
 ## Problem Statement
 
-<2–4 sentences. What problem exists today? Who experiences it? What is the cost of not solving it? Be specific — name the user type and describe the friction they face.>
+<2–4 sentences. What problem exists today? Who experiences it? What is the cost of not solving it? Be specific, name the user type and describe the friction they face.>
 
 ---
 
@@ -64,7 +64,7 @@ Save the document to `docs/plans/YYYY-MM-DD-<slugified-feature-name>.md`.
 
 <Group by user type if there are multiple. Each story follows:
 "As a [role], I want [action] so that [outcome]."
-Keep stories small — each story should be deliverable and testable independently.>
+Keep stories small, each story should be deliverable and testable independently.>
 
 ### <User Role>
 
@@ -75,7 +75,7 @@ Keep stories small — each story should be deliverable and testable independent
 
 ## Acceptance Criteria
 
-<For each story (or group of related stories), list concrete, binary conditions. A condition passes or fails — no judgment required. Use "Given / When / Then" or a checkbox checklist style, whichever is clearer for the criteria.>
+<For each story (or group of related stories), list concrete, binary conditions. A condition passes or fails, no judgment required. Use "Given / When / Then" or a checkbox checklist style, whichever is clearer for the criteria.>
 
 ### <Story or Feature Area>
 
@@ -101,7 +101,7 @@ Keep stories small — each story should be deliverable and testable independent
 
 ---
 
-## Step 2 — Print a summary
+## Step 2: Print a summary
 
 After saving the file, output a brief terminal summary:
 
@@ -113,8 +113,8 @@ PRD written
   Open Qs:   <count>
 
 Next steps:
-  • /product-review <file path>   — stress-test this PRD
-  • /feature <file path>          — start TDD implementation
+  • /product-review <file path>  , stress-test this PRD
+  • /feature <file path>         , start TDD implementation
 ```
 
 ---

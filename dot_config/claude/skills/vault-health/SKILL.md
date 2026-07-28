@@ -6,7 +6,7 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep
 
 Vault health check. Runs in two phases: auto-fixes first, then a report of suggestions. Present the full output at the end in a single structured summary.
 
-**Vault resolution — run both in parallel at the start:**
+**Vault resolution: run both in parallel at the start:**
 
 ```bash
 obsidian eval code="app.vault.getName()"
@@ -17,7 +17,7 @@ Store as VAULT_NAME and VAULT_PATH. Use `vault=$VAULT_NAME` in all subsequent ob
 
 ---
 
-## Phase 1 — Auto-fixes
+## Phase 1: Auto-fixes
 
 ### 1a: Inspiration notes missing `summary:`
 
@@ -57,7 +57,7 @@ Process all missing notes before moving to Phase 2. Track count for the summary 
 
 ---
 
-## Phase 2 — Reports and suggestions
+## Phase 2: Reports and suggestions
 
 Run all three of the following in parallel (they are independent reads).
 
@@ -65,7 +65,7 @@ Run all three of the following in parallel (they are independent reads).
 
 A dead wikilink is a `[[Target]]` or `[[Target|Alias]]` in any note's body where no file in the vault has a matching name (case-insensitive basename without extension).
 
-**Step 1 — Build the note name index:**
+**Step 1: Build the note name index:**
 
 ```python
 python3 << 'PYEOF'
@@ -83,7 +83,7 @@ print(json.dumps(sorted(names)))
 PYEOF
 ```
 
-**Step 2 — Find all wikilinks and check against the index:**
+**Step 2: Find all wikilinks and check against the index:**
 
 ```python
 python3 << 'PYEOF'
@@ -194,7 +194,7 @@ Collect all orphan paths. No auto-fix -- present as report.
 
 Scan up to **20 files** from `1_Projects/`, `2_Areas/`, and `3_Resources/` that have **2 or fewer existing tags** (not counting `agent-context` files, which are loaded separately). Pick files round-robin across the three folders to avoid always hitting one area.
 
-**Step 1 — Find candidates:**
+**Step 1: Find candidates:**
 
 ```python
 python3 << 'PYEOF'
@@ -255,7 +255,7 @@ print(json.dumps(candidates))
 PYEOF
 ```
 
-**Step 2 — Fetch the vault's existing tag vocabulary:**
+**Step 2: Fetch the vault's existing tag vocabulary:**
 
 ```bash
 obsidian vault=$VAULT_NAME tags sort=count
@@ -263,7 +263,7 @@ obsidian vault=$VAULT_NAME tags sort=count
 
 Parse the output to extract all tag names (strip counts and `#` prefixes). Store as VAULT_TAGS -- the live vocabulary to draw from when making suggestions.
 
-**Step 3 — For each candidate, read the note and suggest 2-3 tags:**
+**Step 3: For each candidate, read the note and suggest 2-3 tags:**
 
 Read the file content (or just the first 30 lines if it is long). Based on the folder, filename, existing tags, and content, suggest 2-3 tags that:
 - Follow vault conventions: singular nouns, kebab-case
@@ -276,12 +276,12 @@ Present as suggestions only -- do not write to files.
 
 ---
 
-## Phase 3 — Output
+## Phase 3: Output
 
 Present everything in a single structured report:
 
 ```
-## Vault Health Report — YYYY-MM-DD
+## Vault Health Report: YYYY-MM-DD
 
 ### Auto-fixed
 - Inspiration notes missing summary: N fixed (list filenames)
@@ -297,7 +297,7 @@ Present everything in a single structured report:
 
 ### Tag Suggestions
 (for each note: path, current tags, suggested tags with one-line rationale)
-(note: these are suggestions only — apply manually or ask me to write them)
+(note: these are suggestions only, apply manually or ask me to write them)
 ```
 
 Keep the report skimmable. Use tables where a list would be long. Flag anything that looks like a systematic issue (e.g. "most orphans are in 3_Resources/some-folder -- these may be intentionally standalone reference notes").

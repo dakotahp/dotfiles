@@ -16,7 +16,7 @@ Moves a note (or an entire project folder) into `4_Archive/` while preserving it
 
 ## Why this exists
 
-Obsidian makes it easy to move a whole folder with a right-click, but archiving individual sub-notes is tedious — you have to decide where they go, create subfolders manually, and maintain some organization over time. This skill handles the destination logic automatically so the archive stays navigable without any extra thought.
+Obsidian makes it easy to move a whole folder with a right-click, but archiving individual sub-notes is tedious, you have to decide where they go, create subfolders manually, and maintain some organization over time. This skill handles the destination logic automatically so the archive stays navigable without any extra thought.
 
 ## Context
 

@@ -12,9 +12,9 @@ Move a file to `4_Archive/`, preserving its full vault-relative path so it stays
 - `2_Areas/My Area/Old Note.md` → `4_Archive/2_Areas/My Area/Old Note.md`
 
 **Usage:**
-- `/archive` — archive the file currently open in the Obsidian app
-- `/archive "Note Name"` — find and archive a named file (safer if there's a gap between opening and running)
-- `/archive --folder "Project Name"` — archive an entire project/area folder
+- `/archive`: archive the file currently open in the Obsidian app
+- `/archive "Note Name"`: find and archive a named file (safer if there's a gap between opening and running)
+- `/archive --folder "Project Name"`: archive an entire project/area folder
 
 ---
 
@@ -30,11 +30,11 @@ VAULT_PATH=$(obsidian vault=$VAULT eval code="app.vault.adapter.basePath" | sed 
 
 ## Step 2: Determine the target
 
-### Case A — `--folder` flag
+### Case A: `--folder` flag
 
 If `$ARGUMENTS` starts with `--folder`, strip that flag and treat the remainder as a project/area folder name. Jump to the **Folder Archive** path at the end of this skill.
 
-### Case B — Named file argument
+### Case B: Named file argument
 
 If `$ARGUMENTS` is provided (and does not start with `--folder`), search for the file:
 
@@ -44,7 +44,7 @@ obsidian vault=$VAULT search query="$ARGUMENTS" format=json
 
 If multiple results come back, filter to files under `1_Projects/`, `2_Areas/`, or `3_Resources/` (skip files already under `4_Archive/`). If still ambiguous, present the top matches and ask the user which one. Set `$FILE_PATH` to the vault-relative path of the chosen file.
 
-### Case C — Active file (default, no argument)
+### Case C: Active file (default, no argument)
 
 ```bash
 obsidian vault=$VAULT eval code="app.workspace.getActiveFile()?.path"
@@ -81,7 +81,7 @@ Check for collision:
 test -f "$VAULT_PATH/$DEST_PATH" && echo "exists" || echo "clear"
 ```
 
-If destination already exists, stop: `Destination already exists: $DEST_PATH — aborting.`
+If destination already exists, stop: `Destination already exists: $DEST_PATH, aborting.`
 
 ---
 
@@ -138,7 +138,7 @@ DEST_DIR="$VAULT_PATH/4_Archive/$CATEGORY/$NAME"
 test -e "$DEST_DIR" && echo "exists" || echo "clear"
 ```
 
-If exists, stop: `Destination already exists: 4_Archive/$CATEGORY/$NAME — aborting.`
+If exists, stop: `Destination already exists: 4_Archive/$CATEGORY/$NAME, aborting.`
 
 ### F3: Confirm
 
@@ -164,7 +164,7 @@ mv "$SRC_DIR" "$VAULT_PATH/4_Archive/$CATEGORY/$NAME"
 
 ### F5: Confirm
 
-The canonical file's `status:` is intentionally **left alone**. The `4_Archive/` folder location is the signal that the project is archived; the existing `status:` (`done`, `paused`, `active`, or absent) preserves the historical record of how the project ended — finished vs. shelved vs. abandoned mid-flight. Queries for active work should filter out anything under `4_Archive/` by path, not by status.
+The canonical file's `status:` is intentionally **left alone**. The `4_Archive/` folder location is the signal that the project is archived; the existing `status:` (`done`, `paused`, `active`, or absent) preserves the historical record of how the project ended, finished vs. shelved vs. abandoned mid-flight. Queries for active work should filter out anything under `4_Archive/` by path, not by status.
 
 ```
 Archived: $CATEGORY/$NAME → 4_Archive/$CATEGORY/$NAME

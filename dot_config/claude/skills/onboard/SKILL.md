@@ -1,6 +1,6 @@
 ---
 name: onboard
-description: Analyzes any repository and produces a structured onboarding overview — tech stack, architecture, entry points, conventions, and how to run/test/contribute. Pass a specific area to focus on (e.g. /onboard authentication), or nothing for a full overview.
+description: Analyzes any repository and produces a structured onboarding overview: tech stack, architecture, entry points, conventions, and how to run/test/contribute. Pass a specific area to focus on (e.g. /onboard authentication), or nothing for a full overview.
 allowed-tools: Read, Glob, Grep, Bash, Task
 ---
 
@@ -8,24 +8,24 @@ Analyze this repository and produce a clear onboarding summary for a developer w
 
 If $ARGUMENTS is provided, keep the full overview but add a dedicated deep-dive section on that specific area, module, or concept.
 
-Work through the following steps in order, then present everything as a single structured report at the end. Do not print intermediate findings — collect everything first, then output the final report.
+Work through the following steps in order, then present everything as a single structured report at the end. Do not print intermediate findings, collect everything first, then output the final report.
 
 ---
 
-## Step 1 — Orientation
+## Step 1: Orientation
 
 Read the following files if they exist:
 - `README.md` / `README`
 - `CLAUDE.md`
 - `CONTRIBUTING.md`
-- `docs/` — any top-level docs files
-- `.github/` — PR templates, issue templates, workflows
+- `docs/`: any top-level docs files
+- `.github/`: PR templates, issue templates, workflows
 
 Note the project's stated purpose, any setup instructions, and any explicit conventions the authors document.
 
 ---
 
-## Step 2 — Tech stack
+## Step 2: Tech stack
 
 Identify the languages, frameworks, and runtimes in use by checking:
 - `package.json`, `package-lock.json`, `yarn.lock`, `bun.lockb`
@@ -40,7 +40,7 @@ List the primary language, runtime version, key frameworks, and notable dependen
 
 ---
 
-## Step 3 — Project structure
+## Step 3: Project structure
 
 Map the top two levels of the directory tree. For each significant directory, infer its purpose from its name and contents. Flag anything non-obvious.
 
@@ -51,18 +51,18 @@ Pay particular attention to:
 
 ---
 
-## Step 4 — Entry points and core modules
+## Step 4: Entry points and core modules
 
 Find where execution begins:
 - `main.*`, `index.*`, `app.*`, `server.*`, `cli.*`
 - Scripts referenced in `package.json` `scripts`, `Makefile` targets, or `Procfile`
 - Dockerfile `CMD` / `ENTRYPOINT`
 
-Identify the 3–6 most central modules or files — the ones a new developer would need to understand first to make sense of the codebase.
+Identify the 3–6 most central modules or files, the ones a new developer would need to understand first to make sense of the codebase.
 
 ---
 
-## Step 5 — Architecture and patterns
+## Step 5: Architecture and patterns
 
 Spawn an Explore sub-agent to read a representative sample of source files (aim for breadth over depth) and identify:
 - Architectural style (MVC, layered, event-driven, microservices, etc.)
@@ -73,17 +73,17 @@ Spawn an Explore sub-agent to read a representative sample of source files (aim 
 
 ---
 
-## Step 6 — Data and state
+## Step 6: Data and state
 
 Look for:
 - Database setup (`schema.*`, `migrations/`, `prisma/`, `models/`, ORM config)
 - State management patterns (Redux, Zustand, context, stores, etc.)
 - External services or APIs the project depends on
-- Environment variables — check `.env.example`, `.env.sample`, or any documented env vars
+- Environment variables, check `.env.example`, `.env.sample`, or any documented env vars
 
 ---
 
-## Step 7 — Testing
+## Step 7: Testing
 
 Find the testing setup:
 - Test runner and framework (Jest, Vitest, pytest, RSpec, etc.)
@@ -94,7 +94,7 @@ Find the testing setup:
 
 ---
 
-## Step 8 — Dev workflow
+## Step 8: Dev workflow
 
 Determine how to get the project running locally:
 - Install command
@@ -107,7 +107,7 @@ Check for CI/CD config (`.github/workflows/`, `.circleci/`, `Jenkinsfile`, etc.)
 
 ---
 
-## Step 9 — Focused deep-dive (if $ARGUMENTS provided)
+## Step 9: Focused deep-dive (if $ARGUMENTS provided)
 
 If $ARGUMENTS was provided, explore that specific area in depth:
 - Find all files directly related to it

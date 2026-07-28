@@ -4,7 +4,7 @@ Loads project context and recent session history at the start of a new session. 
 
 ## What it does
 
-Reads the project's canonical summary file and recent session logs, then outputs a combined report showing where you left off — project state, recent decisions, pending tasks, and suggested next steps.
+Reads the project's canonical summary file and recent session logs, then outputs a combined report showing where you left off, project state, recent decisions, pending tasks, and suggested next steps.
 
 Supports loading a configurable number of recent sessions and searching past sessions by topic keyword.
 

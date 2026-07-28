@@ -4,7 +4,7 @@ Saves a structured session log to a project's (`1_Projects/<name>/`) or area's (
 
 ## What it does
 
-Creates a dated, keyword-tagged markdown file capturing the important parts of a session — decisions, learnings, solutions, files changed, pending tasks. No raw conversation transcript; only structured, extracted insights.
+Creates a dated, keyword-tagged markdown file capturing the important parts of a session, decisions, learnings, solutions, files changed, pending tasks. No raw conversation transcript; only structured, extracted insights.
 
 Files are saved as `Session Logs/YYYY-MM-DD-HH_MM-topic-name.md` within the project or area folder. The YYYY-MM-DD prefix means files sort chronologically in both the filesystem and Obsidian.
 

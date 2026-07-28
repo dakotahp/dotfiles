@@ -9,12 +9,12 @@ allowed-tools: Bash
 Loads the project's canonical summary file and recent session logs to get up to speed quickly.
 
 **Usage:**
-- `/continue-project` — summary file + last 3 session logs (project derived from cwd)
-- `/continue-project 5` — summary file + last 5 session logs
-- `/continue-project auth` — summary file + last 3 + search for "auth" in past sessions
-- `/continue-project 10 migration` — summary file + last 10 + search for "migration"
-- `/continue-project "Real Estate Operating Company"` — explicit project, last 3 logs (works from anywhere)
-- `/continue-project "Real Estate Operating Company" 5 migration` — explicit project + N + topic
+- `/continue-project`: summary file + last 3 session logs (project derived from cwd)
+- `/continue-project 5`: summary file + last 5 session logs
+- `/continue-project auth`: summary file + last 3 + search for "auth" in past sessions
+- `/continue-project 10 migration`: summary file + last 10 + search for "migration"
+- `/continue-project "Real Estate Operating Company"`: explicit project, last 3 logs (works from anywhere)
+- `/continue-project "Real Estate Operating Company" 5 migration`: explicit project + N + topic
 
 ## Instructions for Claude
 
@@ -22,7 +22,7 @@ Loads the project's canonical summary file and recent session logs to get up to 
 
 `$ARGUMENTS` may contain, in order:
 
-1. **Optional quoted project name** — if `$ARGUMENTS` starts with `"`, take everything up to the next `"` as the project name. Strip it (and surrounding whitespace) from `$ARGUMENTS` before parsing the rest.
+1. **Optional quoted project name**, if `$ARGUMENTS` starts with `"`, take everything up to the next `"` as the project name. Strip it (and surrounding whitespace) from `$ARGUMENTS` before parsing the rest.
 2. **Number (N):** How many recent sessions to load (default: 3, max: 50)
 3. **Topic keyword:** Search for related sessions beyond the last N
 
@@ -59,11 +59,11 @@ This skill operates on a **project** under `1_Projects/` or an **area** under `2
 
 **2c. Set placeholders:**
 
-- `{Vault}` — resolved vault name
-- `{Category}` — `1_Projects` or `2_Areas`
-- `{ProjectName}` — the project/area name
-- `{ProjectPath}` — `{Category}/{ProjectName}` (vault-relative)
-- `{ProjectAbsPath}` — absolute filesystem path to the project folder (for `ls` of session logs)
+- `{Vault}`: resolved vault name
+- `{Category}`: `1_Projects` or `2_Areas`
+- `{ProjectName}`: the project/area name
+- `{ProjectPath}`: `{Category}/{ProjectName}` (vault-relative)
+- `{ProjectAbsPath}`: absolute filesystem path to the project folder (for `ls` of session logs)
 
 **2d. Read the summary file:**
 
@@ -86,10 +86,10 @@ Extract from the summary file:
 - Project purpose/description
 - Current phase/status
 - Key references and paths
-- The `## Session Context` section (if it exists) — status, blockers, next steps
+- The `## Session Context` section (if it exists), status, blockers, next steps
 - The `last-touched` frontmatter property (if present)
 
-**Stale check:** if `last-touched` is present and more than 30 days before today, set a `STALE_WARNING` flag with the day count. Surface it prominently in the Step 6 report (see CONTEXT block). If `last-touched` is absent, no warning — the project simply hasn't had a session-skill run yet.
+**Stale check:** if `last-touched` is present and more than 30 days before today, set a `STALE_WARNING` flag with the day count. Surface it prominently in the Step 6 report (see CONTEXT block). If `last-touched` is absent, no warning, the project simply hasn't had a session-skill run yet.
 
 ### Step 3: Find Session Logs
 
@@ -141,7 +141,7 @@ Resuming a project counts as touching it. Append a backlink to today's daily not
 obsidian daily vault="{Vault}"
 ```
 
-- If the command errors or indicates no daily note exists, **skip silently**. Do NOT create one — that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes.
+- If the command errors or indicates no daily note exists, **skip silently**. Do NOT create one, that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes.
 
 **b. Idempotency:** if the daily note content already contains `[[{ProjectName}]]`, skip.
 
@@ -192,16 +192,16 @@ SESSION STATE:
  PREVIOUS SESSIONS ({count} more)
 ══════════════════════════════════════════════
 
-- {YYYY-MM-DD}: {Topic} — {Outcome snippet}
-- {YYYY-MM-DD}: {Topic} — {Outcome snippet}
+- {YYYY-MM-DD}: {Topic}, {Outcome snippet}
+- {YYYY-MM-DD}: {Topic}, {Outcome snippet}
 
 {Only if topic search was performed and found results:}
 ══════════════════════════════════════════════
  RELATED SESSIONS (Topic: "{keyword}")
 ══════════════════════════════════════════════
 
-- {YYYY-MM-DD}: {Topic} — {Why it matched}
-- {YYYY-MM-DD}: {Topic} — {Why it matched}
+- {YYYY-MM-DD}: {Topic}, {Why it matched}
+- {YYYY-MM-DD}: {Topic}, {Why it matched}
 
 ══════════════════════════════════════════════
  READY TO:

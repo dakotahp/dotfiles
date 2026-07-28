@@ -1,6 +1,6 @@
 # /product-review
 
-Reviews a PRD like a senior product leader — reads the spec, fetches linked assets, identifies gaps, and produces a structured Q&A report separating answered questions from items needing stakeholder input.
+Reviews a PRD like a senior product leader, reads the spec, fetches linked assets, identifies gaps, and produces a structured Q&A report separating answered questions from items needing stakeholder input.
 
 ## Usage
 

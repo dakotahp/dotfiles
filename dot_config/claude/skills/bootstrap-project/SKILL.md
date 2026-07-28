@@ -17,14 +17,14 @@ Creates the standard folder + canonical summary file for a new project (default)
 
 - The **last whitespace-separated token** is `area` (case-insensitive) → category is `2_Areas`, and the name is everything before that token.
 - Otherwise → category is `1_Projects`, and the name is the entire argument string.
-- The name may be wrapped in quotes — strip surrounding `"` or `'`.
+- The name may be wrapped in quotes, strip surrounding `"` or `'`.
 - If `$ARGUMENTS` is empty, ask the user for the name and whether it's a project or area (AskUserQuestion).
 
 Set placeholders:
 
-- `{Category}` — `1_Projects` or `2_Areas`
-- `{Kind}` — `project` or `area` (matches `{Category}`)
-- `{Name}` — the cleaned name (e.g. `Refactor Back-end Architecture`)
+- `{Category}`: `1_Projects` or `2_Areas`
+- `{Kind}`: `project` or `area` (matches `{Category}`)
+- `{Name}`: the cleaned name (e.g. `Refactor Back-end Architecture`)
 
 ### Step 2: Resolve Vault
 
@@ -43,18 +43,18 @@ Verify the folder does not already exist:
 obsidian read path="{Category}/{Name}/{Name}.md" vault="{Vault}"
 ```
 
-- If the file exists, stop and tell the user: `"A {Kind} named '{Name}' already exists at {Category}/{Name}/{Name}.md. Aborting — open it directly or pick a different name."`
+- If the file exists, stop and tell the user: `"A {Kind} named '{Name}' already exists at {Category}/{Name}/{Name}.md. Aborting, open it directly or pick a different name."`
 - A "not found" error is the expected case; proceed.
 
 ### Step 4: Ask for the Intent
 
 Use AskUserQuestion to ask **one** open-ended question:
 
-> "What's the basic intent of this {Kind}? (1-3 sentences — what is it, why does it exist, what would 'done' or 'healthy' look like. You'll flesh this out later in Obsidian; this just gives the file an identifiable starting point.)"
+> "What's the basic intent of this {Kind}? (1-3 sentences, what is it, why does it exist, what would 'done' or 'healthy' look like. You'll flesh this out later in Obsidian; this just gives the file an identifiable starting point.)"
 
 Provide the user options like:
-- **Write it now** — user types a short paragraph
-- **Skip** — file is created with a placeholder line the user can fill in later
+- **Write it now**: user types a short paragraph
+- **Skip**: file is created with a placeholder line the user can fill in later
 
 If the user picks "Skip" or types nothing, use this placeholder body:
 
@@ -79,7 +79,7 @@ last-touched: {Today}
 
 Notes:
 - `agent-context` value is literally `project` or `area` (matches `{Kind}`).
-- Do not add tags, sections, or scaffolding beyond what's above — the user will grow the file organically.
+- Do not add tags, sections, or scaffolding beyond what's above, the user will grow the file organically.
 
 ### Step 6: Create the File
 
@@ -87,7 +87,7 @@ Notes:
 obsidian create path="{Category}/{Name}/{Name}.md" content="{file content}" vault="{Vault}"
 ```
 
-The `obsidian create` command creates parent folders as needed. Do not pass `overwrite` — collisions were checked in Step 3 and we don't want to clobber.
+The `obsidian create` command creates parent folders as needed. Do not pass `overwrite`, collisions were checked in Step 3 and we don't want to clobber.
 
 ### Step 7: Verify and Confirm
 
@@ -104,18 +104,18 @@ Bootstrapped {Kind}: {Name}
 
 Vault:     {Vault}
 Location:  {Category}/{Name}/{Name}.md
-Intent:    {first ~80 chars of intent, or "(placeholder — fill in soon)"}
+Intent:    {first ~80 chars of intent, or "(placeholder, fill in soon)"}
 
 Next: open it in Obsidian and start adding context. Use /snapshot later to capture session state.
 ```
 
-If the read fails, surface the error and stop — don't claim success.
+If the read fails, surface the error and stop, don't claim success.
 
 ---
 
 ## Guidelines
 
 - **Fast path matters.** This skill is supposed to be 1-2 questions and done. Don't expand the file scaffolding or ask follow-up questions beyond intent.
-- **Folder-form only.** Always `{Category}/{Name}/{Name}.md` — matches the convention `/snapshot` and `/continue-project` expect.
+- **Folder-form only.** Always `{Category}/{Name}/{Name}.md`, matches the convention `/snapshot` and `/continue-project` expect.
 - **Don't touch daily notes or anything else.** Bootstrap is creation-only; engagement logging happens in `/snapshot`.
 - **Be conservative with the body.** A blank-ish file with an honest placeholder is better than fake structure (empty "Decisions" / "Next Steps" tables) that the user will have to delete.
