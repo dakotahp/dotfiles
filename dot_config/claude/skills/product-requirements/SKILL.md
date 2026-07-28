@@ -113,8 +113,8 @@ PRD written
   Open Qs:   <count>
 
 Next steps:
-  • /product-review <file path>  , stress-test this PRD
-  • /feature <file path>         , start TDD implementation
+  /technical-plan <file path>   how it will be built
+  /feature <file path>          start TDD implementation
 ```
 
 ---

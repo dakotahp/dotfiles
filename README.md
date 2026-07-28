@@ -67,6 +67,16 @@ Claude Code config is tracked here and deploys to `~/.config/claude/` rather tha
 * `agents/`: subagent definitions, each pinning a model, an effort level, and a tool scope
 * `settings.json`: permissions, sandbox, hooks, plugins
 
+### Planning to implementation chain
+
+These are meant to be run in order, the first two usually in the same session:
+
+1. `/technical-plan`: a short human-facing overview. Approach, the decisions that mattered and their rejected alternatives, blast radius, risks, sequencing. Deliberately excludes schemas and signatures so it stays readable.
+2. `/technical-requirements-document`: the detailed spec, run straight afterward so it inherits the plan's context. Ends in a ticket-by-ticket breakdown and offers to create the tickets in Linear.
+3. `/feature` or a `build` session per ticket. Each starts cold, which is why the TRD's governing rule is that every ticket must be implementable without having seen the planning conversation.
+
+`/product-requirements` writes a PRD if a product spec is needed first, though that is usually a PM's job now.
+
 ### Model and effort are deliberately not in settings.json
 
 Claude Code writes interactive `/model` and effort changes back into `settings.json` itself. Tracking those two keys therefore meant chezmoi and Claude Code taking turns overwriting each other, and it meant an ad-hoc switch for one task silently became the default for every session afterward. Both keys were removed for that reason, so **do not add `model` or `effortLevel` back to `settings.json.tmpl`.**
