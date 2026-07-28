@@ -12,13 +12,19 @@ Implement the feature described in $ARGUMENTS by following every step below in o
 
 ## Standing rules for every subagent
 
-These rules apply across the entire pipeline. They are defined once here; the steps below reference them by number instead of restating them. When you dispatch a subagent, include the rules relevant to its job in its prompt, because subagents do not inherit this skill's text. Fill in concrete values (the actual branch name, etc.) at dispatch time.
+These rules apply across the entire pipeline. They are defined once here; the steps below reference them by number instead of restating them.
+
+**Rules 2 and 3 are already baked into the role definitions** in `~/.config/claude/agents/feature-*.md` (see "Subagent roles" in Step 5), because their text is static. You do not need to restate them at dispatch. Rules 1 and 4 carry values only you know, so pass them in every dispatch prompt with the concrete values filled in.
 
 **Rule 1 — Commit only to the feature branch.** Applies to every subagent that writes or commits. Tell it the feature branch name created in Step 0 and instruct it to commit only to that branch, never to `main` or `master`. Include a line like: *"All commits must go to branch `feature/<name>`. Verify with `git branch --show-current` before committing."*
 
 **Rule 2 — Never bundle a gated command with others in one Bash call.** Applies to the main session and every subagent. The permission system *does* decompose compound commands: it splits on `&&`, `||`, `;`, `|`, and newlines and matches each segment against your allow/deny/ask rules independently. A chain auto-approves only when **every** segment matches an allow rule; if **any** segment is gated (commit, push, merge) or unmatchable, the whole chain prompts and you cannot approve just the safe half. So the rule is not "never chain" — it is: never join a gated or unmatchable step to safe ones. Concretely: (a) keep `git commit`/`git push`/`gh pr merge` in their own Bash calls, never chained after `git add`, tests, or a build; (b) `cd <repo> && <cmd>` is fine and encouraged when working from a parent dir, provided `<cmd>` is allowlisted — `cd` into the project tree or an `additionalDirectories` entry is auto-approved as read-only; (c) do not inline an `export VAR="...$HOME..."` or other expansion-bearing segment into a chain — it is unmatchable and forces a prompt for the whole chain (fix the environment at launch instead so the export is unnecessary). This keeps allowlisted reads, tests, lint, and builds running automatically while prompting only for genuinely sensitive actions.
 
 **Rule 3 — Default to no code comments.** Applies to every subagent that writes or edits code. Well-named identifiers and clear structure should make the code self-explanatory. Only add a comment when something is genuinely counter-intuitive on a rare basis, for example when a more idiomatic approach exists but cannot be used here for a specific reason, or when a future reader would otherwise be likely to "fix" the code without realizing why it is written this way. If a comment merely restates what the code does, delete it. Agents otherwise default to writing verbose, redundant comments.
+
+**Rule 4 — Do not spawn nested subagents.** Applies to every subagent you dispatch. Include this line: *"Do the work yourself. Do not delegate to further subagents."* Current Opus models reach for delegation readily, and each nested layer re-establishes context, re-explores the repo, and reports back through a summary the parent then re-reads. In a pipeline that already fans out per plan task, one unnecessary nesting layer can multiply token spend without improving the result. You, the orchestrator, are the only agent that delegates.
+
+Applies to you as well, in one specific sense: dispatch exactly the roles the step calls for. Do not add extra reviewers, verifiers, or "second opinion" agents beyond what a step specifies. The pipeline's review coverage is deliberate, and Step 8 already runs two passes.
 
 ---
 
@@ -79,20 +85,16 @@ After brainstorming completes, invoke `superpowers:writing-plans` to produce the
 
 ### Adversarial plan review (run BEFORE asking for approval)
 
-Stress-test the plan the way Step 8 stress-tests the diff, but catch the blind spots now, when they cost a sentence to fix instead of a rewrite. Scale to plan size: skip for a trivial single-file plan; run both passes for anything spanning multiple files, surfaces, or subsystems. Both passes are read-only `sonnet` subagents, dispatched in parallel.
+Stress-test the plan the way Step 8 stress-tests the diff, but catch the blind spots now, when they cost a sentence to fix instead of a rewrite. Scale to plan size: skip for a trivial single-file plan; run both passes for anything spanning multiple files, surfaces, or subsystems. Both passes are read-only roles, dispatched in parallel in a single message so they run concurrently.
 
 **Hard rules (each learned by getting it wrong):**
 - **Run this before any implementation exists.** Once code is written, the reviewers rediscover your code instead of independently re-deriving intent, and the signal collapses.
 - **Feed the reviewer the actual plan + spec files, not a hand-written summary.** A compressed summary makes the reviewer flag things the plan already covers ("the plan never mentions X" when it did).
 - **Scope both reviewers to falsifiable claims and coverage gaps, not design taste.** Divergent-but-valid design is noise; false assumptions and missing risks are signal.
 
-**Pass 1 — Assumption falsification (grounded).** Give it the plan + spec + the repo. Prompt verbatim:
+**Pass 1 — Assumption falsification (grounded).** Dispatch `feature-plan-falsifier`. Pass it only the paths to the plan file and the spec file. Its methodology lives in its definition; your prompt supplies the paths and nothing more.
 
-> You are stress-testing a TECHNICAL PLAN before it is implemented, against the real codebase. Read the plan and spec at <paths> and explore the repo. (1) Enumerate every assumption the plan makes about the existing system, including implicit ones it never states. (2) For each, verify against actual code/schema/config and mark VERIFIED (file:line), FALSE (file:line), or UNVERIFIABLE-WITHOUT-RUNTIME (a genuine unknown needing a spike). (3) Flag anything that would make a step fail as written — a seam that does not exist, an export/data path that is not what the plan assumes, an aggregation that cannot be added where claimed. Focus on falsifiable facts about the existing system, not design taste. End with a ranked "biggest blind spots / verify before building" list.
-
-**Pass 2 — Blind re-derivation.** Give it ONLY the spec/ticket requirements + the repo, NOT the plan. Prompt verbatim:
-
-> Produce an independent technical plan for the requirements below, from scratch. Do not assume an existing plan exists; derive everything from the requirements and the codebase, verifying claims in code. Cover: what each key term actually maps to in this codebase (trace it, cite file:line; watch for similarly-named decoys), whether the needed data already exists or must be built, the backend/frontend/export seam for each requirement, risks and unknowns you could not confirm, and a build order. Requirements: <verbatim ticket/spec text>.
+**Pass 2 — Blind re-derivation.** Dispatch `feature-plan-rederiver`. Pass it the verbatim ticket or spec requirements **and nothing else**. Do not pass the plan file path, a summary of the plan, or any hint of the approach you chose. Its whole value is deriving the plan independently, and a single sentence describing your intended design collapses the comparison. The role will flag contamination if it sees any, but do not rely on that; get the dispatch right.
 
 Then **you** diff Pass 2's plan against yours: anything it surfaced that yours omitted — a missed approach, an unstated risk, a whole affected area — is a blind spot. Pass 1 finds "this specific thing will break"; Pass 2 finds "you framed this wrong or missed an area." They are complementary; run both.
 
@@ -106,6 +108,8 @@ Approval means the user says something like "approved", "looks good", "proceed",
 
 **STOP. Do not continue to Step 3.** Context compaction must happen here but cannot be triggered automatically — only you can do it.
 
+This checkpoint is also the cheapest moment in the whole pipeline to change the orchestrator model, which is why the handoff asks for both. Prompt caches are scoped per model, so switching mid-session normally re-sends the entire conversation uncached. Immediately after a `/compact` there is almost nothing left to re-warm, so the switch is close to free. Steps 0 through 2 want the stronger model: brainstorming is interactive, and diffing Pass 2's independent plan against yours is the highest-judgment act in the pipeline. Steps 3 through 7 are mostly dispatching roles and reading back short summaries, which a mid-tier model handles at a lower rate per token.
+
 Post this message verbatim, then wait for the user to respond before doing anything else:
 
 > **Handoff — Step 2 complete. Action required before continuing.**
@@ -115,9 +119,9 @@ Post this message verbatim, then wait for the user to respond before doing anyth
 > - Next step: Step 3
 > - Open issues: `<any user caveats or scope notes from approval>`
 >
-> **Please run `/compact` now to clear the brainstorming/planning context, then reply "continue" to proceed to Step 3.**
+> **Please run `/compact` now to clear the brainstorming/planning context. Then, optionally, run `/model sonnet` before replying: Steps 3 through 7 are dispatch-heavy and do not need the stronger model, and switching right after a compact costs almost nothing in cache. Reply "continue" when done to proceed to Step 3.**
 
-Do not proceed to Step 3 until the user explicitly replies after compacting.
+Do not proceed to Step 3 until the user explicitly replies after compacting. If the user declines the model switch, continue exactly as normal; nothing downstream depends on it.
 
 ---
 
@@ -134,6 +138,8 @@ Create or update the file `.claude/prove_statements.md` with concrete, falsifiab
 
 Write at least one statement per significant behaviour the feature introduces.
 
+Statements are the contract Step 7 verifies against, so vagueness here is not recoverable later: a statement that cannot fail cannot prove anything. If you switched to a mid-tier model at the Step 2 checkpoint, re-read each statement and ask what output would falsify it. Name the exact command and the exact string or exit code you expect.
+
 ---
 
 ## Step 4 — Write failing tests (TDD)
@@ -145,7 +151,7 @@ Write tests that directly exercise each prove statement from Step 3. Then run th
 
 Do not proceed until failing tests are confirmed. If tests pass before implementation, the tests are not testing the right thing — fix them first.
 
-**Delegation:** If the plan contains exact test code (copy-paste ready), dispatch a `sonnet` subagent to write the test files and verify they fail. The subagent prompt must include: the Standing Rules (see top of skill) with the branch name filled in, the exact test code from the plan, the command to run tests, and the instruction to confirm tests fail with specific error messages. If the plan does NOT contain exact test code (only describes behaviors), write the tests in the main session — test design requires judgment.
+**Delegation:** If the plan contains exact test code (copy-paste ready), dispatch `feature-test-writer`. Its prompt must include: Standing Rules 1 and 4 with the branch name filled in, the exact test code from the plan, the paths to write it to, and the command to run tests. If the plan does NOT contain exact test code (only describes behaviors), write the tests in the main session — test design requires judgment.
 
 **Red flags — STOP if you are thinking any of these:**
 
@@ -165,37 +171,41 @@ Do not proceed until failing tests are confirmed. If tests pass before implement
 
 Implement only what is needed to satisfy the prove statements and pass the tests. Do not over-engineer or add unrequested functionality.
 
-### Code comments
-
-Every implementer subagent prompt must carry Standing Rule 3 (default to no code comments), verbatim. See "Standing rules for every subagent" at the top of this skill.
-
 **Always invoke `superpowers:subagent-driven-development`** to implement the plan task-by-task. This is not optional — inline implementation in the main session has no per-task commit discipline and no review checkpoints between tasks, which defeats the pipeline's purpose regardless of feature size. Give each sub-agent a specific, self-contained scope (one task from the plan) so their changes do not conflict.
 
-Every subagent prompt must carry Standing Rule 1 (commit only to the feature branch) with the actual branch name filled in, and Standing Rule 2 (never bundle a gated or unmatchable step with others in one Bash call). See the top of this skill.
+Map that sub-skill's roles onto these definitions: `feature-implementer` for the per-task implementer, then `feature-spec-compliance` and `feature-task-reviewer` for the per-task review checkpoint. Dispatch the two reviewers together in one message so they run concurrently; they read the same diff and do not depend on each other.
 
-### Subagent model tiers
+Every dispatch prompt must carry Standing Rule 1 (commit only to the feature branch) with the actual branch name filled in, and Standing Rule 4 (do not spawn nested subagents). Rules 2 and 3 are already in the definitions.
 
-To conserve cost, speed, and context window hygiene, use the `model` parameter when dispatching subagents. This table governs the **entire pipeline**, not just Step 5:
+### Subagent roles
 
-| Step | Role | Model | Rationale |
-|------|------|-------|-----------|
-| 2.5 | **Plan assumption-falsifier** | `sonnet` | Codebase-grounded verification of the plan's claims |
-| 2.5 | **Plan re-deriver** | `sonnet` | Independent plan from the spec; reasoning, but well-scoped |
-| 4 | **Test writer** | `sonnet` | Plan contains exact test code; writing + verifying failure is mechanical |
-| 5 | **Implementer** | `sonnet` | Mechanical work with clear specs from the plan |
-| 5 | **Spec compliance reviewer** | `haiku` | Pure checklist comparison — does code match spec? |
-| 5 | **Code quality reviewer** | `sonnet` | Judgment needed but well-scoped to a single task's diff |
-| 6 | **Code simplifier** | `sonnet` | Refinement within clear conventions, not invention |
-| 7 | **Prove verifier** | `haiku` | Rote command execution: run command, check output, record pass/fail |
-| 8a | **Adversarial diff reviewer** | `sonnet` | Cold review of full branch diff — needs reasoning to spot behavior changes and architectural regressions |
-| 8b | **Code-quality reviewer** | `sonnet` | Warm review with full context — judgment scoped to a known diff with clear conventions |
-| 9 | **Cleanup & PR creator** | `sonnet` | Linting, removing debug code, calling `gh pr create` is mechanical |
+**Dispatch by `subagent_type`, not by `model`.** Each role is a definition file in `~/.config/claude/agents/`, and it owns that role's model, reasoning effort, tool scope, and static instructions. This table governs the **entire pipeline**, not just Step 5:
 
-**Escalation:** If any subagent returns BLOCKED and the cause is reasoning difficulty (not missing context), re-dispatch with `model: opus`.
+| Step | Role | `subagent_type` | Model + effort |
+|------|------|-----------------|----------------|
+| 2.5 | Plan assumption-falsifier | `feature-plan-falsifier` | sonnet / high |
+| 2.5 | Plan re-deriver | `feature-plan-rederiver` | sonnet / high |
+| 4 | Test writer | `feature-test-writer` | sonnet / medium |
+| 5 | Implementer | `feature-implementer` | sonnet / high |
+| 5 | Spec compliance reviewer | `feature-spec-compliance` | haiku / low |
+| 5 | Per-task quality reviewer | `feature-task-reviewer` | sonnet / high |
+| 6 | Code simplifier | `code-simplifier:code-simplifier` | sonnet, session effort |
+| 7 | Prove verifier | `feature-prove-verifier` | haiku / low |
+| 8a | Adversarial diff reviewer | `feature-adversarial-reviewer` | sonnet / high |
+| 8b | Code-quality reviewer | `feature-quality-reviewer` | sonnet / high |
+| 9 | Cleanup (pre-PR) | `feature-cleanup` | sonnet / medium |
+
+**Why the definitions exist rather than inline `model` arguments.** Reasoning effort is the larger cost lever here, and the Task tool has no `effort` parameter. A subagent inherits the *session* effort unless its definition overrides it, so with a session-wide `effortLevel` of `xhigh`, a haiku agent running `prove_it record` also ran at `xhigh`. Effort drives thinking and output tokens, billed at several times the input rate, and the subagents are where this pipeline's token volume lives. Per-role effort is only expressible in a definition file, which is why these roles are files.
+
+Two secondary wins: the read-only tool scoping that Step 8 depends on is declared in `tools` frontmatter instead of relying on you to pass it, and each role's static instructions live in its own body rather than being reproduced in this skill on every pipeline turn.
+
+**Escalation:** If a subagent returns BLOCKED and the cause is reasoning difficulty rather than missing context, re-dispatch the same `subagent_type` with `model: opus` to override the definition for that one call. Try adding the missing context first; most BLOCKED reports are a context problem wearing a reasoning problem's clothes.
+
+**Step 6 is the exception.** `code-simplifier:code-simplifier` is a plugin agent whose definition carries no `effort` key, so it inherits session effort and cannot be tuned from here. Leave it; do not fork the plugin's prompt into a local definition just to set effort on it.
 
 **When NOT to delegate:** Steps 2 (planning) and 3 (prove statements) require understanding the design spec and translating requirements into falsifiable claims. These stay in the main session. The one exception inside Step 2 is the plan-review pair: delegate the two read-only reviewers, but keep the diff/synthesis and the plan revision with you.
 
-**Context window benefit:** Subagent results return as short summaries, not raw tool output. A haiku agent running 10 prove_it commands keeps ~50 lines of test output out of the main opus context. Over a full pipeline run, this compounds significantly.
+**Context window benefit:** Subagent results return as short summaries, not raw tool output. A haiku agent running 10 prove_it commands keeps ~50 lines of test output out of the orchestrator's context. Over a full pipeline run, this compounds significantly.
 
 **After it completes, return to this pipeline. Continue to Step 6.**
 
@@ -214,7 +224,7 @@ Post this message verbatim, then wait for the user to respond before doing anyth
 > - Next step: Step 6
 > - Open issues: `<any known gaps or deferred items>`
 >
-> **Please run `/compact` now to clear the implementation context, then reply "continue" to proceed to Step 6.**
+> **Please run `/compact` now to clear the implementation context. If you switched to `/model sonnet` earlier, this is the other cheap moment to switch back: Step 8 synthesis (deciding which review findings to accept and articulating why) is the remaining judgment-heavy work. Staying on sonnet through Step 9 is also fine, and you can escalate later if 8a returns Critical findings. Reply "continue" when done to proceed to Step 6.**
 
 Do not proceed to Step 6 until the user explicitly replies after compacting.
 
@@ -222,7 +232,7 @@ Do not proceed to Step 6 until the user explicitly replies after compacting.
 
 ## Step 6 — Simplify and re-run tests
 
-Spawn the `code-simplifier:code-simplifier` agent (with `model: sonnet`) on all files modified during implementation. It will refine the code for clarity, consistency, and maintainability while preserving all functionality.
+Spawn the `code-simplifier:code-simplifier` agent on all files modified during implementation. It will refine the code for clarity, consistency, and maintainability while preserving all functionality. This is the one role whose effort you cannot tune (see "Step 6 is the exception" under Subagent roles in Step 5); dispatch it as-is.
 
 After the code-simplifier completes, re-run the full test suite. Every test must pass before continuing. If simplification breaks any tests, fix them before proceeding.
 
@@ -247,7 +257,7 @@ prove_it signal done
 
 Address any failures before proceeding. Each statement must be backed by captured evidence.
 
-**Delegation:** Dispatch a `haiku` subagent to handle prove verification. The subagent prompt must include: the full contents of `.claude/prove_statements.md`, the Standing Rules (see top of skill) with the branch name filled in, and instructions to run each verification command, check the output, and call `prove_it record` + `prove_it signal done`. If any statement fails, the subagent must report BLOCKED with the failure details so the main session can diagnose and fix. This is pure command execution — haiku is sufficient and keeps test output out of the main context.
+**Delegation:** Dispatch `feature-prove-verifier`. Its prompt must include the full contents of `.claude/prove_statements.md` plus Standing Rules 1 and 4 with the branch name filled in. It runs each verification command, records pass or fail, calls `prove_it signal done`, and reports BLOCKED with the actual output if any statement fails so the main session can diagnose and fix. Keeping this out of the main session also keeps full test output out of the main context.
 
 ---
 
@@ -259,69 +269,21 @@ This step runs **two distinct review passes** with different framings. Both are 
 
 The goal of this pass is to catch the kind of show-stopper issues a cold PR reviewer would catch: unintended behavior changes, scope creep, architectural regressions, missing coverage for edge cases the implementation silently introduced, contract/API changes the author didn't realize they made.
 
-Dispatch a `sonnet` subagent with **no session context, no plan, no spec, no prove statements** — only the diff against the default branch and the ability to read the repo as it stands. The subagent must not be told what the feature is "supposed" to do; it must infer intent from the code itself, the way a PR reviewer does. This cold framing is the entire point — do not include the plan file path, the spec, or a description of the feature in the prompt.
+Dispatch `feature-adversarial-reviewer` with **no session context, no plan, no spec, no prove statements**. Its prompt carries exactly two things: the diff base branch name, and Standing Rule 4. Nothing else. The role must not be told what the feature is "supposed" to do; it must infer intent from the code itself, the way a PR reviewer does. This cold framing is the entire point, and this is the one dispatch in the pipeline where adding helpful context makes the result strictly worse.
 
-**Dispatch it read-only.** Scope the subagent to `tools: Read, Grep, Glob, Bash` with `disallowedTools: Edit, Write, Agent`. The reviewer only diffs, reads, and runs verification (tests, greps, builds); with no Edit/Write tool it structurally cannot alter the branch, which is what makes its verification commands safe to run autonomously without you approving each one (see the read-only settings note at the end of this step).
+The review categories, the skip list, and the output format all live in the role definition, so there is no verbatim prompt to reproduce here. Resist the urge to restate them: a paraphrase in your dispatch prompt competes with the definition instead of reinforcing it.
 
-**Diff base:** the prompt below says `master`; use whatever the repo's default branch actually is (`git remote show origin | sed -n 's/.*HEAD branch: //p'`, commonly `main`). Substitute it everywhere the prompt says `master`.
+**Diff base:** resolve the repo's actual default branch with `git remote show origin | sed -n 's/.*HEAD branch: //p'` (commonly `main`, sometimes `master`) and pass that name.
 
-The subagent prompt must include verbatim:
-
-> You are reviewing a branch diff against `master` as a skeptical, cold reviewer. You have no prior context on this change. Your job is to find real problems a senior engineer would flag, not style nits.
->
-> ### Step 1: Gather context
->
-> Run `git diff master...HEAD` to see all changed lines. Read whatever files you need from the working tree to understand the change in context. Infer intent from the code itself — do not ask for a spec or plan.
->
-> ### Step 2: Look for these issue categories
->
-> - **Security vulnerabilities** — injection, auth bypass, data exposure, insecure defaults
-> - **Error handling gaps** — unhandled exceptions, missing null checks, swallowed errors
-> - **Race conditions and concurrency issues** — shared mutable state, missing locks, TOCTOU
-> - **API misuse or anti-patterns** — wrong method for the job, deprecated usage, contract violations
-> - **Architecture concerns** — wrong abstraction level, violating existing patterns in the codebase, duplicating something that already exists
-> - **User experience and usability issues** — confusing workflows, missing user feedback (loading states, error messages, success confirmations), broken UI states, accessibility problems, data displayed incorrectly or misleadingly, poor error messaging that doesn't help the user recover
-> - **Data integrity issues** — incorrect data transformations, missing validations at system boundaries (user input, external APIs), stale cache problems, inconsistent state
-> - **Root cause vs symptom** — fixes that patch over a symptom while the underlying problem remains, workarounds that will need to be reworked later
-> - **Behavior changes and scope creep** — code paths quietly altered that don't appear central to the change, or code that doesn't belong with the apparent purpose
-> - **Contract / API changes** — function signatures, return types, error shapes, schema fields, public exports that downstream callers may rely on
-> - **Missing tests** for behaviors the diff introduces or changes, especially edge cases and failure paths (only when a critical path is untested)
->
-> ### Step 3: Skip these
->
-> Do NOT comment on:
-> - Style or formatting (linters handle this)
-> - Missing documentation or tests, unless a critical path is untested
-> - Compliments or positive feedback
-> - Pre-existing issues (only review new/changed lines)
-> - Things a linter, typechecker, or CI would catch (imports, type errors, formatting)
-> - Something that looks like a bug but is not actually a bug on closer inspection
-> - Pedantic nitpicks that a senior engineer wouldn't call out
-> - General code quality issues (test coverage, documentation) unless they directly impact users
-> - Changes in functionality that are likely intentional or directly related to the broader change
-> - Issues that are explicitly silenced in the code (lint ignore comments, intentional workarounds with explanatory comments)
->
-> ### Step 4: Output format
->
-> Write one entry per finding in this exact format:
->
-> ```
-> ### [Critical/High/Medium] - Short title
-> **File:** path/to/file.ext:line
-> **Issue:** Description of the problem
-> **Why it matters:** Impact if not fixed
-> **Suggestion:** How to fix
-> ```
->
-> If you find nothing material, say so explicitly — do not invent findings to seem useful.
+**Read-only is structural, not advisory.** The role's `tools` frontmatter grants `Read, Glob, Grep, Bash` and no `Write` or `Edit`, so it cannot alter the branch whatever it runs. That is what makes its verification commands safe to auto-approve (see the read-only settings note at the end of this step). You do not need to pass tool restrictions at dispatch, and you should not override them.
 
 Address every Critical and High finding. For Medium findings, use judgment. If you disagree with a finding, you must articulate why — disagreement requires reasoning, not dismissal. Re-run the test suite after any changes.
 
 ### 8b — Code-quality review (small-picture)
 
-After 8a is fully addressed, dispatch a second `sonnet` subagent for a conventional quality review. This pass has full session context (plan, spec, modified files) and focuses on: correctness within the intended design, edge cases, security vulnerabilities, performance, unclear naming, missing error handling, deprecated APIs, idiomatic patterns.
+After 8a is fully addressed, dispatch `feature-quality-reviewer` for a conventional quality review. Unlike 8a, this pass gets full context: pass it the plan, the spec, and the list of modified files, plus Standing Rule 4. It focuses on correctness within the intended design, edge cases, security, performance, unclear naming, missing error handling, deprecated APIs, and idiomatic patterns.
 
-Dispatch it read-only too — same scoping as 8a (`tools: Read, Grep, Glob, Bash`, `disallowedTools: Edit, Write, Agent`) so its verification runs autonomously and it cannot mutate the branch. The controller (main session), not the reviewer, applies any fixes.
+It is read-only by definition, same as 8a, so its verification runs autonomously and it cannot mutate the branch. You, not the reviewer, apply any fixes.
 
 Address every issue raised. If you disagree with a suggestion and the reasoning is non-obvious, leave a brief inline comment explaining why. Re-run the test suite after any changes from this step.
 
@@ -372,7 +334,7 @@ Complete all of the following before creating the PR:
    The PR body must reference the prove statements from Step 3 and link to their evidence.
 5. Open the PR with `open <url>` (macOS) or `xdg-open <url>` (Linux) in the default browser.
 
-**Delegation:** Steps 1-3 (cleanup, planning-artifact deletion, linting) can be dispatched to a `sonnet` subagent. The subagent prompt must include: the Standing Rules (see top of skill) with the branch name filled in, the list of modified files, the paths to the spec and plan files to delete, the lint command for the project, and instructions to fix any issues and commit the cleanup (the deleted planning files were never tracked, so they will simply disappear from disk — no git operation needed for them). Step 4 (PR creation) should stay in the main session — the PR title and body require understanding the full feature context, and the user needs to see the PR URL immediately.
+**Delegation:** Steps 1-3 (cleanup, planning-artifact deletion, linting) can be dispatched to `feature-cleanup`. Its prompt must include: Standing Rules 1 and 4 with the branch name filled in, the list of modified files, the paths to the spec and plan files to delete, and the lint command for the project. Step 4 (PR creation) stays in the main session — the PR title and body require understanding the full feature context, and the user needs to see the PR URL immediately.
 
 ---
 
