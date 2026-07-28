@@ -60,6 +60,14 @@ git checkout -b feature/<short-kebab-case-description>
 
 Derive the name from $ARGUMENTS (e.g. `feature/stripe-webhook`, `feature/phase4-security`). This branch is where every commit in this pipeline lands, including commits from subagents. Never commit to `main` or `master`. Record the branch name; you will pass it explicitly to every subagent you dispatch in Step 5.
 
+### Session display name
+
+From the same derivation, record a session display name: the ticket reference followed by the slug, without the `feature/` prefix. For branch `feature/app-1234-csv-export` that is `APP-1234 csv-export`. With no ticket reference, use the slug alone.
+
+Deriving it from the branch slug rather than composing it separately is deliberate: it keeps the name in the session list matching the branch and the PR, so the agent view can be cross-referenced against them instead of only read.
+
+You cannot set this yourself. There is no tool or hook for renaming a session, so you hand it to the user as a ready-to-run `/rename` in the Step 2 checkpoint, where they are already stopping to act. Record it now, while the ticket is in front of you.
+
 ---
 
 ## Step 1 (optional) - Start and assign ticket
@@ -132,7 +140,7 @@ Approval means the user says something like "approved", "looks good", "proceed",
 
 **STOP. Do not continue to Step 3.** Context compaction must happen here but cannot be triggered automatically; only you can do it.
 
-This checkpoint is also the cheapest moment in the whole pipeline to change the orchestrator model, which is why the handoff asks for both. Prompt caches are scoped per model, so switching mid-session normally re-sends the entire conversation uncached. Immediately after a `/compact` there is almost nothing left to re-warm, so the switch is close to free. Steps 0 through 2 want the stronger model: brainstorming is interactive, and diffing Pass 2's independent plan against yours is the highest-judgment act in the pipeline. Steps 3 through 7 are mostly dispatching roles and reading back short summaries, which a mid-tier model handles at a lower rate per token.
+This is also the cheapest moment to change the orchestrator model, which is why the handoff bundles its asks. Prompt caches are scoped per model, so switching mid-session normally re-sends the entire conversation uncached; immediately after a `/compact` there is almost nothing left to re-warm. Because Step 2 validates a specification rather than designing one, the default tier is usually adequate for the whole run, so the switch matters mainly when this session started at a stronger tier for an unusually involved spec. Steps 3 through 7 are mostly dispatching roles and reading back short summaries.
 
 Post this message verbatim, then wait for the user to respond before doing anything else:
 
@@ -143,9 +151,14 @@ Post this message verbatim, then wait for the user to respond before doing anyth
 > - Next step: Step 3
 > - Open issues: `<any user caveats or scope notes from approval>`
 >
-> **Please run `/compact` now to clear the spec-validation and planning context. Then, optionally, run `/model sonnet` before replying: Steps 3 through 7 are dispatch-heavy and do not need the stronger model, and switching right after a compact costs almost nothing in cache. Reply "continue" when done to proceed to Step 3.**
+> **Please run these, then reply "continue":**
+> - `/compact`, to clear the spec-validation and planning context
+> - `/rename <session display name>`, so this session stays findable in the session list once several are open
+> - optionally `/model sonnet`, if this session started at a stronger tier: Steps 3 through 7 are dispatch-heavy, and switching right after a compact costs almost nothing in cache
 
-Do not proceed to Step 3 until the user explicitly replies after compacting. If the user declines the model switch, continue exactly as normal; nothing downstream depends on it.
+**Fill in the actual display name recorded in Step 0.** Posting the placeholder defeats the purpose, since the whole point is that the user does not have to compose the name themselves.
+
+Do not proceed to Step 3 until the user explicitly replies. If they decline the rename or the model switch, continue exactly as normal; nothing downstream depends on either.
 
 ---
 
