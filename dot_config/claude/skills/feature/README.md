@@ -23,7 +23,7 @@ code simplification, verification, two review passes, and PR creation.
 | 5 | Implements task-by-task via subagents, then pauses to compact |
 | 6 | Runs code-simplifier, re-runs tests |
 | 7 | Runs prove_it verification against each statement |
-| 8 | Two review passes: a cold reviewer with no context, then a warm one with full context |
+| 8 | Two review passes: a cold reviewer with no context, then a coherence pass looking only for cross-task problems |
 | 9 | Cleans up, deletes planning artifacts, lints, creates a draft PR via `gh` |
 | 10 | Watches all three review-comment surfaces, addresses them, pushes, repeats until approved |
 
