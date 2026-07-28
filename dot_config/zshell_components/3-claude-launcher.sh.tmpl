@@ -1,4 +1,23 @@
-# Launch Claude Code with mise shims at the front of PATH.
+# Claude Code wrapper. Two unrelated concerns, deliberately kept separate.
+#
+# 1. Per-invocation model and effort defaults
+#
+# Claude Code persists interactive /model and effort changes into settings.json
+# (the settings schema literally calls effortLevel "persisted"), so an ad-hoc
+# switch silently becomes the default for every later session. CLI flags outrank
+# user settings and apply to one invocation only, so pinning them here means
+# every launch starts from a known baseline no matter what the last session
+# wrote. Switch freely mid-session; the change no longer leaks into the next one.
+#
+# `claude agents` needs its own flags, placed after the subcommand: those set the
+# default for sessions dispatched from the agent view, which is where most
+# sessions actually start. They reach dispatched sessions even when a long-lived
+# supervisor is already running. The top-level flags only cover a session
+# launched directly.
+#
+# Per-shell override: CLAUDE_DEFAULT_MODEL, CLAUDE_DEFAULT_EFFORT.
+#
+# 2. mise shims on PATH
 #
 # Claude Code snapshots PATH at launch and runs its Bash tool in non-interactive
 # shells that never re-source .zshrc, so `mise activate` (which rewrites PATH per
@@ -9,7 +28,59 @@
 #
 # Prepending the shims dir here lets mise resolve each repo's pinned tool versions
 # (e.g. abodo-rails' node 22 vs the global node 24) with no per-command export.
-# Guarded on the shims dir so it is a no-op on machines without mise.
-if [ -d "$HOME/.local/share/mise/shims" ]; then
-  claude() { PATH="$HOME/.local/share/mise/shims:$PATH" command claude "$@"; }
-fi
+#
+# These two concerns used to be coupled: the wrapper was defined inside the mise
+# guard, so a machine without mise would silently get no defaults either. The
+# function is now always defined and only the PATH prepend stays guarded.
+
+_claude_has_flag() {
+  local needle=$1 arg
+  shift
+  for arg in "$@"; do
+    [[ $arg == "$needle" || $arg == "$needle="* ]] && return 0
+  done
+  return 1
+}
+
+claude() {
+  # Subcommands that reject --model/--effort. Anything else (no args, a leading
+  # flag, a bare prompt, or `agents`) accepts them.
+  local -a passthrough=(
+    auth auto-mode doctor gateway install mcp plugin plugins
+    project setup-token ultrareview update upgrade remote-control rc ssh
+  )
+
+  local -a args=("$@")
+  local sub="${1:-}"
+  local arg inject=1
+
+  if [[ -n $sub ]] && [[ " ${passthrough[*]} " == *" $sub "* ]]; then
+    inject=0
+  fi
+
+  # A resumed session already has a model and an effort level. Forcing the
+  # defaults onto it would quietly downgrade whatever it was running.
+  for arg in "$@"; do
+    case $arg in
+      -c|--continue|-r|--resume|--resume=*) inject=0 ;;
+    esac
+  done
+
+  if (( inject )); then
+    local -a defaults=()
+    _claude_has_flag --model "$@"  || defaults+=(--model "${CLAUDE_DEFAULT_MODEL:-sonnet}")
+    _claude_has_flag --effort "$@" || defaults+=(--effort "${CLAUDE_DEFAULT_EFFORT:-medium}")
+
+    if [[ $sub == agents ]]; then
+      args=(agents "${defaults[@]}" "${@:2}")
+    else
+      args=("${defaults[@]}" "$@")
+    fi
+  fi
+
+  if [[ -d "$HOME/.local/share/mise/shims" ]]; then
+    PATH="$HOME/.local/share/mise/shims:$PATH" command claude "${args[@]}"
+  else
+    command claude "${args[@]}"
+  fi
+}
