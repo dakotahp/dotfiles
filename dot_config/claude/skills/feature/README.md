@@ -17,7 +17,7 @@ code simplification, verification, two review passes, and PR creation.
 |------|-------------|
 | 0 | Checks deps, installs anything missing, creates the feature branch |
 | 1 | Optional: assigns the referenced ticket and moves it to in progress |
-| 2 | Brainstorms and writes the plan, stress-tests it with two independent reviewers, gets your approval, then pauses to compact |
+| 2 | Establishes the spec (from a ticket, TRD, or plan file), validates its assumptions against the code, decomposes it into tasks, gets your approval, then pauses to compact |
 | 3 | Writes concrete, falsifiable prove statements |
 | 4 | Writes failing tests first (TDD) |
 | 5 | Implements task-by-task via subagents, then pauses to compact |

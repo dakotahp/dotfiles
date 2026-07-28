@@ -1,6 +1,6 @@
 ---
 name: feature
-description: Use when implementing a new feature from scratch, before writing any implementation code.
+description: Use when implementing an already-specified task: a ticket, a TRD section, or a written spec. Runs the full pipeline from spec validation through failing tests, implementation, review, and a draft PR. Expects the design to be settled and validates the spec against the code rather than working out what to build; given only an investigation or a rough idea, it asks for a specification first instead of designing one.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task
 ---
 
@@ -68,39 +68,63 @@ If a ticket is being referenced, use the appropriate MCP to assign the ticket to
 
 ---
 
-## Step 2: Plan the feature
+## Step 2: Establish the specification
 
-Invoke `superpowers:brainstorming` as a sub-step to explore requirements and design space. When doing so, instruct it to **skip the "User Review Gate" for the written spec**, the plan approval at the end of this step serves as the combined spec+plan gate, so asking the user to separately review the spec file is redundant here. After brainstorming writes the spec, it should proceed directly to invoking writing-plans without pausing for spec review.
+**This pipeline expects a defined task.** Its job is to implement a specification correctly, with TDD discipline and review, not to work out what should be built. Design belongs upstream, in `/technical-plan` and `/technical-requirements-document` or in a written ticket.
 
-**Do NOT commit the spec file or the plan file.** These planning documents are working artifacts; they are not part of the feature implementation and must not appear in the git history. Write them to disk, reference them throughout the pipeline, but never `git add` or commit them. They will be deleted in Step 9 once their purpose is served.
+### Step 2a: Identify what you were given
 
-After brainstorming completes, invoke `superpowers:writing-plans` to produce the implementation plan. The plan must cover:
+Classify $ARGUMENTS, and the current session's context, into one of these:
 
-- What will be created or changed and why
-- Files to be added or modified
-- Key architectural decisions and trade-offs
-- Anything that needs clarification before work begins
+1. **A ticket or issue identifier or URL.** Fetch it through the tracker's MCP.
+2. **A path to a spec, TRD, or plan file.** Read it.
+3. **A TRD or technical plan already produced in this session.** Use it plus the surrounding conversation, and do not re-ask what has already been settled.
+4. **Prose that is genuinely a complete specification**, meaning it states what changes, where, and how you would know it worked.
 
-**IMPORTANT:** Skip the writing-plans "Execution Handoff" section entirely; do NOT ask the user which execution approach to use. This pipeline controls execution flow; the writing-plans skill is a sub-routine here. Execution will use subagent-driven-development in Step 5.
+**If it is none of those, stop.** Do not brainstorm your way to a specification, and do not infer one from an investigation earlier in the session. Say what is missing and offer to produce a spec first, for example: *"This is an investigation, not a specification. I can write a well-specified ticket from what we found, then run this pipeline against it. Want me to do that?"* An informal session is a poor input to this pipeline: it silently converts unreviewed assumptions into implemented code, and by the time that surfaces it costs a rewrite rather than a sentence.
 
-### Adversarial plan review (run BEFORE asking for approval)
+The exception is an explicit request to design in-session. If the user asks for that, invoke `superpowers:brainstorming` first and treat its output as the specification, then continue from Step 2b. This is the exception, not the default path.
 
-Stress-test the plan the way Step 8 stress-tests the diff, but catch the blind spots now, when they cost a sentence to fix instead of a rewrite. Scale to plan size: skip for a trivial single-file plan; run both passes for anything spanning multiple files, surfaces, or subsystems. Both passes are read-only roles, dispatched in parallel in a single message so they run concurrently.
+### Step 2b: Validate the specification against the code
+
+A specification is a set of claims about a system, and claims can be wrong. Validating them before decomposing is what stops a false premise from becoming implemented behavior, and here it costs a sentence to fix rather than a rewrite.
+
+Scale to the size of the spec: skip for a trivial single-file change; run both passes for anything spanning multiple files, surfaces, or subsystems. Dispatch them in a single message so they run concurrently. Both are read-only.
 
 **Hard rules (each learned by getting it wrong):**
 - **Run this before any implementation exists.** Once code is written, the reviewers rediscover your code instead of independently re-deriving intent, and the signal collapses.
-- **Feed the reviewer the actual plan + spec files, not a hand-written summary.** A compressed summary makes the reviewer flag things the plan already covers ("the plan never mentions X" when it did).
-- **Scope both reviewers to falsifiable claims and coverage gaps, not design taste.** Divergent-but-valid design is noise; false assumptions and missing risks are signal.
+- **Feed the reviewers the actual spec, not a hand-written summary.** A compressed summary makes them flag things the spec already covers ("it never mentions X" when it did).
+- **Scope both to falsifiable claims and coverage gaps, not design taste.** The approach arrived from upstream and is not up for re-litigation here. Divergent-but-valid design is noise; false assumptions and missing risks are signal.
 
-**Pass 1: Assumption falsification (grounded).** Dispatch `plan-falsifier`. Pass it only the paths to the plan file and the spec file. Its methodology lives in its definition; your prompt supplies the paths and nothing more.
+**Pass 1: Assumption falsification.** Dispatch `plan-falsifier` with the path to the spec. It enumerates every assumption the spec makes about the existing system and marks each VERIFIED, FALSE, or UNVERIFIABLE-WITHOUT-RUNTIME with a `file:line` citation. Its methodology lives in its definition; your prompt supplies the path and nothing more.
 
-**Pass 2: Blind re-derivation.** Dispatch `plan-rederiver`. Pass it the verbatim ticket or spec requirements **and nothing else**. Do not pass the plan file path, a summary of the plan, or any hint of the approach you chose. Its whole value is deriving the plan independently, and a single sentence describing your intended design collapses the comparison. The role will flag contamination if it sees any, but do not rely on that; get the dispatch right.
+**Pass 2: Blind re-derivation.** Worth running when the spec covers a whole project or several interacting surfaces. Skip it for a single well-scoped ticket, where an independently derived plan has little to add. Dispatch `plan-rederiver` with the verbatim requirements **and nothing else**: no spec file path, no summary, no hint of the chosen approach. Then diff what it produced against the spec. Anything it surfaced that the spec omits, a missed affected area, an unstated risk, a dependency nobody named, is a gap in the spec.
 
-Then **you** diff Pass 2's plan against yours: anything it surfaced that yours omitted, a missed approach, an unstated risk, a whole affected area, is a blind spot. Pass 1 finds "this specific thing will break"; Pass 2 finds "you framed this wrong or missed an area." They are complementary; run both.
+Fold validated findings into the spec before decomposing. Convert each UNVERIFIABLE assumption into an explicit verification task rather than carrying it forward as though it were settled. Discard contamination artifacts and any finding that attacks a strawman.
 
-Fold validated findings back into the plan and spec before presenting them. Convert each UNVERIFIABLE assumption into an explicit spike/verification task rather than an optimistic claim. Discard contamination artifacts and any finding that attacks a strawman of the plan.
+**A FALSE assumption is a stop, not a footnote.** If the spec rests on something untrue of the code, the spec is wrong, and decomposing it produces tasks that cannot be implemented as written. Take it back to the user with what the falsifier found. That is a specification defect, and fixing it is their call, not something to paper over during implementation.
 
-**After writing-plans saves the plan file and the plan review above is folded in**, present a summary of the plan to the user and ask for explicit approval. Example: *"Implementation plan saved to `docs/superpowers/plans/<file>.md`. Here's a summary: [brief overview of tasks]. Approve the plan to continue, or give feedback to revise."* Do NOT end your message without this prompt: the writing-plans skill's natural ending is an execution handoff that you are skipping, so you must replace it with your own approval request.
+### Step 2c: Decompose into implementation tasks
+
+Invoke `superpowers:writing-plans` to turn the validated specification into an ordered task breakdown. **The approach is already decided at this point; tell it so.** Its job here is decomposition, not design: which tasks, in what order, touching which files, with what verification. It must not re-litigate the approach the specification settled, and if it believes the approach is wrong, that is a finding to raise with the user, not a licence to substitute a different one.
+
+The plan must cover:
+
+- The tasks, in dependency order, each small enough for one subagent
+- Files to be added or modified per task
+- Anything still needing clarification before work begins
+
+Later steps depend on this plan file existing: Step 5 executes it task by task and Step 9 deletes it.
+
+**Do NOT commit the spec file or the plan file.** These are working artifacts; they are not part of the feature implementation and must not appear in the git history. Write them to disk, reference them throughout the pipeline, but never `git add` or commit them. They are deleted in Step 9 once their purpose is served.
+
+**IMPORTANT:** Skip the writing-plans "Execution Handoff" section entirely; do NOT ask the user which execution approach to use. This pipeline controls execution flow; the writing-plans skill is a sub-routine here. Execution will use subagent-driven-development in Step 5.
+
+### Step 2d: Get approval
+
+**After writing-plans saves the plan file and the Step 2b findings are folded in**, present the task breakdown to the user and ask for explicit approval. Example: *"Implementation plan saved to `docs/superpowers/plans/<file>.md`. Here's a summary: [brief overview of tasks]. Approve the plan to continue, or give feedback to revise."* Do NOT end your message without this prompt: the writing-plans skill's natural ending is an execution handoff that you are skipping, so you must replace it with your own approval request.
+
+Surface anything Step 2b turned up that you resolved by reading the code, and anything you converted into a verification task. The user approved the specification upstream, not your interpretation of it, so a spec claim you quietly corrected is exactly the thing they need to see here.
 
 Approval means the user says something like "approved", "looks good", "proceed", or an unambiguous equivalent. **Feedback without approval is NOT approval**, incorporate the feedback, update the plan, and re-present it. Do not interpret silence or partial responses as approval. **After approval, immediately continue to Step 3 in the same response: do not wait for another user message.**
 
@@ -119,7 +143,7 @@ Post this message verbatim, then wait for the user to respond before doing anyth
 > - Next step: Step 3
 > - Open issues: `<any user caveats or scope notes from approval>`
 >
-> **Please run `/compact` now to clear the brainstorming/planning context. Then, optionally, run `/model sonnet` before replying: Steps 3 through 7 are dispatch-heavy and do not need the stronger model, and switching right after a compact costs almost nothing in cache. Reply "continue" when done to proceed to Step 3.**
+> **Please run `/compact` now to clear the spec-validation and planning context. Then, optionally, run `/model sonnet` before replying: Steps 3 through 7 are dispatch-heavy and do not need the stronger model, and switching right after a compact costs almost nothing in cache. Reply "continue" when done to proceed to Step 3.**
 
 Do not proceed to Step 3 until the user explicitly replies after compacting. If the user declines the model switch, continue exactly as normal; nothing downstream depends on it.
 
@@ -183,8 +207,8 @@ Every dispatch prompt must carry Standing Rule 1 (commit only to the feature bra
 
 | Step | Role | `subagent_type` | Model + effort |
 |------|------|-----------------|----------------|
-| 2.5 | Plan assumption-falsifier | `plan-falsifier` | sonnet / high |
-| 2.5 | Plan re-deriver | `plan-rederiver` | sonnet / high |
+| 2b | Spec assumption-falsifier | `plan-falsifier` | sonnet / high |
+| 2b | Spec re-deriver | `plan-rederiver` | sonnet / high |
 | 4 | Test writer | `feature-test-writer` | sonnet / medium |
 | 5 | Implementer | `feature-implementer` | sonnet / high |
 | 5 | Spec compliance reviewer | `feature-spec-compliance` | haiku / low |
@@ -203,7 +227,7 @@ Two secondary wins: the read-only tool scoping that Step 8 depends on is declare
 
 **Step 6 is the exception.** `code-simplifier:code-simplifier` is a plugin agent whose definition carries no `effort` key, so it inherits session effort and cannot be tuned from here. Leave it; do not fork the plugin's prompt into a local definition just to set effort on it.
 
-**When NOT to delegate:** Steps 2 (planning) and 3 (prove statements) require understanding the design spec and translating requirements into falsifiable claims. These stay in the main session. The one exception inside Step 2 is the plan-review pair: delegate the two read-only reviewers, but keep the diff/synthesis and the plan revision with you.
+**When NOT to delegate:** Steps 2 (establishing the spec) and 3 (prove statements) require understanding the design spec and translating requirements into falsifiable claims. These stay in the main session. The one exception inside Step 2 is the Step 2b pair: delegate the two read-only reviewers, but keep the diff, the synthesis, and the spec revision with you.
 
 **Context window benefit:** Subagent results return as short summaries, not raw tool output. A haiku agent running 10 prove_it commands keeps ~50 lines of test output out of the orchestrator's context. Over a full pipeline run, this compounds significantly.
 
@@ -385,7 +409,8 @@ Do not self-declare the loop complete. The exit condition requires evidence from
 | "I'm already on a branch, subagents will use it" | Subagents start fresh, they do not inherit your branch. Pass the branch name explicitly in every subagent prompt. |
 | "I'll create the branch after planning" | By then a subagent may have already committed to master. Create the branch in Step 0, before anything else. |
 | "This feature is small, inline execution is fine" | Feature size is irrelevant. Inline execution has no per-task commits and no review checkpoints. Always use subagent-driven-development. |
-| "The plan is obviously right, skip the plan review" | Plan-stage blind spots are the cheapest to fix and the most expensive to discover mid-implementation. Run the Step 2 plan review before approval, on the full plan, before any code exists. |
+| "The spec is obviously right, skip the validation" | A false premise in the spec becomes implemented behavior, and by then it costs a rewrite. Run Step 2b before approval, on the real spec, before any code exists. |
+| "This session already figured out the problem, that counts as a spec" | It does not. An investigation is not a specification, and Step 2a stops rather than brainstorming. Write the ticket first, then run the pipeline against it. |
 | "Chaining commands into one Bash call is faster" | Fine for all-allowlisted segments (`cd <repo> && <allowlisted cmd>`), but the moment one segment is gated (commit/push) or unmatchable (an inline `export`), the whole chain prompts and unattended runs stall. Standing Rule 2: never bundle a gated or unmatchable step with others. |
 
 **This pipeline is complete only when Step 10 has been executed. All steps are required.**
