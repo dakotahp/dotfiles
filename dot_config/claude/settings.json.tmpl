@@ -24,7 +24,9 @@
       "Bash(bin/rake:*)",
       "Bash(bundle exec rspec:*)",
       "Bash(bundle exec rubocop:*)",
-      "Bash(yarn:*)"
+      "Bash(yarn:*)",
+      "Bash(docker compose up -d:*)",
+      "Bash(docker compose ps:*)"
 {{- if .work_computer }},
       "Bash(task test*)",
       "Bash(task lint*)",
