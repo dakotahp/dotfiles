@@ -21,17 +21,31 @@
       "Bash(gh pr diff:*)",
       "Bash(bin/rubocop:*)",
       "Bash(bin/rails:*)",
-      "Bash(RAILS_ENV=test bin/rails test:*)",
+      "Bash(RAILS_ENV=test bin/rails test*)",
+      "Bash(RAILS_ENV=test bin/rails db:seed*)",
       "Bash(bin/rake:*)",
       "Bash(bundle exec rspec:*)",
       "Bash(bundle exec rubocop:*)",
       "Bash(yarn:*)",
       "Bash(docker compose up -d:*)",
-      "Bash(docker compose ps:*)"
+      "Bash(docker compose ps:*)",
+      "Bash(npx jest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(prove_it phase:*)",
+      "Bash(prove_it record:*)",
+      "Bash(prove_it signal:*)",
+      "Skill(feature)",
+      "Skill(code-review:code-review)"
 {{- if .work_computer }},
       "Bash(task test*)",
       "Bash(task lint*)",
-      "Bash(RAILS_ENV=test bin/rake test*)"
+      "Bash(RAILS_ENV=test bin/rake test*)",
+      "mcp__linear-server__get_issue",
+      "mcp__linear-server__get_project",
+      "mcp__linear-server__list_issues",
+      "mcp__linear-server__list_projects",
+      "mcp__sentry__get_issue_details",
+      "mcp__sentry__get_sentry_resource"
 {{- end }}
     ],
     "ask": [
