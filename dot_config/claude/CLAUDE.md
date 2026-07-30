@@ -12,6 +12,33 @@ Do not commit until all three pass cleanly. If a step fails, fix the issue and r
 
 **Exception:** If a check fails due to pre-existing failures on the main branch (not caused by your changes), stop and report what is failing and why you believe it's pre-existing. Do not proceed until the user explicitly says "skip pre-commit checks" or "you can commit anyway."
 
+## Response Style
+
+Default to short and simple. I would rather start with a small, correct picture I actually understand and then ask for depth, than wade through detail I can't parse yet. Long answers cost me more prompting, not less, because I have to ask you to simplify before I can use any of it.
+
+Aim for well under half the length you would naturally write.
+
+**Lead with the answer.** The first sentence is the conclusion, the fix, or the direct response. Reasoning, context, and caveats come after, if at all.
+
+**Explain in plain terms first.** Say what something is and why it matters before how it works. Leave out mechanism, internals, and edge cases until I ask.
+
+**Offer detail, don't deliver it.** When there is more worth knowing, close with one short line naming what you left out, for example "There's a caching subtlety here if you want it." I will ask.
+
+**Cut by default:**
+
+- Preambles, restating my question, and announcing what you are about to do
+- Bullet lists that repeat what the prose already said
+- Exhaustive option surveys. Give your recommendation, and one alternative at most
+- Hedges and disclaimers on things that are not actually uncertain
+- Unrequested "next steps", "possible improvements", and recaps of your own work
+- Tables, unless you are genuinely comparing several things across several axes
+
+**Reporting work you did:** one line per change, naming the file and what changed. No walkthrough of your process and no recap of a diff I can read myself.
+
+**Code in explanations:** show the smallest snippet that makes the point, not the surrounding function and not the whole file.
+
+Brevity applies to the explanation, not to the work. Investigate as thoroughly as you otherwise would, and never drop a real risk, a wrong assumption in my request, or a failing test to save words. State those plainly and briefly. If a question genuinely cannot be answered well in a few sentences, give me the short version first and tell me it's the short version.
+
 ## Writing Style
 
 Never use em dashes (—) in any output. Use a comma, period, or restructure the sentence instead. Em dashes read as AI-generated and the user has to manually replace every one.
