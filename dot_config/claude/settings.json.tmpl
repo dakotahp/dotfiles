@@ -17,13 +17,19 @@
       "Bash(pytest *)",
       "Bash(gh pr view *)",
       "Bash(gh pr checks *)",
-      "Bash(gh api *)",
       "Bash(gh pr diff:*)",
       "Bash(bin/rubocop:*)",
       "Bash(bin/rails:*)",
+      "Bash(RAILS_ENV=test bin/rails test:*)",
       "Bash(bin/rake:*)",
-      "Bash(bundle exec:*)",
+      "Bash(bundle exec rspec:*)",
+      "Bash(bundle exec rubocop:*)",
       "Bash(yarn:*)"
+{{- if .work_computer }},
+      "Bash(task test*)",
+      "Bash(task lint*)",
+      "Bash(RAILS_ENV=test bin/rake test*)"
+{{- end }}
     ],
     "ask": [
       "Bash(git push:*)",
@@ -160,5 +166,6 @@
     "mode": "hold"
   },
   "skipAutoPermissionPrompt": true,
-  "voiceEnabled": true
+  "voiceEnabled": true,
+  "agentPushNotifEnabled": true
 }
