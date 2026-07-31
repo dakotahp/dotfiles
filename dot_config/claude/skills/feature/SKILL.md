@@ -381,14 +381,17 @@ Complete all of the following before creating the PR:
 
 **Draft state does not block this step.** Run this loop against the PR immediately, whether or not it has been marked ready for review. Automated reviewer bots (e.g. a `claude-review`/`claude-review-inline` CI check) run on draft PRs the same as on ready ones, and CI (build/lint/tests) starts on push regardless of draft state. Catching feedback before ready-for-review is the point, not a reason to wait. Only a human reviewer requiring the PR to be out of draft before they'll look at it would be a reason to wait, and that is the user's call to make, not a default assumption.
 
-After the PR is created, check for review feedback. **Do NOT use `gh pr view --comments`**, the pretty format is truncated and unparseable, and it silently omits line-anchored review comments, so it forces a re-run. Review feedback lives on three separate surfaces; pull all of them directly as JSON in two calls:
+**This step always polls both CI and review feedback together, on a fixed cadence, until both exit conditions hold.** This is not optional and not left to judgment per run: every poll checks both surfaces in the same pass, and every poll that leaves anything outstanding schedules the next one. An agent that checks CI but not comments, or comments but not CI, or checks once and reports status without scheduling a follow-up, has not run this step correctly.
+
+After the PR is created, check for review feedback and CI status together. **Do NOT use `gh pr view --comments`**, the pretty format is truncated and unparseable, and it silently omits line-anchored review comments, so it forces a re-run. Review feedback lives on three separate surfaces, and CI status is a fourth thing to check every time; pull all of them directly as JSON in two calls:
 
 ```
-# 1) Top-level conversation comments + formal review summaries + the merge-gate decision:
-gh pr view <n> --json reviewDecision,comments,reviews \
+# 1) Top-level conversation comments + formal review summaries + the merge-gate decision + CI checks:
+gh pr view <n> --json reviewDecision,comments,reviews,statusCheckRollup \
   --jq '{reviewDecision,
          comments:[.comments[]|{author:.author.login, at:.createdAt, body}],
-         reviews:[.reviews[]|{author:.author.login, state, at:.submittedAt, body}]}'
+         reviews:[.reviews[]|{author:.author.login, state, at:.submittedAt, body}],
+         checks:[.statusCheckRollup[]?|{name:.name, status:.status, conclusion:.conclusion}]}'
 
 # 2) Inline (line-anchored) review comments: NOT returned by `gh pr view`:
 gh api repos/{owner}/{repo}/pulls/<n>/comments \
@@ -399,16 +402,22 @@ gh api repos/{owner}/{repo}/pulls/<n>/comments \
 **Repo review setups differ: the same two calls cover all of them, but interpret results accordingly:**
 - Some repos' Claude reviewer posts **one big top-level comment** (surface 1); others post **inline comments on specific lines** (surface 2). Always read both surfaces; do not assume which one a repo uses.
 - Some reviewers **post a new comment per commit** (compare by `createdAt`; the newest is current). Others **amend the same comment in place** (`createdAt` never changes across re-reviews: fetch the latest **body** by author, e.g. `select(.author.login=="claude")`, rather than trusting timestamps). Handle both by keying on author + newest body, not on comment count or time.
+- `checks` entries with `status` other than `COMPLETED` (e.g. `QUEUED`, `IN_PROGRESS`) are still running — not a failure, and not a reason to stop polling.
 
-For each unresolved item: address it, re-run the tests covering the change, push, then re-fetch with the two calls above (add `select(.createdAt > "<last-check-ISO>")` to see only what is new).
+**On every poll, act on what you found before deciding whether to poll again:**
+- A check's `conclusion` is `FAILURE` (or similar, e.g. `CANCELLED`, `TIMED_OUT`): diagnose it yourself, fix it, re-run the tests covering the change, and push. Do not just report the failure and wait for it to be fixed some other way — fixing broken CI is this step's job.
+- There is unaddressed review feedback on either surface — most often the automated `claude-review`/`claude-review-inline` bot, but treat a human reviewer's comments the same way: evaluate it on its merits (per `superpowers:receiving-code-review` if the feedback is substantive), fix and push if it's valid, or articulate why you disagree if it's not. Never dismiss feedback without reasoning, and never treat a bot comment as lower-stakes than a human one.
+- After addressing anything, re-fetch with the two calls above (add `select(.createdAt > "<last-check-ISO>")` to see only what is new) before deciding the loop is done.
+
+**Polling cadence:** if, after acting on the above, either exit condition below is not yet met — a check is still running, no formal review has landed yet, or you just pushed a fix and want to see it land — schedule the next combined poll with `ScheduleWakeup` at a **fixed 180-second (3-minute) interval**. Do not shorten it because "CI is usually fast" and do not lengthen it because "this might take a while" — 3 minutes is the ceiling the user should ever have to wait for a status update, and consistency here matters more than shaving polls. The `ScheduleWakeup` prompt must re-run this exact combined check (both CI and review feedback, both gh calls) every time, never a partial check of just one surface. Keep scheduling wakeups across as many 3-minute intervals as it takes; do not give up after one round just because nothing changed.
 
 Repeat until **both** conditions are true:
-1. No unresolved review threads across **both** surfaces above.
+1. No unresolved review threads across **both** surfaces above, and no CI check left in a non-`COMPLETED` state.
 2. `reviewDecision` is `APPROVED` **or** the user explicitly says "merge it", "ship it", or equivalent. (`reviewDecision` is the machine-readable gate; `REVIEW_REQUIRED`/`CHANGES_REQUESTED` means not yet.)
 
 Do not self-declare the loop complete. The exit condition requires evidence from the commands above, not inference.
 
-**Marking the PR ready for review, and merging it, are always the user's action, never yours.** This isn't a permission gate to ask about each time, it's a standing division of labor: the user handles both unconditionally. When the loop's exit condition is met, report that plainly (checks green, no unresolved threads, reviewDecision/explicit go-ahead status) and stop there — don't ask whether to mark ready or merge, and don't run `gh pr ready` or `gh pr merge` yourself.
+**Marking the PR ready for review, and merging it, are always the user's action, never yours.** This isn't a permission gate to ask about each time, it's a standing division of labor: the user handles both unconditionally. When the loop's exit condition is met, report that plainly (checks green, no unresolved threads, reviewDecision/explicit go-ahead status) and stop there — don't ask whether to mark ready or merge, and don't run `gh pr ready` or `gh pr merge` yourself. If the exit condition is met purely because there is nothing left to check (all checks green, no reviewer assigned, no reviewDecision possible), say so plainly and stop polling rather than scheduling wakeups indefinitely with nothing new to look for.
 
 ---
 
@@ -429,5 +438,7 @@ Do not self-declare the loop complete. The exit condition requires evidence from
 | "The spec is obviously right, skip the validation" | A false premise in the spec becomes implemented behavior, and by then it costs a rewrite. Run Step 2b before approval, on the real spec, before any code exists. |
 | "This session already figured out the problem, that counts as a spec" | It does not. An investigation is not a specification, and Step 2a stops rather than brainstorming. Write the ticket first, then run the pipeline against it. |
 | "Chaining commands into one Bash call is faster" | Fine for all-allowlisted segments (`cd <repo> && <allowlisted cmd>`), but the moment one segment is gated (commit/push) or unmatchable (an inline `export`), the whole chain prompts and unattended runs stall. Standing Rule 2: never bundle a gated or unmatchable step with others. |
+| "I checked CI, I'll check comments next time" / "I checked comments, CI is probably still running" | Step 10 checks both surfaces every single poll, no exceptions. Checking one and deferring the other is why this step used to be inconsistent. |
+| "No feedback yet, I'll just stop checking" | If either exit condition isn't met, schedule a `ScheduleWakeup` at 180s and check again. Silence isn't the exit condition; evidence of green checks + approval/go-ahead is. |
 
 **This pipeline is complete only when Step 10 has been executed. All steps are required.**
