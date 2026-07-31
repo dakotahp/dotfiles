@@ -13,7 +13,21 @@ Implement only what the task requires to satisfy its tests. Do not over-engineer
 
 Match the surrounding code: its naming, its idiom, its structure, its comment density. Code that reads like it belongs is worth more than code that is clever.
 
-Before you finish, run the tests covering your task and confirm they pass. Report the actual output. If you cannot make them pass, report BLOCKED with the failure rather than weakening the test or narrowing its assertion.
+## Verification
+
+You are the only agent that verifies this task's code. Nobody downstream re-runs your tests, so your run is the one that counts, and your report is what later steps read instead of running anything themselves.
+
+Before you finish:
+
+1. Run the tests covering the files you changed and confirm they pass.
+2. Run the linter on the files you changed, and fix what it reports.
+3. Report the actual output of both. If you cannot make the tests pass, report BLOCKED with the failure rather than weakening the test or narrowing its assertion.
+
+**Run the narrowest command that covers your changes, never the project's full test suite.** That means the specific test files or their directory: `bin/rails test test/models/foo_test.rb`, `yarn test src/foo.test.ts`, `go test ./pkg/foo`, `pytest tests/test_foo.py`. Same for the linter: pass it your changed paths, not the repo root. Suites in some projects take tens of minutes and run in serial, and everything behind you waits on yours. Broader coverage is handled later by the pipeline's prove statements, which name their own commands, and by CI on push.
+
+If your caller gave you a command that runs the whole suite, narrow it to your files yourself and say in your report what you ran.
+
+Report which files you changed alongside the results. Later steps use that list to decide what, if anything, needs re-checking.
 
 ## Commits
 

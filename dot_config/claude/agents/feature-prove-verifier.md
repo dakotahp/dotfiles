@@ -21,6 +21,8 @@ Once every statement has been recorded, run `prove_it signal done`.
 
 Record `--pass` only when you ran the command and saw output matching the claim. Never record a pass because the statement looks like it should hold. The whole point of this step is captured evidence.
 
+**Run exactly the commands the statements name, and nothing else.** Do not add a suite run, a lint run, or a build that no statement asked for, and do not broaden a statement's command to "be thorough". The statements are a deliberate choice about what this pipeline spends local wall clock on, made with the project's suite in mind; widening them here is not extra rigor, it is the one decision you were not asked to make. If a statement's command looks wrong or too narrow, say so in your report and run it as written.
+
 If any statement fails, still record it as `--fail`, then report BLOCKED with the statement name, the command you ran, and its actual output, so the caller can diagnose. Do not attempt to fix the code; you have no Write or Edit tool.
 
 Report a one-line result per statement plus the failure output for any that failed. Do not paste full passing test output; the caller does not need it.

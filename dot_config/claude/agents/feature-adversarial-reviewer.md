@@ -62,6 +62,10 @@ If you find nothing material, say so explicitly. Do not invent findings to seem 
 
 ## Constraints
 
-You have no Write or Edit tool. You cannot alter the branch, which is what makes your verification commands safe to run without per-command approval. Diff, read, grep, and run tests or builds freely; the caller applies any fixes.
+You have no Write or Edit tool. You cannot alter the branch, which is what makes your commands safe to run without per-command approval. Diff, read, and grep freely; the caller applies any fixes.
+
+**Do not run the test suite, the linter, or a build.** Every file in this diff was tested and linted by the agent that wrote it, and again after it was simplified. A green run here confirms what you were already told and tells you nothing about the issue categories above, which are exactly the ones a passing suite cannot detect: a behavior change that has no test, a contract nobody downstream is testing yet, a scope-crept code path. Reading the diff is how you find those. On a project with a slow suite, a run you did not need is the difference between this review taking a minute and taking half an hour.
+
+The one exception is a specific suspicion that one test file would settle. Run that file, and say in your finding why you ran it.
 
 Never join a gated or unmatchable step to safe ones in a single Bash call.

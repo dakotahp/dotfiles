@@ -14,7 +14,7 @@ Implement the feature described in $ARGUMENTS by following every step below in o
 
 These rules apply across the entire pipeline. They are defined once here; the steps below reference them by number instead of restating them.
 
-**Rules 2 and 3 are already baked into the role definitions** in `~/.config/claude/agents/feature-*.md` (see "Subagent roles" in Step 5), because their text is static. You do not need to restate them at dispatch. Rules 1 and 4 carry values only you know, so pass them in every dispatch prompt with the concrete values filled in.
+**Rules 2, 3 and 5 are already baked into the role definitions** in `~/.config/claude/agents/feature-*.md` (see "Subagent roles" in Step 5), because their text is static. You do not need to restate them at dispatch. Rules 1 and 4 carry values only you know, so pass them in every dispatch prompt with the concrete values filled in.
 
 **Rule 1: Commit only to the feature branch.** Applies to every subagent that writes or commits. Tell it the feature branch name created in Step 0 and instruct it to commit only to that branch, never to `main` or `master`. Include a line like: *"All commits must go to branch `feature/<name>`. Verify with `git branch --show-current` before committing."*
 
@@ -25,6 +25,16 @@ These rules apply across the entire pipeline. They are defined once here; the st
 **Rule 4: Do not spawn nested subagents.** Applies to every subagent you dispatch. Include this line: *"Do the work yourself. Do not delegate to further subagents."* Current Opus models reach for delegation readily, and each nested layer re-establishes context, re-explores the repo, and reports back through a summary the parent then re-reads. In a pipeline that already fans out per plan task, one unnecessary nesting layer can multiply token spend without improving the result. You, the orchestrator, are the only agent that delegates.
 
 Applies to you as well, in one specific sense: dispatch exactly the roles the step calls for. Do not add extra reviewers, verifiers, or "second opinion" agents beyond what a step specifies. The pipeline's review coverage is deliberate, and Step 8 already runs two passes.
+
+**Rule 5: Verify at the point of change, once.** Applies to the main session and every subagent. Tests and lint run when a file changes, run by whoever changed it, and are not re-run afterwards by anyone who did not change anything. Three parts:
+
+- **If you edited files:** run the narrowest test command that covers them, and lint only the files you edited. Report the real output. "Narrowest" means the specific test file or its directory, never the suite: `bin/rails test test/models/foo_test.rb`, `yarn test src/foo.test.ts`, `go test ./pkg/foo`, `pytest tests/test_foo.py`.
+- **If you edited nothing:** do not run tests and do not run a linter. Read the diff and the previous agent's reported results. Reviewers in this pipeline are read-only for a reason; a green run on a file nobody has touched since the last green run tells you nothing you were not already told.
+- **Never run the project's full test suite.** Run only what covers your own edits, or, in Step 7, exactly the commands the prove statements name.
+
+The narrow exception, for reviewers only: if you suspect a *specific* behavior is broken and one test file would settle it, run that one file and say in your report why you ran it. That is targeted evidence for a finding, not a re-verification pass.
+
+**Why this rule exists.** A failing test or a lint violation is the one class of problem that is guaranteed to be caught anyway: CI runs the full suite and the linter on every push, in parallel, with nobody waiting on it. Local runs are therefore not the safety net, and a second local run of an unchanged file is not a safety net twice over. What CI cannot catch is everything the review passes exist for, so that is where this pipeline's time is worth spending. One earlier run spent it the other way: the linter ran five times and one slow seeded test four times, mostly on files unchanged between runs, while a genuinely untested controller went unnoticed until real CI found it.
 
 ---
 
@@ -177,18 +187,30 @@ Write at least one statement per significant behaviour the feature introduces.
 
 Statements are the contract Step 7 verifies against, so vagueness here is not recoverable later: a statement that cannot fail cannot prove anything. If you switched to a mid-tier model at the Step 2 checkpoint, re-read each statement and ask what output would falsify it. Name the exact command and the exact string or exit code you expect.
 
+### Scope each command to the feature
+
+**Point every command at the behaviour its statement describes**, not at the project. A statement covering a presenter names that presenter's test file; one covering an endpoint names that endpoint's test. Targeted commands are what makes a failure in Step 7 legible: when the command that failed runs one file, its output says what broke, and when it runs the whole project the answer is buried in everything that did not.
+
+Do not author a statement whose command runs the project's whole test suite. Step 7 executes these commands verbatim, so a statement like that becomes an unbounded local run in the middle of the pipeline, and CI already covers the same ground on push without anyone waiting on it.
+
+If `.claude/prove_statements.md` already contains a statement naming a broad command, leave it exactly as written and run it. The user maintains that file and tunes those commands themselves; a statement you did not write is a deliberate choice, not an oversight to correct.
+
+When you finish this step, state in one line which commands the statements will run before continuing to Step 4. Do not stop for approval; this is a notice, not a gate.
+
 ---
 
 ## Step 4: Write failing tests (TDD)
 
-Write tests that directly exercise each prove statement from Step 3. Then run the test suite and confirm:
+Write tests that directly exercise each prove statement from Step 3. Then run **only the new test files** (Standing Rule 5) and confirm:
 
 1. The new tests exist and are syntactically valid
 2. The new tests are **currently failing** (the feature is not yet implemented)
 
+Running the whole suite here proves nothing extra: every other test in the project passed before you wrote a file, and will pass after. Point the runner at the paths you just created.
+
 Do not proceed until failing tests are confirmed. If tests pass before implementation, the tests are not testing the right thing, fix them first.
 
-**Delegation:** If the plan contains exact test code (copy-paste ready), dispatch `feature-test-writer`. Its prompt must include: Standing Rules 1 and 4 with the branch name filled in, the exact test code from the plan, the paths to write it to, and the command to run tests. If the plan does NOT contain exact test code (only describes behaviors), write the tests in the main session, test design requires judgment.
+**Delegation:** If the plan contains exact test code (copy-paste ready), dispatch `feature-test-writer`. Its prompt must include: Standing Rules 1 and 4 with the branch name filled in, the exact test code from the plan, the paths to write it to, and the command that runs **those specific files**. If the plan does NOT contain exact test code (only describes behaviors), write the tests in the main session, test design requires judgment.
 
 **Red flags: STOP if you are thinking any of these:**
 
@@ -271,7 +293,9 @@ Do not proceed to Step 6 until the user explicitly replies after compacting.
 
 Spawn the `code-simplifier:code-simplifier` agent on all files modified during implementation. It will refine the code for clarity, consistency, and maintainability while preserving all functionality. This is the one role whose effort you cannot tune (see "Step 6 is the exception" under Subagent roles in Step 5); dispatch it as-is.
 
-After the code-simplifier completes, re-run the full test suite. Every test must pass before continuing. If simplification breaks any tests, fix them before proceeding.
+**Pass Standing Rule 5 in this dispatch prompt.** This is a plugin agent, so unlike the `feature-*` roles it has no local definition carrying the rule, and left alone it will re-run the suite and re-lint the branch it just read. Tell it: run the narrowest tests covering the files it actually changed, lint only those files, and run nothing at all for files it read but left alone.
+
+Its report tells you which files it changed and whether their tests passed. **Do not re-run anything yourself.** Simplification is refactoring, so its blast radius is the files it edited, and it already verified them. If it reports a failure it could not fix, fix that before continuing; that is the only reason to run a test in this step.
 
 ---
 
@@ -314,7 +338,7 @@ The review categories, the skip list, and the output format all live in the role
 
 **Read-only is structural, not advisory.** The role's `tools` frontmatter grants `Read, Glob, Grep, Bash` and no `Write` or `Edit`, so it cannot alter the branch whatever it runs. That is what makes its verification commands safe to auto-approve (see the read-only settings note at the end of this step). You do not need to pass tool restrictions at dispatch, and you should not override them.
 
-Address every Critical and High finding. For Medium findings, use judgment. If you disagree with a finding, you must articulate why, disagreement requires reasoning, not dismissal. Re-run the test suite after any changes.
+Address every Critical and High finding. For Medium findings, use judgment. If you disagree with a finding, you must articulate why, disagreement requires reasoning, not dismissal. After any change you make, run the tests covering the files you changed (Standing Rule 5). If you changed nothing, run nothing.
 
 ### 8b: Branch coherence review (cross-task)
 
@@ -324,13 +348,13 @@ After 8a is fully addressed, dispatch `feature-quality-reviewer`. Unlike 8a, thi
 
 It is read-only by definition, same as 8a, so its verification runs autonomously and it cannot mutate the branch. You, not the reviewer, apply any fixes.
 
-Address every issue raised. If you disagree with a suggestion and the reasoning is non-obvious, leave a brief inline comment explaining why. Re-run the test suite after any changes from this step.
+Address every issue raised. If you disagree with a suggestion and the reasoning is non-obvious, leave a brief inline comment explaining why. After any change you make, run the tests covering the files you changed (Standing Rule 5). If you changed nothing, run nothing.
 
 **Why three review lenses, and why they do not collapse:** the per-task reviewer in Step 5 sees one diff in isolation and catches ordinary defects while the context is still fresh. 8a sees the whole branch with no knowledge of intent, which is what surfaces accidental behavior changes and scope creep; a reviewer who knows what the code was supposed to do rationalizes those away. 8b sees the whole branch *with* intent, which is the only vantage point from which cross-task interactions are visible at all. Each lens is blind to what the others catch. What does not need a third pass is per-task quality, which is why 8b is scoped away from it rather than deleted: the redundancy was in 8b's old breadth, not in its existence.
 
 ### Autonomous verification without approval-babysitting
 
-Both reviewers run *arbitrary* verification code (diffs, greps, test suites, ad-hoc one-liners), so a static command allowlist can never cover all of it, and a `dontAsk` mode would auto-DENY anything unlisted and break the review mid-run. Two mechanisms keep the reviewers autonomous AND safe; they compose:
+Both reviewers run *arbitrary* read commands (diffs, greps, log queries, ad-hoc one-liners, and under Standing Rule 5's narrow exception the occasional single test file), so a static command allowlist can never cover all of it, and a `dontAsk` mode would auto-DENY anything unlisted and break the review mid-run. Two mechanisms keep the reviewers autonomous AND safe; they compose:
 
 1. **Read-only tool scoping** (above): with no `Edit`/`Write`/`Agent` tool, a reviewer cannot mutate the branch no matter what it runs, so auto-approving its reads/tests is safe by construction.
 2. **Sandbox mode** for the Bash it does run: OS-level confinement (writes limited to the workspace, network denied) lets contained commands execute without a prompt; only network/escaping commands fall back to asking. Your user settings (`~/.claude/settings.json`, or `$CLAUDE_CONFIG_DIR/settings.json` if that is set) should carry, once:
@@ -357,7 +381,7 @@ Complete all of the following before creating the PR:
 
 1. Remove debug logs, development TODOs, and any commented-out code left from the implementation
 2. **Discard the planning artifacts.** The spec file and plan file from Step 2 have served their purpose, implementation is done, both review passes are complete, and the PR body (next step) will capture the lasting context. Delete both files from disk now. If the conversation needs to revisit design decisions later, the chat history and PR body are sufficient.
-3. Run the project linter and fix all issues (e.g. `npm run lint`, `eslint .`, `ruff check --fix .`, or whatever is configured for this project)
+3. Run the project linter over the files this branch changed (`git diff --name-only <base>...HEAD`) and fix all issues (e.g. `npm run lint`, `eslint`, `ruff check --fix`, `bin/rubocop`, or whatever is configured for this project). **This is the branch's one lint gate**, and under Standing Rule 5 it is the only lint run in the pipeline that is not scoped to a single agent's own edits. Pass the linter the changed paths rather than the repo root: a whole-repo run reports pre-existing violations this branch did not cause, which you then have to sort back out.
 4. Create the pull request in a draft state:
 
    ```
@@ -438,6 +462,10 @@ Do not self-declare the loop complete. The exit condition requires evidence from
 | "The spec is obviously right, skip the validation" | A false premise in the spec becomes implemented behavior, and by then it costs a rewrite. Run Step 2b before approval, on the real spec, before any code exists. |
 | "This session already figured out the problem, that counts as a spec" | It does not. An investigation is not a specification, and Step 2a stops rather than brainstorming. Write the ticket first, then run the pipeline against it. |
 | "Chaining commands into one Bash call is faster" | Fine for all-allowlisted segments (`cd <repo> && <allowlisted cmd>`), but the moment one segment is gated (commit/push) or unmatchable (an inline `export`), the whole chain prompts and unattended runs stall. Standing Rule 2: never bundle a gated or unmatchable step with others. |
+| "Let me just re-run the suite to be sure before I continue" | Sure of what? Nothing has changed since the last agent ran it. Standing Rule 5: if you did not edit a file, you do not test it. The reassurance is real, the information is zero, and the wall clock is the same either way. |
+| "I only changed one file, but I'll run the whole suite anyway, it's safer" | It is not safer, it is slower and it buries the result you actually needed in output nobody reads. Run the narrowest command covering what you changed; CI runs the rest on push. |
+| "This reviewer found something, it should verify by running the tests" | Only if one specific test file would settle one specific suspicion, and only with a note saying why. A reviewer running the suite is re-verifying, not investigating. |
+| "The linter should run here too, it's cheap" | It is cheap once and wasteful five times. Editors lint their own edits; Step 9 lints the branch. Nowhere else. |
 | "I checked CI, I'll check comments next time" / "I checked comments, CI is probably still running" | Step 10 checks both surfaces every single poll, no exceptions. Checking one and deferring the other is why this step used to be inconsistent. |
 | "No feedback yet, I'll just stop checking" | If either exit condition isn't met, schedule a `ScheduleWakeup` at 180s and check again. Silence isn't the exit condition; evidence of green checks + approval/go-ahead is. |
 

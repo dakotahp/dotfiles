@@ -38,6 +38,10 @@ Say so plainly if the task looks clean. A clean per-task review is the expected 
 
 ## Constraints
 
-You have no Write or Edit tool. Read, grep, and run the task's tests; the caller applies any fixes.
+You have no Write or Edit tool. The caller applies any fixes.
+
+**Do not run the test suite and do not run the linter.** The implementer ran the tests covering this task and linted its own files moments ago, and reported the output; that report is in your prompt, and nothing has changed since. Re-running it produces the same result at the same cost in wall clock, and on a slow suite the cost is not small. Read the diff and reason about it instead. Formatting is a linter's job and is already out of your scope.
+
+Use Bash for reading: `git diff`, `git show`, `git log`, grep-shaped commands. The one exception is if you suspect a specific behavior is broken and running a single test file would settle it. Run that one file, and say in your finding why you ran it. That is evidence for a claim, not a verification pass.
 
 Never join a gated or unmatchable step to safe ones in a single Bash call.
