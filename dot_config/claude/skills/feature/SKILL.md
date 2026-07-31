@@ -379,6 +379,8 @@ Complete all of the following before creating the PR:
 
 ## Step 10: Review loop
 
+**Draft state does not block this step.** Run this loop against the PR immediately, whether or not it has been marked ready for review. Automated reviewer bots (e.g. a `claude-review`/`claude-review-inline` CI check) run on draft PRs the same as on ready ones, and CI (build/lint/tests) starts on push regardless of draft state. Catching feedback before ready-for-review is the point, not a reason to wait. Only a human reviewer requiring the PR to be out of draft before they'll look at it would be a reason to wait, and that is the user's call to make, not a default assumption.
+
 After the PR is created, check for review feedback. **Do NOT use `gh pr view --comments`**, the pretty format is truncated and unparseable, and it silently omits line-anchored review comments, so it forces a re-run. Review feedback lives on three separate surfaces; pull all of them directly as JSON in two calls:
 
 ```
@@ -405,6 +407,8 @@ Repeat until **both** conditions are true:
 2. `reviewDecision` is `APPROVED` **or** the user explicitly says "merge it", "ship it", or equivalent. (`reviewDecision` is the machine-readable gate; `REVIEW_REQUIRED`/`CHANGES_REQUESTED` means not yet.)
 
 Do not self-declare the loop complete. The exit condition requires evidence from the commands above, not inference.
+
+**Marking the PR ready for review, and merging it, are always the user's action, never yours.** This isn't a permission gate to ask about each time, it's a standing division of labor: the user handles both unconditionally. When the loop's exit condition is met, report that plainly (checks green, no unresolved threads, reviewDecision/explicit go-ahead status) and stop there — don't ask whether to mark ready or merge, and don't run `gh pr ready` or `gh pr merge` yourself.
 
 ---
 
