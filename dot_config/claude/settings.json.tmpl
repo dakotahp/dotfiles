@@ -2,6 +2,15 @@
   "sandbox": {
     "enabled": true,
     "autoAllowBashIfSandboxed": true,
+    "network": {
+      "allowedDomains": [
+        "registry.npmjs.org",
+        "registry.yarnpkg.com",
+        "repo.yarnpkg.com",
+        "codeload.github.com",
+        "objects.githubusercontent.com"
+      ]
+    },
     "excludedCommands": ["obsidian"]
   },
   "permissions": {
