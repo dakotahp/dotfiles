@@ -90,7 +90,17 @@
     ],
     "ask": [
       "Bash(git push:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(*rails runner*)",
+      "Bash(*rails destroy*)"
+    ],
+    "deny": [
+      "Bash(*rails db:drop*)",
+      "Bash(*rake db:drop*)",
+      "Bash(*db:reset*)",
+      "Bash(*rails console*)",
+      "Bash(gh pr merge:*)",
+      "Bash(git reset --hard*)"
     ],
     "additionalDirectories": [
 {{- if .work_computer }}
