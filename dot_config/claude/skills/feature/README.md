@@ -44,7 +44,8 @@ choice. The orchestrator mostly dispatches roles and reads back summaries, and e
 file, so sonnet/high is enough for the main session. Escalate to opus only in reaction to something: a false assumption from the spec
 falsifier, or Critical findings at 7a.
 
-Step 0 can report the model it is running but cannot see the effort level at all, so it hands that check to you.
+Step 0 reads the model from its own prompt and the effort level from `effortLevel` in your user settings, so it only stops when one of them is
+wrong. A match passes through silently.
 
 ## Compaction stops
 

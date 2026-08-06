@@ -48,17 +48,25 @@ The pipeline's canonical orchestrator setting is **`sonnet` at `high` effort**. 
 
 Claude Code carries the last model and effort forward into new sessions, so whatever this session started at is an artifact of the previous one, not a choice. Check it here, where stopping is free, rather than discovering it three steps in.
 
-You can read your own model from your system prompt. You cannot see the effort level at all, so report the model and hand the effort check to the user.
+Read the model from your system prompt, which names it directly. Read the effort level from settings, which is where the harness persists it:
 
-Post this, filling in the model you are actually running, then wait:
+```bash
+jq -r '.effortLevel // "unset"' "${CLAUDE_CONFIG_DIR:-$HOME/.claude}/settings.json"
+```
+
+`unset` means the harness has not written the key yet, not that effort is low. Report it as unknown and ask the user to check `/status` rather than assuming a value.
+
+**If both match `sonnet` and `high`, say so in one line and continue straight into the dependency checks.** There is nothing for the user to do, and stopping to announce a correct default is the tedium this step exists to remove.
+
+Otherwise post this and wait:
 
 > **Pipeline defaults: `sonnet` / `high`.**
-> - Detected model: `<model>`
-> - Effort: not visible to me, check `/status`
+> - Model: `<model>`
+> - Effort: `<effort>`
 >
-> If either differs, run `/model sonnet`, set effort to high, and reply "continue". To run this pipeline at a different tier deliberately, say so and I will proceed as-is.
+> Run `/model sonnet` and set effort to high, then reply "continue". To run this pipeline at a different tier deliberately, say so and I will proceed as-is.
 
-Do not continue until the user replies.
+Name only the setting that is actually wrong in the instruction line. Telling the user to change something already correct is how a check like this trains people to skip reading it.
 
 ### Dependencies
 
