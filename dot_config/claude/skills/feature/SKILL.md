@@ -350,7 +350,9 @@ Dispatch `feature-adversarial-reviewer` with **no session context, no plan, no s
 
 The review categories, the skip list, and the output format all live in the role definition, so there is no verbatim prompt to reproduce here. Resist the urge to restate them: a paraphrase in your dispatch prompt competes with the definition instead of reinforcing it.
 
-**Diff base:** resolve the repo's actual default branch with `git remote show origin | sed -n 's/.*HEAD branch: //p'` (commonly `main`, sometimes `master`) and pass that name.
+**Diff base:** resolve the repo's actual default branch (commonly `main`, sometimes `master`) from local refs with `git symbolic-ref --short refs/remotes/origin/HEAD`. It prints `origin/<branch>`; pass the part after the slash. Read the prefix off yourself rather than piping the output through `sed` or `cut`, which turns one allowlisted command into a chain that prompts.
+
+If that ref is missing, which happens in clones that never set it, fall back to whichever of `origin/main` or `origin/master` `git rev-parse --verify` resolves. Do not reach for `git remote show origin`: it queries the remote, so the sandbox blocks it even when permissions allow it.
 
 **Read-only is structural, not advisory.** The role's `tools` frontmatter grants `Read, Glob, Grep, Bash` and no `Write` or `Edit`, so it cannot alter the branch whatever it runs. That is what makes its verification commands safe to auto-approve (see the read-only settings note at the end of this step). You do not need to pass tool restrictions at dispatch, and you should not override them.
 
