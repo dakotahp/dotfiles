@@ -18,7 +18,7 @@ These rules apply across the entire pipeline. They are defined once here; the st
 
 **Rule 1: Commit only to the feature branch.** Applies to every subagent that writes or commits. Tell it the feature branch name created in Step 0 and instruct it to commit only to that branch, never to `main` or `master`. Include a line like: *"All commits must go to branch `feature/<name>`. Verify with `git branch --show-current` before committing."*
 
-**Rule 2: Never bundle a gated command with others in one Bash call.** Applies to the main session and every subagent. The permission system *does* decompose compound commands: it splits on `&&`, `||`, `;`, `|`, and newlines and matches each segment against your allow/deny/ask rules independently. A chain auto-approves only when **every** segment matches an allow rule; if **any** segment is gated (commit, push, merge) or unmatchable, the whole chain prompts and you cannot approve just the safe half. So the rule is not "never chain"; it is: never join a gated or unmatchable step to safe ones. Concretely: (a) keep `git commit`/`git push`/`gh pr merge` in their own Bash calls, never chained after `git add`, tests, or a build; (b) `cd <repo> && <cmd>` is fine and encouraged when working from a parent dir, provided `<cmd>` is allowlisted; `cd` into the project tree or an `additionalDirectories` entry is auto-approved as read-only; (c) do not inline an `export VAR="...$HOME..."` or other expansion-bearing segment into a chain; it is unmatchable and forces a prompt for the whole chain (fix the environment at launch instead so the export is unnecessary). This keeps allowlisted reads, tests, lint, and builds running automatically while prompting only for genuinely sensitive actions.
+**Rule 2: Never bundle a gated command with others in one Bash call.** Applies to the main session and every subagent. The permission system *does* decompose compound commands: it splits on `&&`, `||`, `;`, `|`, and newlines and matches each segment against your allow/deny/ask rules independently. A chain auto-approves only when **every** segment matches an allow rule; if **any** segment is gated (commit, push) or unmatchable, the whole chain prompts and you cannot approve just the safe half. So the rule is not "never chain"; it is: never join a gated or unmatchable step to safe ones. Concretely: (a) keep `git commit` and `git push` in their own Bash calls, never chained after `git add`, tests, or a build; (b) `cd <repo> && <cmd>` is fine and encouraged when working from a parent dir, provided `<cmd>` is allowlisted; `cd` into the project tree or an `additionalDirectories` entry is auto-approved as read-only; (c) do not inline an `export VAR="...$HOME..."` or other expansion-bearing segment into a chain; it is unmatchable and forces a prompt for the whole chain (fix the environment at launch instead so the export is unnecessary). This keeps allowlisted reads, tests, lint, and builds running automatically while prompting only for genuinely sensitive actions.
 
 **Rule 3: Default to no code comments.** Applies to every subagent that writes or edits code. Well-named identifiers and clear structure should make the code self-explanatory. Only add a comment when something is genuinely counter-intuitive on a rare basis, for example when a more idiomatic approach exists but cannot be used here for a specific reason, or when a future reader would otherwise be likely to "fix" the code without realizing why it is written this way. If a comment merely restates what the code does, delete it. Agents otherwise default to writing verbose, redundant comments.
 
@@ -380,9 +380,9 @@ Both reviewers run *arbitrary* read commands (diffs, greps, log queries, ad-hoc 
    {
      "sandbox": { "enabled": true, "autoAllowBashIfSandboxed": true },
      "permissions": {
-       "allow": ["Read","Grep","Glob","Bash(git diff *)","Bash(git log *)","Bash(git show *)","Bash(git status *)","Bash(npm test *)","Bash(go test *)","Bash(pytest *)","Bash(gh pr view *)","Bash(gh pr checks *)","Bash(gh api *)","Bash(gh pr diff:*)","Bash(bin/rubocop:*)","Bash(bin/rails:*)","Bash(bin/rake:*)","Bash(bundle exec:*)","Bash(yarn:*)"],
-       "ask": ["Bash(git push:*)","Bash(git commit:*)"],
-       "deny": ["Bash(git reset *)","Bash(rm *)","Bash(gh pr merge *)"],
+       "allow": ["Read","Grep","Glob","Bash(git diff *)","Bash(git log *)","Bash(git status *)","Bash(git branch --show-current)","Bash(jq:*)","Bash(npm test *)","Bash(go test *)","Bash(pytest *)","Bash(gh pr view *)","Bash(gh pr checks *)","Bash(gh api repos/:*)","Bash(gh pr diff:*)","Bash(bin/rubocop:*)","Bash(bin/rails test*)","Bash(bin/rake test*)","Bash(yarn:*)"],
+       "ask": ["Bash(git push:*)","Bash(git commit:*)","Bash(*rails runner*)"],
+       "deny": ["Bash(git reset --hard*)","Bash(*rails db:drop*)","Bash(gh pr merge:*)"],
        "additionalDirectories": ["/absolute/path/to/repo-a","/absolute/path/to/repo-b"]
      }
    }
@@ -406,13 +406,9 @@ Complete all of the following before creating the PR:
    gh pr create --draft --title "<concise imperative title>" --body "<what changed, why, and how to verify it>"
    ```
 
-   When merging a PR, always use a merge commit (not squash or rebase):
-
-   ```
-   gh pr merge <number> --merge --delete-branch
-   ```
-
    The PR body must reference the prove statements from Step 3 and link to their evidence.
+
+   **The PR stays a draft, and you never merge it.** Marking it ready and merging are the user's, without exception. Do not run `gh pr ready` or `gh pr merge`, and do not ask whether to. Both are denied in the user's settings, so an attempt fails rather than prompting.
 5. Open the PR with `open <url>` (macOS) or `xdg-open <url>` (Linux) in the default browser.
 
 **Delegation:** Steps 1-3 (cleanup, planning-artifact deletion, linting) can be dispatched to `feature-cleanup`. Its prompt must include: Standing Rules 1 and 4 with the branch name filled in, the list of modified files, the paths to the spec and plan files to delete, and the lint command for the project. Step 4 (PR creation) stays in the main session, the PR title and body require understanding the full feature context, and the user needs to see the PR URL immediately.
