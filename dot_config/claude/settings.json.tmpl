@@ -11,7 +11,9 @@
         "registry.yarnpkg.com",
         "repo.yarnpkg.com",
         "codeload.github.com",
-        "objects.githubusercontent.com"
+        "objects.githubusercontent.com",
+        "circleci.com",
+        "app.circleci.com"
       ],
       "allowUnixSockets": [
         "{{ .xdgDataDir }}/gnupg/S.gpg-agent",
@@ -21,7 +23,7 @@
     "filesystem": {
       "allowWrite": ["{{ .xdgDataDir }}/gnupg"]
     },
-    "excludedCommands": ["obsidian"]
+    "excludedCommands": ["obsidian", "circleci"]
   },
   "permissions": {
     "allow": [
@@ -50,6 +52,8 @@
       "Bash(gh pr checks *)",
       "Bash(gh pr diff:*)",
       "Bash(gh api repos/:*)",
+      "Bash(circleci config validate:*)",
+      "Bash(circleci version)",
       "Bash(jq:*)",
       "Bash(sed -n:*)",
       "Bash(bin/rubocop:*)",
@@ -94,7 +98,9 @@
       "mcp__sentry__get_issue_details",
       "mcp__sentry__get_sentry_resource",
       "mcp__sentry__search_issue_events",
-      "WebFetch(domain:linear.app)"
+      "WebFetch(domain:linear.app)",
+      "WebFetch(domain:circleci.com)",
+      "WebFetch(domain:app.circleci.com)"
 {{- end }}
     ],
     "ask": [

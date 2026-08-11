@@ -105,6 +105,14 @@ Commits are signed and the sandbox blocks that by default, so `settings.json.tmp
 
 `allowUnixSockets` is macOS-only and ignored on Linux, where the sockets live under `/run/user` instead.
 
+### The CircleCI CLI cannot be sandboxed
+
+`circleci` is in `sandbox.excludedCommands` because no combination of allowlists makes it work. It reads the system boot time through `gopsutil` on every invocation, that is a `sysctl kern.boottime` call the sandbox denies, and the CLI treats the failure as fatal. It exits 1 with `getting boot time: operation not permitted` before parsing arguments, so even `circleci version` fails. There is no config or env var to skip it.
+
+Allowlisting is therefore not an option for the CLI, only exclusion. The `circleci.com` and `app.circleci.com` entries in `allowedDomains` and the matching `WebFetch` rules are for everything else that talks to CircleCI, a sandboxed `curl` against `api/v2` or fetching a pipeline page, which do work through the normal allowlist.
+
+Note that `excludedCommands` is read at session start and does not hot-reload, so a change here needs a new session. The filesystem and network rules above do reload live.
+
 ### Mode agents
 
 Three agents in `agents/` exist to pick a tier by naming the kind of work rather than by remembering a model and an effort level. Prefix an agent-view prompt with one:
