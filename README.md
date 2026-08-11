@@ -93,6 +93,18 @@ Claude Code writes interactive `/model` and effort changes back into `settings.j
 
 The defaults live in `3-claude-launcher.sh` instead, passed as `--model` and `--effort`. Command-line flags outrank settings files and apply to a single invocation, so every launch starts from a known baseline no matter what the previous session persisted. Change them for one shell with `CLAUDE_DEFAULT_MODEL` and `CLAUDE_DEFAULT_EFFORT`, or edit the launcher to move the baseline.
 
+The corollary is that **nothing can learn the session's live effort by reading `effortLevel`.** The launcher's flag is never written back, so the key holds whatever an interactive change last persisted, which is usually a different value from the running session. `/feature` Step 0 tried reading it and passed silently whenever the stale value happened to match, so it now reports the model and asks a human to confirm effort instead.
+
+### GPG signing inside the sandbox
+
+Commits are signed and the sandbox blocks that by default, so `settings.json.tmpl` carries three rules that exist only to let a sandboxed `git commit` sign. They look removable and are not:
+
+- `sandbox.filesystem.allowWrite` on `gnupg`, because gpg takes a lockfile in `GNUPGHOME` before it touches the keybox.
+- `sandbox.network.allowUnixSockets` for `S.gpg-agent` and `S.keyboxd`, because on macOS the agent sockets live in that same directory. Dropping just these two fails with `IPC connect call failed`; dropping just the write rule fails with `Operation not permitted`.
+- A `SessionStart` hook running `gpgconf --launch gpg-agent`, because a sandboxed gpg cannot cold-start the agent: spawning it means creating its socket, and the daemon would inherit the sandbox. Without the hook the first commit after a reboot fails with `No agent running`.
+
+`allowUnixSockets` is macOS-only and ignored on Linux, where the sockets live under `/run/user` instead.
+
 ### Mode agents
 
 Three agents in `agents/` exist to pick a tier by naming the kind of work rather than by remembering a model and an effort level. Prefix an agent-view prompt with one:
