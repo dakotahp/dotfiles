@@ -12,7 +12,14 @@
         "repo.yarnpkg.com",
         "codeload.github.com",
         "objects.githubusercontent.com"
+      ],
+      "allowUnixSockets": [
+        "{{ .xdgDataDir }}/gnupg/S.gpg-agent",
+        "{{ .xdgDataDir }}/gnupg/S.keyboxd"
       ]
+    },
+    "filesystem": {
+      "allowWrite": ["{{ .xdgDataDir }}/gnupg"]
     },
     "excludedCommands": ["obsidian"]
   },
@@ -121,6 +128,10 @@
           {
             "type": "command",
             "command": "prove_it hook claude:SessionStart"
+          },
+          {
+            "type": "command",
+            "command": "gpgconf --launch gpg-agent >/dev/null 2>&1 || true"
           }
         ]
       }
