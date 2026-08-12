@@ -133,7 +133,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "prove_it hook claude:SessionStart"
+            "command": "env -u CLAUDE_PROJECT_DIR prove_it hook claude:SessionStart"
           },
           {
             "type": "command",
@@ -147,7 +147,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "prove_it hook claude:PreToolUse"
+            "command": "env -u CLAUDE_PROJECT_DIR prove_it hook claude:PreToolUse"
           }
         ]
       }
@@ -157,7 +157,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "prove_it hook claude:PostToolUse"
+            "command": "env -u CLAUDE_PROJECT_DIR prove_it hook claude:PostToolUse"
           }
         ]
       },
@@ -176,7 +176,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "prove_it hook claude:PostToolUseFailure"
+            "command": "env -u CLAUDE_PROJECT_DIR prove_it hook claude:PostToolUseFailure"
           }
         ]
       }
@@ -186,7 +186,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "prove_it hook claude:Stop"
+            "command": "env -u CLAUDE_PROJECT_DIR prove_it hook claude:Stop"
           }
         ]
       }
@@ -196,7 +196,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "prove_it hook claude:TaskCompleted"
+            "command": "env -u CLAUDE_PROJECT_DIR prove_it hook claude:TaskCompleted"
           }
         ]
       }
