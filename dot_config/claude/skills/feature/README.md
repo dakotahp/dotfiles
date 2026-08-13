@@ -25,7 +25,13 @@ verification, two review passes, and PR creation.
 | 7 | Two review passes: a cold reviewer with no context, then a coherence pass looking only for cross-task problems |
 | 8 | Cleans up debug code, deletes planning artifacts, lints the branch |
 | 9 | Creates the draft PR via `gh` and opens it in your browser |
-| 10 | Watches all three review-comment surfaces, addresses them, pushes, repeats until approved |
+| 10 | Watches CI, mergeability, and the automated reviewer, fixes what it finds (including rebasing a conflicted branch), pushes, repeats until all three are clean, then hands the PR to you |
+
+## Where it stops
+
+The pipeline's whole deliverable is a draft PR with green automated signals. Requesting reviews, marking the PR ready, and merging are yours, and the skill will not do them, ask about them, or offer.
+
+It also will not wait for a human reviewer. Step 10 polls the signals that land in minutes (CI, mergeability, the review bot) and then ends. A colleague's comments usually arrive long after the session is over, so bringing those back is a fresh `/feature` or `/code-review` run when you want it.
 
 ## How much runs locally
 

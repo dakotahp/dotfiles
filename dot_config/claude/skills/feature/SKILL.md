@@ -6,6 +6,8 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task
 
 Implement the feature described in $ARGUMENTS by following every step below in order. Do not skip steps. Do not move to the next step until the current one is fully complete.
 
+**The deliverable is one thing: a ticket turned into a draft pull request whose automated signals are green.** That is the whole scope. Requesting human reviews, marking the PR ready for review, and merging it belong to the user, and they happen after this pipeline has ended. This is a fixed division of labour, not a permission gate, so do not do those three things, do not ask whether to, and do not offer. When Step 10's exit conditions hold, hand the PR over and stop.
+
 **This skill is the master pipeline.** All other skills invoked during this pipeline (brainstorming, writing-plans, subagent-driven-development, requesting-code-review, etc.) are sub-routines. After any sub-skill completes, immediately return to this pipeline and continue from the next numbered step. This pipeline is complete only when Step 10 has been executed.
 
 **A step that ends in a subagent dispatch is not finished when the subagent returns.** Every delegated step in this pipeline hands you something to do with the result, and the last one (Step 8) hands you the whole of Step 9. Read the step's own text again after a dispatch returns, not the subagent's report, to decide what comes next.
@@ -419,7 +421,7 @@ It commits its own cleanup and returns a short report.
 
    The PR body must reference the prove statements from Step 3 and link to their evidence.
 
-   **The PR stays a draft, and you never merge it.** Marking it ready and merging are the user's, without exception. Do not run `gh pr ready` or `gh pr merge`, and do not ask whether to. Both are denied in the user's settings, so an attempt fails rather than prompting.
+   **The PR stays a draft, and you never merge it.** Marking it ready, requesting reviewers, and merging are the user's, without exception. Do not run `gh pr ready`, `gh pr merge`, or `gh pr edit --add-reviewer`, and do not ask whether to. All three are denied in the user's settings, so an attempt fails rather than prompting.
 2. Open the PR with `open <url>` (macOS) or `xdg-open <url>` (Linux) in the default browser.
 3. Report the PR number and URL in your own message text, then continue to Step 10.
 
@@ -427,20 +429,22 @@ It commits its own cleanup and returns a short report.
 
 ---
 
-## Step 10: Review loop
+## Step 10: Automated review loop
+
+**This step watches the signals that land in minutes: CI, mergeability, and automated reviewer comments. It does not wait for people.** It is the last step, and when it exits the pipeline is over.
 
 **Precondition: Step 9 created the PR and you have its number.** If you cannot name the PR number from a `gh pr create` in this session, stop and run Step 9 first. Do not verify the PR exists with `gh pr list` and assume the pipeline made it; a PR from an earlier run or another branch is not this branch's PR.
 
 **Draft state does not block this step.** Run this loop against the PR immediately, whether or not it has been marked ready for review. Automated reviewer bots (e.g. a `claude-review`/`claude-review-inline` CI check) run on draft PRs the same as on ready ones, and CI (build/lint/tests) starts on push regardless of draft state. Catching feedback before ready-for-review is the point, not a reason to wait. Only a human reviewer requiring the PR to be out of draft before they'll look at it would be a reason to wait, and that is the user's call to make, not a default assumption.
 
-**This step always polls both CI and review feedback together, on a fixed cadence, until both exit conditions hold.** This is not optional and not left to judgment per run: every poll checks both surfaces in the same pass, and every poll that leaves anything outstanding schedules the next one. An agent that checks CI but not comments, or comments but not CI, or checks once and reports status without scheduling a follow-up, has not run this step correctly.
+**This step always polls CI, mergeability, and review feedback together, on a fixed cadence, until all three exit conditions hold.** This is not optional and not left to judgment per run: every poll checks both surfaces in the same pass, and every poll that leaves anything outstanding schedules the next one. An agent that checks CI but not comments, or comments but not CI, or checks once and reports status without scheduling a follow-up, has not run this step correctly.
 
-After the PR is created, check for review feedback and CI status together. **Do NOT use `gh pr view --comments`**, the pretty format is truncated and unparseable, and it silently omits line-anchored review comments, so it forces a re-run. Review feedback lives on three separate surfaces, and CI status is a fourth thing to check every time; pull all of them directly as JSON in two calls:
+After the PR is created, check for review feedback, CI status, and mergeability together. **Do NOT use `gh pr view --comments`**, the pretty format is truncated and unparseable, and it silently omits line-anchored review comments, so it forces a re-run. Review feedback lives on three separate surfaces, and CI status and mergeability are two more things to check every time; pull all of them directly as JSON in two calls:
 
 ```
-# 1) Top-level conversation comments + formal review summaries + the merge-gate decision + CI checks:
-gh pr view <n> --json reviewDecision,comments,reviews,statusCheckRollup \
-  --jq '{reviewDecision,
+# 1) Top-level conversation comments + formal review summaries + the review decision (informational) + CI checks + mergeability:
+gh pr view <n> --json reviewDecision,comments,reviews,statusCheckRollup,mergeable,mergeStateStatus,baseRefName \
+  --jq '{reviewDecision, mergeable, mergeStateStatus, baseRefName,
          comments:[.comments[]|{author:.author.login, at:.createdAt, body}],
          reviews:[.reviews[]|{author:.author.login, state, at:.submittedAt, body}],
          checks:[.statusCheckRollup[]?|{name:.name, status:.status, conclusion:.conclusion}]}'
@@ -455,21 +459,69 @@ gh api repos/{owner}/{repo}/pulls/<n>/comments \
 - Some repos' Claude reviewer posts **one big top-level comment** (surface 1); others post **inline comments on specific lines** (surface 2). Always read both surfaces; do not assume which one a repo uses.
 - Some reviewers **post a new comment per commit** (compare by `createdAt`; the newest is current). Others **amend the same comment in place** (`createdAt` never changes across re-reviews: fetch the latest **body** by author, e.g. `select(.author.login=="claude")`, rather than trusting timestamps). Handle both by keying on author + newest body, not on comment count or time.
 - `checks` entries with `status` other than `COMPLETED` (e.g. `QUEUED`, `IN_PROGRESS`) are still running, not a failure and not a reason to stop polling.
+- `mergeable: UNKNOWN` means GitHub has not finished computing the merge yet, not that the branch is fine. The query itself starts that computation, so treat `UNKNOWN` as "ask again next poll" and never as a pass.
+- `mergeStateStatus: DRAFT` is the expected value for every PR this pipeline creates, because the PR stays a draft on purpose. It is not a problem to fix and it is not a reason to mark the PR ready. Read `mergeable` for the conflict answer when the state status is `DRAFT`.
+- `mergeStateStatus: BLOCKED` usually means a required review or check has not passed yet, which the rest of this loop already handles. It is not a conflict.
 
 **On every poll, act on what you found before deciding whether to poll again:**
+- `mergeable` is `CONFLICTING` (usually with `mergeStateStatus: DIRTY`), or `mergeStateStatus` is `BEHIND`: the base branch moved under you. Fix it with the rebase procedure below, and do this **first**, before CI failures and before review feedback. A conflicted branch cannot merge no matter how green its checks are, and the checks themselves ran against a base that no longer exists.
 - A check's `conclusion` is `FAILURE` (or similar, e.g. `CANCELLED`, `TIMED_OUT`): diagnose it yourself, fix it, re-run the tests covering the change, and push. Do not just report the failure and wait for it to be fixed some other way; fixing broken CI is this step's job.
 - There is unaddressed review feedback on either surface, most often the automated `claude-review`/`claude-review-inline` bot, but treat a human reviewer's comments the same way: evaluate it on its merits (per `superpowers:receiving-code-review` if the feedback is substantive), fix and push if it's valid, or articulate why you disagree if it's not. Never dismiss feedback without reasoning, and never treat a bot comment as lower-stakes than a human one.
 - After addressing anything, re-fetch with the two calls above (add `select(.createdAt > "<last-check-ISO>")` to see only what is new) before deciding the loop is done.
 
-**Polling cadence:** if, after acting on the above, either exit condition below is not yet met (a check is still running, no formal review has landed yet, or you just pushed a fix and want to see it land), schedule the next combined poll with `ScheduleWakeup` at a **fixed 180-second (3-minute) interval**. Do not shorten it because "CI is usually fast" and do not lengthen it because "this might take a while". Three minutes is the ceiling the user should ever have to wait for a status update, and consistency here matters more than shaving polls. The `ScheduleWakeup` prompt must re-run this exact combined check (both CI and review feedback, both gh calls) every time, never a partial check of just one surface. Keep scheduling wakeups across as many 3-minute intervals as it takes; do not give up after one round just because nothing changed.
+### Rebasing a conflicted or behind branch
 
-Repeat until **both** conditions are true:
-1. No unresolved review threads across **both** surfaces above, and no CI check left in a non-`COMPLETED` state.
-2. `reviewDecision` is `APPROVED` **or** the user explicitly says "merge it", "ship it", or equivalent. (`reviewDecision` is the machine-readable gate; `REVIEW_REQUIRED`/`CHANGES_REQUESTED` means not yet.)
+Rebase the feature branch onto the base. Do not merge the base into it: a merge commit in the middle of a feature branch makes the diff the reviewers already read harder to follow, and this pipeline's branches are short-lived.
+
+Confirm you are on the feature branch first (`git branch --show-current`, Standing Rule 1), then:
+
+```
+git fetch origin <baseRefName>
+git rebase origin/<baseRefName>
+```
+
+For `BEHIND` with no conflicts that is the whole fix. For `CONFLICTING`/`DIRTY`, resolve each conflict, `git add` the resolved files, and `git rebase --continue` until the rebase finishes.
+
+**Resolving:** keep both sides. The other side of the conflict is work somebody else already shipped to the base branch, so deleting it to make the markers go away is a regression you are introducing, not a resolution. For lockfiles and other generated files, discard both sides and regenerate the file (`yarn install`, `bundle install`, and so on) rather than hand-editing conflict markers.
+
+**Then re-verify before pushing.** Re-run the commands in `.claude/prove_statements.md`. A resolution can be textually clean and still change behaviour, and this is the one place in the pipeline where re-running tests you did not just edit is right: the base moved under every file, so Standing Rule 5's "you did not edit it, you do not test it" no longer holds.
+
+**Then push with `git push --force-with-lease`.** A rebase rewrites the branch's commits, so a plain push is rejected. Never use bare `--force`, and never push any branch but the feature branch. Both `git rebase` and the push prompt for approval by design, so keep each in its own Bash call (Standing Rule 2) instead of chaining it after the fetch or the tests. If `--force-with-lease` is rejected, someone else pushed to this branch: fetch, look at what landed, and hand it to the user. Do not escalate to `--force`.
+
+Expect the next poll to show checks back in `IN_PROGRESS` and some inline comments marked outdated. That is the force-push landing, not a regression.
+
+**Stop and hand it to the user** when a conflict's correct resolution depends on intent you do not have, when the same conflict reappears commit after commit, or when you are simply not confident. Run `git rebase --abort` first so the branch is left exactly as it was, then say which files conflicted and what the two sides wanted. An unsure resolution silently reverts someone else's work, which is worse than a branch that waits.
+
+**Polling cadence:** if, after acting on the above, any exit condition below is not yet met (a check is still running, `mergeable` is still `UNKNOWN`, or you just pushed a fix and want to see it land), schedule the next combined poll with `ScheduleWakeup` at a **fixed 180-second (3-minute) interval**. Do not shorten it because "CI is usually fast" and do not lengthen it because "this might take a while". Three minutes is the ceiling the user should ever have to wait for a status update, and consistency here matters more than shaving polls. The `ScheduleWakeup` prompt must re-run this exact combined check (CI, review feedback, and mergeability, both gh calls) every time, never a partial check of just one surface. Keep scheduling wakeups across as many 3-minute intervals as it takes; do not give up after one round just because nothing changed.
+
+Repeat until **all three** conditions are true:
+1. Every CI check has `status: COMPLETED`, and none has a failing `conclusion`.
+2. `mergeable` is `MERGEABLE`. `UNKNOWN` does not satisfy this; poll again until GitHub answers.
+3. Every comment from an **automated** reviewer is addressed, on both surfaces.
+
+All three are machine-checkable, and that is deliberate. Human approval is **not** an exit condition, and neither is a human having looked at the PR at all. Requesting review is the user's job and happens after this pipeline ends, so a loop that waits for `reviewDecision: APPROVED` waits for something nobody has asked for yet. Report `reviewDecision` as information in your final message and gate nothing on it.
 
 Do not self-declare the loop complete. The exit condition requires evidence from the commands above, not inference.
 
-**Marking the PR ready for review, and merging it, are always the user's action, never yours.** This isn't a permission gate to ask about each time, it's a standing division of labor: the user handles both unconditionally. When the loop's exit condition is met, report that plainly (checks green, no unresolved threads, reviewDecision/explicit go-ahead status) and stop there. Don't ask whether to mark ready or merge, and don't run `gh pr ready` or `gh pr merge` yourself. If the exit condition is met purely because there is nothing left to check (all checks green, no reviewer assigned, no reviewDecision possible), say so plainly and stop polling rather than scheduling wakeups indefinitely with nothing new to look for.
+### Closing the pipeline
+
+When all three conditions hold, the pipeline is finished. Post a short final report and stop:
+
+> **Pipeline complete.** Draft PR: `<url>`
+> - CI: `<n>` checks passed
+> - Mergeable: yes
+> - Automated review: `<addressed / none posted>`
+> - `reviewDecision`: `<value, or "none yet">`
+>
+> Yours from here: request reviews, mark ready, merge.
+
+Then say nothing further about the PR. **Do not ask whether to mark it ready, whether to merge, whether to request reviewers, or whether the user wants anything else done.** Those are not permission questions this pipeline is entitled to ask, because the answer never changes: the user does all three, always, without being prompted. Offering is the same mistake as doing it, one step removed, and it puts the user back in the position of managing you when the work is done.
+
+Do not run `gh pr ready`, `gh pr merge`, or `gh pr edit --add-reviewer`. All three are denied in the user's settings and fail rather than prompt.
+
+**Do not keep polling for human review comments.** A colleague's review usually lands hours or days later, long after this session is over, and the loop above exists for the automated signals that land in minutes. Once the three conditions hold, stop scheduling wakeups even though no human has commented, and do not treat the empty review as unfinished business. If a human comment does happen to arrive while you are still polling, address it on its merits like any other feedback; just never wait for one.
+
+Bringing later human feedback back into a session is the user's call, and `/code-review` is there for it. It is not your job to keep a session alive on the chance that it comes.
 
 ---
 
@@ -481,9 +533,11 @@ Do not self-declare the loop complete. The exit condition requires evidence from
 |----------|----------------|
 | "Proving and review are overhead once tests pass" | Both are non-negotiable pipeline stages. Passing tests say the code does what its tests say, nothing more. |
 | "The user gave feedback, that means approval" | Feedback is not approval. Re-present the plan and wait for an explicit sign-off. |
-| "The PR has been up for a while, it must be approved" | Check with `gh pr view`. Assume nothing. |
+| "The PR has been up for a while, it must be approved" | Approval is not yours to infer or to wait for. Report `reviewDecision` as you found it and stop. |
 | "I already did a mental review, Step 7 is redundant" | The review is a formal sub-skill invocation, not a mental pass. |
-| "There are no comments yet so the loop is done" | Both conditions (no threads AND approval/user sign-off) must be satisfied. |
+| "There are no comments yet so the loop is done" | Only if CI is complete and `mergeable` is `MERGEABLE` too. An empty comment list on its own proves nothing; a bot may not have posted yet. |
+| "Checks are green, should I mark it ready or request a reviewer?" | Neither, and do not ask. The user does both, every time, unprompted. Asking hands them work the handoff line already covered. |
+| "The pipeline is done, I'll offer to do more" | The handoff report is the end of your turn. An open-ended offer reads as an unfinished job and puts the user back to managing you. |
 | "I'm already on a branch, subagents will use it" | Subagents start fresh, they do not inherit your branch. Pass the branch name explicitly in every subagent prompt. |
 | "I'll create the branch after planning" | By then a subagent may have already committed to master. Create the branch in Step 0, before anything else. |
 | "This feature is small, inline execution is fine" | Feature size is irrelevant. Inline execution has no per-task commits and no review checkpoints. Always use subagent-driven-development. |
@@ -494,9 +548,12 @@ Do not self-declare the loop complete. The exit condition requires evidence from
 | "I only changed one file, but I'll run the whole suite anyway, it's safer" | It is not safer, it is slower and it buries the result you actually needed in output nobody reads. Run the narrowest command covering what you changed; CI runs the rest on push. |
 | "This reviewer found something, it should verify by running the tests" | Only if one specific test file would settle one specific suspicion, and only with a note saying why. A reviewer running the suite is re-verifying, not investigating. |
 | "The linter should run here too, it's cheap" | It is cheap once and wasteful five times. Editors lint their own edits; Step 8 lints the branch. Nowhere else. |
-| "I checked CI, I'll check comments next time" / "I checked comments, CI is probably still running" | Step 10 checks both surfaces every single poll, no exceptions. Checking one and deferring the other is why this step used to be inconsistent. |
-| "No feedback yet, I'll just stop checking" | If either exit condition isn't met, schedule a `ScheduleWakeup` at 180s and check again. Silence isn't the exit condition; evidence of green checks + approval/go-ahead is. |
+| "I checked CI, I'll check comments next time" / "I checked comments, CI is probably still running" | Step 10 checks CI, mergeability, and both comment surfaces every single poll, no exceptions. Checking some and deferring the rest is why this step used to be inconsistent. |
+| "No feedback yet, I'll just stop checking" | If a check is still running or `mergeable` is `UNKNOWN`, schedule a `ScheduleWakeup` at 180s and check again. Stop when those answer, not when you get bored. |
+| "No human has reviewed it, so the loop isn't finished" | Human review is outside this pipeline. Green checks, a mergeable branch, and addressed bot comments are the whole exit condition. |
 
+| "All the checks are green, so the PR is fine" | Green checks say nothing about conflicts. A `CONFLICTING`/`DIRTY` branch cannot merge, and its checks ran against a base that has since moved. Read `mergeable` on every poll. |
+| "There's a conflict, I'll tell the user and stop" | Rebasing the branch is this step's job, the same as fixing red CI. Stop only when a resolution needs intent you do not have, and `git rebase --abort` before you do. |
 | "The cleanup agent came back, that was the last step" | It was not. Step 8 is cleanup, Step 9 creates the PR in the main session, Step 10 reviews it. A cleanup report means you are two steps from done. |
 
 **This pipeline is complete only when Step 10 has been executed. All steps are required.**
