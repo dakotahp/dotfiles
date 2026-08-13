@@ -23,8 +23,9 @@ verification, two review passes, and PR creation.
 | 5 | Implements task-by-task via subagents, each task reviewed for correctness and readability as it lands, then pauses to compact |
 | 6 | Runs prove_it verification against each statement |
 | 7 | Two review passes: a cold reviewer with no context, then a coherence pass looking only for cross-task problems |
-| 8 | Cleans up, deletes planning artifacts, lints, creates a draft PR via `gh` |
-| 9 | Watches all three review-comment surfaces, addresses them, pushes, repeats until approved |
+| 8 | Cleans up debug code, deletes planning artifacts, lints the branch |
+| 9 | Creates the draft PR via `gh` and opens it in your browser |
+| 10 | Watches all three review-comment surfaces, addresses them, pushes, repeats until approved |
 
 ## How much runs locally
 

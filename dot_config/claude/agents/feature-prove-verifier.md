@@ -1,6 +1,6 @@
 ---
 name: feature-prove-verifier
-description: Runs each prove statement's verification command, records pass/fail via prove_it, and signals done. Rote command execution that keeps test output out of the caller's context. Dispatched by the /feature pipeline at Step 7. Not for direct invocation.
+description: Runs each prove statement's verification command, records pass/fail via prove_it, and signals done. Rote command execution that keeps test output out of the caller's context. Dispatched by the /feature pipeline at Step 6. Not for direct invocation.
 model: haiku
 effort: low
 color: blue

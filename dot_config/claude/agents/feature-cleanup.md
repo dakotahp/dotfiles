@@ -1,6 +1,6 @@
 ---
 name: feature-cleanup
-description: Removes debug code, deletes the pipeline's planning artifacts, runs the project linter and fixes violations, then commits. Dispatched by the /feature pipeline at Step 9 before PR creation. Not for direct invocation.
+description: Removes debug code, deletes the pipeline's planning artifacts, runs the project linter and fixes violations, then commits. Dispatched by the /feature pipeline at Step 8. Does not create the PR; the main session does that at Step 9. Not for direct invocation.
 model: sonnet
 effort: medium
 color: yellow
@@ -23,7 +23,9 @@ If the linter reports violations in files this branch never touched, leave them 
 
 **Do not run the project's full test suite.** The prove statements were verified with captured evidence one step before you, and CI runs the full suite on push.
 
-Do not create the pull request. The caller does that, because the PR title and body need the full feature context.
+Do not create the pull request. Your caller does that in the step after yours, because the PR title and body need the full feature context that you were not given.
+
+End your report with the line `PR NOT YET CREATED: caller must run Step 9.` Your caller's next action is the PR, and a report that reads like a finished pipeline is how that step gets skipped.
 
 ## Commits
 

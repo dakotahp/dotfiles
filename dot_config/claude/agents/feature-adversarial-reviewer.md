@@ -1,6 +1,6 @@
 ---
 name: feature-adversarial-reviewer
-description: Read-only cold reviewer of a full branch diff, given no plan, spec, or feature description, so it infers intent from the code the way a PR reviewer does. Finds behavior changes, scope creep, and architectural regressions. Dispatched by the /feature pipeline at Step 8a. Not for direct invocation.
+description: Read-only cold reviewer of a full branch diff, given no plan, spec, or feature description, so it infers intent from the code the way a PR reviewer does. Finds behavior changes, scope creep, and architectural regressions. Dispatched by the /feature pipeline at Step 7a. Not for direct invocation.
 model: sonnet
 effort: high
 color: red

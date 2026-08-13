@@ -1,6 +1,6 @@
 ---
 name: feature-quality-reviewer
-description: Read-only branch-coherence reviewer with full context (plan, spec, changed files). Looks for problems that only appear when the tasks are viewed together, not per-task quality, which was already reviewed. Dispatched by the /feature pipeline at Step 8b. Not for direct invocation.
+description: Read-only branch-coherence reviewer with full context (plan, spec, changed files). Looks for problems that only appear when the tasks are viewed together, not per-task quality, which was already reviewed. Dispatched by the /feature pipeline at Step 7b. Not for direct invocation.
 model: sonnet
 effort: high
 color: purple

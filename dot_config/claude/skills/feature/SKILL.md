@@ -6,7 +6,9 @@ allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task
 
 Implement the feature described in $ARGUMENTS by following every step below in order. Do not skip steps. Do not move to the next step until the current one is fully complete.
 
-**This skill is the master pipeline.** All other skills invoked during this pipeline (brainstorming, writing-plans, subagent-driven-development, requesting-code-review, etc.) are sub-routines. After any sub-skill completes, immediately return to this pipeline and continue from the next numbered step. This pipeline is complete only when Step 9 has been executed.
+**This skill is the master pipeline.** All other skills invoked during this pipeline (brainstorming, writing-plans, subagent-driven-development, requesting-code-review, etc.) are sub-routines. After any sub-skill completes, immediately return to this pipeline and continue from the next numbered step. This pipeline is complete only when Step 10 has been executed.
+
+**A step that ends in a subagent dispatch is not finished when the subagent returns.** Every delegated step in this pipeline hands you something to do with the result, and the last one (Step 8) hands you the whole of Step 9. Read the step's own text again after a dispatch returns, not the subagent's report, to decide what comes next.
 
 ---
 
@@ -273,6 +275,10 @@ Every dispatch prompt must carry Standing Rule 1 (commit only to the feature bra
 | 7a | Adversarial diff reviewer | `feature-adversarial-reviewer` | sonnet / high |
 | 7b | Branch coherence reviewer | `feature-quality-reviewer` | sonnet / high |
 | 8 | Cleanup (pre-PR) | `feature-cleanup` | sonnet / medium |
+| 9 | Create the draft PR | **none, main session only** | n/a |
+| 10 | Review loop | **none, main session only** | n/a |
+
+The last two rows are in the table on purpose. This table is what you consult when you ask "who runs this step", so a step missing from it reads as an oversight, and the pipeline's habit is to reach for a role. Steps 9 and 10 have no role, and no `feature-*` definition may be repurposed for them.
 
 **Why the definitions exist rather than inline `model` arguments.** Reasoning effort is the larger cost lever here, and the Task tool has no `effort` parameter. A subagent inherits the *session* effort unless its definition overrides it, so with a session-wide `effortLevel` of `xhigh`, a haiku agent running `prove_it record` also ran at `xhigh`. Effort drives thinking and output tokens, billed at several times the input rate, and the subagents are where this pipeline's token volume lives. Per-role effort is only expressible in a definition file, which is why these roles are files.
 
@@ -385,14 +391,27 @@ Both reviewers run *arbitrary* read commands (diffs, greps, log queries, ad-hoc 
 
 ---
 
-## Step 8: Cleanup and create PR
+## Step 8: Cleanup
 
-Complete all of the following before creating the PR:
+**Delegate this entire step to `feature-cleanup`.** Nothing in it needs feature context, and the whole step is one dispatch. The prompt must carry Standing Rules 1 and 4 with the branch name filled in, the list of modified files, the paths of the spec and plan files to delete, and the project's lint command.
 
-1. Remove debug logs, development TODOs, and any commented-out code left from the implementation
-2. **Discard the planning artifacts.** The spec file and plan file from Step 2 have served their purpose, implementation is done, both review passes are complete, and the PR body (next step) will capture the lasting context. Delete both files from disk now. If the conversation needs to revisit design decisions later, the chat history and PR body are sufficient.
-3. Run the project linter over the files this branch changed (`git diff --name-only <base>...HEAD`) and fix all issues (e.g. `npm run lint`, `eslint`, `ruff check --fix`, `bin/rubocop`, or whatever is configured for this project). **This is the branch's one lint gate**, and under Standing Rule 5 it is the only lint run in the pipeline that is not scoped to a single agent's own edits. Pass the linter the changed paths rather than the repo root: a whole-repo run reports pre-existing violations this branch did not cause, which you then have to sort back out.
-4. Create the pull request in a draft state:
+The role does three things:
+
+1. Removes debug logs, development TODOs, and any commented-out code left from the implementation
+2. **Discards the planning artifacts.** The spec file and plan file from Step 2 have served their purpose, implementation is done, and both review passes are complete. The Step 9 PR body will carry the lasting context, so both files are deleted from disk here.
+3. Runs the project linter over the files this branch changed (`git diff --name-only <base>...HEAD`) and fixes all issues (e.g. `npm run lint`, `eslint`, `ruff check --fix`, `bin/rubocop`, or whatever is configured for this project). **This is the branch's one lint gate**, and under Standing Rule 5 it is the only lint run in the pipeline that is not scoped to a single agent's own edits. It passes the linter the changed paths rather than the repo root: a whole-repo run reports pre-existing violations this branch did not cause, which someone then has to sort back out.
+
+It commits its own cleanup and returns a short report.
+
+**This step does NOT create the PR, and neither does the role.** A cleanup report is not the end of the pipeline. When the dispatch returns, you are half-finished: continue to Step 9 in the same response and create the PR yourself.
+
+---
+
+## Step 9: Create the draft PR
+
+**Never delegate this step. It runs in the main session, always.** The PR title and body need the whole feature in view, which only you have, and the user needs the URL in the session where they are watching. There is no role for this step and none of the `feature-*` definitions may be used for it.
+
+1. Create the pull request in a draft state:
 
    ```
    gh pr create --draft --title "<concise imperative title>" --body "<what changed, why, and how to verify it>"
@@ -401,13 +420,16 @@ Complete all of the following before creating the PR:
    The PR body must reference the prove statements from Step 3 and link to their evidence.
 
    **The PR stays a draft, and you never merge it.** Marking it ready and merging are the user's, without exception. Do not run `gh pr ready` or `gh pr merge`, and do not ask whether to. Both are denied in the user's settings, so an attempt fails rather than prompting.
-5. Open the PR with `open <url>` (macOS) or `xdg-open <url>` (Linux) in the default browser.
+2. Open the PR with `open <url>` (macOS) or `xdg-open <url>` (Linux) in the default browser.
+3. Report the PR number and URL in your own message text, then continue to Step 10.
 
-**Delegation:** Steps 1-3 (cleanup, planning-artifact deletion, linting) can be dispatched to `feature-cleanup`. Its prompt must include: Standing Rules 1 and 4 with the branch name filled in, the list of modified files, the paths to the spec and plan files to delete, and the lint command for the project. Step 4 (PR creation) stays in the main session, the PR title and body require understanding the full feature context, and the user needs to see the PR URL immediately.
+**This is the step the pipeline most often skips, so treat it as a gate.** It sits right after a delegated step, and a subagent report that says "cleanup committed" reads like the end of the work when it is not. If you are about to poll for review feedback, you must already be holding a PR number that `gh pr create` printed in this session. If you are not, you are in Step 9, not Step 10.
 
 ---
 
-## Step 9: Review loop
+## Step 10: Review loop
+
+**Precondition: Step 9 created the PR and you have its number.** If you cannot name the PR number from a `gh pr create` in this session, stop and run Step 9 first. Do not verify the PR exists with `gh pr list` and assume the pipeline made it; a PR from an earlier run or another branch is not this branch's PR.
 
 **Draft state does not block this step.** Run this loop against the PR immediately, whether or not it has been marked ready for review. Automated reviewer bots (e.g. a `claude-review`/`claude-review-inline` CI check) run on draft PRs the same as on ready ones, and CI (build/lint/tests) starts on push regardless of draft state. Catching feedback before ready-for-review is the point, not a reason to wait. Only a human reviewer requiring the PR to be out of draft before they'll look at it would be a reason to wait, and that is the user's call to make, not a default assumption.
 
@@ -472,7 +494,9 @@ Do not self-declare the loop complete. The exit condition requires evidence from
 | "I only changed one file, but I'll run the whole suite anyway, it's safer" | It is not safer, it is slower and it buries the result you actually needed in output nobody reads. Run the narrowest command covering what you changed; CI runs the rest on push. |
 | "This reviewer found something, it should verify by running the tests" | Only if one specific test file would settle one specific suspicion, and only with a note saying why. A reviewer running the suite is re-verifying, not investigating. |
 | "The linter should run here too, it's cheap" | It is cheap once and wasteful five times. Editors lint their own edits; Step 8 lints the branch. Nowhere else. |
-| "I checked CI, I'll check comments next time" / "I checked comments, CI is probably still running" | Step 9 checks both surfaces every single poll, no exceptions. Checking one and deferring the other is why this step used to be inconsistent. |
+| "I checked CI, I'll check comments next time" / "I checked comments, CI is probably still running" | Step 10 checks both surfaces every single poll, no exceptions. Checking one and deferring the other is why this step used to be inconsistent. |
 | "No feedback yet, I'll just stop checking" | If either exit condition isn't met, schedule a `ScheduleWakeup` at 180s and check again. Silence isn't the exit condition; evidence of green checks + approval/go-ahead is. |
 
-**This pipeline is complete only when Step 9 has been executed. All steps are required.**
+| "The cleanup agent came back, that was the last step" | It was not. Step 8 is cleanup, Step 9 creates the PR in the main session, Step 10 reviews it. A cleanup report means you are two steps from done. |
+
+**This pipeline is complete only when Step 10 has been executed. All steps are required.**
