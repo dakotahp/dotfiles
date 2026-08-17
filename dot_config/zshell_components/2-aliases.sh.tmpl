@@ -42,6 +42,11 @@ alias secret="openssl rand -hex 32"
 # Restart GPG to make it easy to reload config changes
 alias restart-gpg-agent="gpgconf --kill gpg-agent && gpg-agent --daemon"
 
+# WireGuard VPN (/etc/wireguard/wg0.conf)
+alias vpn-up="sudo wg-quick up wg0"
+alias vpn-down="sudo wg-quick down wg0"
+alias vpn-status="sudo wg show wg0"
+
 # Makes it easier to sign into 1Password cli
 opsign() {
   who=$(op whoami)
