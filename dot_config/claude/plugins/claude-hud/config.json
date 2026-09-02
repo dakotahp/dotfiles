@@ -1,0 +1,7 @@
+{
+  "display": {
+    "showPromptCache": true,
+    "showEffortLevel": true,
+    "sevenDayThreshold": 0
+  }
+}
