@@ -131,6 +131,12 @@
 {{- end }}
     ]
   },
+  "autoMode": {
+    "allow": [
+      "$defaults",
+      "Bash commands invoking the local `obsidian` CLI's read-only subcommands (`read`, `search`, `files`, `vaults`, `daily:path`) — even with a sandbox bypass / dangerouslyDisableSandbox — since these only read from the already-running Obsidian desktop app and cannot modify the vault. Do NOT auto-approve `obsidian append`, `create`, `move`, `daily` (creates a note), or any `obsidian eval` call that could write, delete, or move vault content — those still require normal confirmation."
+    ]
+  },
   "hooks": {
     "SessionStart": [
       {
