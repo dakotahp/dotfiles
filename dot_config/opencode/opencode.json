@@ -12,7 +12,19 @@
       },
       "models": {
         "qwen3.8:27b-mlx": {
-          "name": "Qwen3.8 27B MLX"
+          "name": "Qwen3.8 27B MLX",
+          "tool_call": true,
+          "reasoning": true,
+          "limit": {
+            "context": 131072,
+            "output": 8192
+          },
+          "options": {
+            "temperature": 0.2,
+            "top_k": 20,
+            "top_p": 0.9,
+            "min_p": 0.0
+          }
         }
       }
     }
