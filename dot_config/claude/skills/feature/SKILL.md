@@ -445,7 +445,7 @@ After the PR is created, check for review feedback, CI status, and mergeability 
 # 1) Top-level conversation comments + formal review summaries + the review decision (informational) + CI checks + mergeability:
 gh pr view <n> --json reviewDecision,comments,reviews,statusCheckRollup,mergeable,mergeStateStatus,baseRefName \
   --jq '{reviewDecision, mergeable, mergeStateStatus, baseRefName,
-         comments:[.comments[]|{author:.author.login, at:.createdAt, body}],
+         comments:[.comments[]|{id, author:.author.login, at:.createdAt, body}],
          reviews:[.reviews[]|{author:.author.login, state, at:.submittedAt, body}],
          checks:[.statusCheckRollup[]?|{name:.name, status:.status, conclusion:.conclusion}]}'
 
@@ -468,6 +468,7 @@ gh api repos/{owner}/{repo}/pulls/<n>/comments \
 - A check's `conclusion` is `FAILURE` (or similar, e.g. `CANCELLED`, `TIMED_OUT`): diagnose it yourself, fix it, re-run the tests covering the change, and push. Do not just report the failure and wait for it to be fixed some other way; fixing broken CI is this step's job.
 - There is unaddressed review feedback on either surface, most often the automated `claude-review`/`claude-review-inline` bot, but treat a human reviewer's comments the same way: evaluate it on its merits (per `superpowers:receiving-code-review` if the feedback is substantive), fix and push if it's valid, or articulate why you disagree if it's not. Never dismiss feedback without reasoning, and never treat a bot comment as lower-stakes than a human one.
 - After addressing anything, re-fetch with the two calls above (add `select(.createdAt > "<last-check-ISO>")` to see only what is new) before deciding the loop is done.
+- If surface 1 now shows more than one comment from the same automated-reviewer author (e.g. a repo that posts a new `claude` comment per push rather than amending one in place), minimize every one of that author's comments except the newest as outdated. See below.
 
 ### Rebasing a conflicted or behind branch
 
@@ -491,6 +492,21 @@ For `BEHIND` with no conflicts that is the whole fix. For `CONFLICTING`/`DIRTY`,
 Expect the next poll to show checks back in `IN_PROGRESS` and some inline comments marked outdated. That is the force-push landing, not a regression.
 
 **Stop and hand it to the user** when a conflict's correct resolution depends on intent you do not have, when the same conflict reappears commit after commit, or when you are simply not confident. Run `git rebase --abort` first so the branch is left exactly as it was, then say which files conflicted and what the two sides wanted. An unsure resolution silently reverts someone else's work, which is worse than a branch that waits.
+
+### Minimizing outdated review comments
+
+Some repos' automated reviewer posts a fresh top-level comment on every push instead of amending its previous one in place (see the note under "Repo review setups differ" above). Across a multi-push pipeline run this leaves a stack of superseded comments cluttering the PR, each one stale the moment the next lands. Once you see more than one comment from that same author, minimize every one of them except the newest (by `createdAt`) as outdated:
+
+```
+gh api graphql -f query='
+mutation($id: ID!) {
+  minimizeComment(input: {subjectId: $id, classifier: OUTDATED}) {
+    minimizedComment { isMinimized }
+  }
+}' -f id="<comment-node-id>"
+```
+
+The comment IDs come from the `id` field already in surface 1's projection above; run the mutation once per ID to collapse. Only touch comments from the automated-reviewer author (never a human's), and never minimize the single newest one from that author. This is routine housekeeping the moment a newer comment supersedes an older one, not feedback triage, so it does not require re-fetching afterward or otherwise pausing the loop.
 
 **Polling cadence:** if, after acting on the above, any exit condition below is not yet met (a check is still running, `mergeable` is still `UNKNOWN`, or you just pushed a fix and want to see it land), schedule the next combined poll with `ScheduleWakeup` at a **fixed 180-second (3-minute) interval**. Do not shorten it because "CI is usually fast" and do not lengthen it because "this might take a while". Three minutes is the ceiling the user should ever have to wait for a status update, and consistency here matters more than shaving polls. The `ScheduleWakeup` prompt must re-run this exact combined check (CI, review feedback, and mergeability, both gh calls) every time, never a partial check of just one surface. Keep scheduling wakeups across as many 3-minute intervals as it takes; do not give up after one round just because nothing changed.
 
