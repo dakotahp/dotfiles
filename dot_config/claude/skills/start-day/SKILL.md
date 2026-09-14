@@ -2,7 +2,7 @@
 name: start-day
 description: Use when starting the day to set up today's daily note and process any prior unprocessed notes.
 allowed-tools: Bash, Read, Write, Edit, Glob, Grep, AskUserQuestion, Agent, mcp__claude_ai_Google_Calendar__list_events
-model: claude-sonnet-4-6
+model: claude-sonnet-5-0
 ---
 
 Morning startup for an Obsidian vault using the PARA structure. Runs in two phases: first closes out any unprocessed daily notes from prior days (routing content to its destination and archiving), then primes today's note with rolled-over todos, Avoidance Radar items, and context. Non-interactive except for ambiguous `2_Areas` folder matches.
@@ -19,6 +19,7 @@ obsidian vaults
 All `vault=ObsidianPersonal` references below should be read as `vault=$VAULT`, substitute the resolved vault name throughout. Sections marked **[personal-vault only]** are skipped in non-personal mode.
 
 Key rules:
+
 - Vault parameter comes immediately after the subcommand: `obsidian <subcommand> vault=$VAULT [options]`
 - Use `path=` for exact vault-relative paths; `file=` for wikilink-style name resolution
 - Never run `obsidian --help`, it hangs and never exits
@@ -137,6 +138,7 @@ Items under `## Today's Priorities` are hard todos by default (unchecked only, s
 Run two batches in sequence:
 
 **Read batch (fire together):**
+
 ```bash
 obsidian read vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md"
 obsidian files vault=ObsidianPersonal folder="2_Areas"
@@ -147,34 +149,44 @@ obsidian files vault=ObsidianPersonal folder="2_Areas"
 All three write types target different files, fire them simultaneously.
 
 *Idea stubs*, for each idea fragment:
+
 ```bash
 obsidian create vault=ObsidianPersonal path="0_Inbox/Idea - <Short Title>.md" content="---\ntags:\n  - idea\n  - stub\nsource: \"[[YYYY-MM-DD]]\"\n---\n\n<raw thought, verbatim or lightly cleaned>" silent
 ```
+
 Keep `<Short Title>` to 4–6 words. Don't expand or elaborate.
 
 *Avoidance items*, fuzzy-match each item against the Radar content read above. If not already present, append:
+
 ```bash
 obsidian append vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md" content="\n- [ ] <item>, *first noted: YYYY-MM-DD*"
 ```
+
 If the Radar file doesn't exist, create it first:
+
 ```bash
 obsidian create vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md" content="---\nagent-context: vault\n---\n\nThings that keep coming up but keep getting deferred. Reviewed weekly.\n" silent
 ```
+
 **When running as a subagent (multi-note dispatch):** skip writing to the Radar entirely, return avoidance items (new) and completed todos (for resolution matching) as output to the main thread instead.
 
 *Radar resolutions*, for each completed `[x]` todo collected in Step 1b-i, fuzzy-match against open `- [ ]` Radar items. A completed todo resolves a Radar item when:
+
 - It references the same project and the Radar item is generic ("move something forward", "make progress on X", "do something on Y"), OR
 - It names a specific deliverable that satisfies the Radar item's intent (e.g. "Write Ecclesiastes 5:10 post" resolves "Bible Verses Secular Relation Blog: move something forward")
 
 When a match is found, update the Radar entry in-place, check the box and append the resolution annotation:
+
 ```bash
 perl -i -pe 's|^- \[ \] (MATCHED_ITEM_PREFIX.*)|"- [x] $1, resolved: YYYY-MM-DD (completed in [[NOTE-DATE]])"|e' "$VAULT_PATH/2_Areas/Personal Knowledge Management/Avoidance Radar.md"
 ```
+
 Use a literal prefix long enough to uniquely identify the line (avoid regex special chars). Fire resolution writes in the same batch as new avoidance appends, both target the Radar file but perl edits are safe to batch with appends since they operate on different lines.
 
 **When running as a subagent:** skip all Radar writes, return completed todos alongside avoidance items for the main thread to process.
 
 *Learnings*, match each learning semantically to a `2_Areas/` subfolder (from the files list). **Clear match:** proceed without asking. **No match:** suggest top 2 candidates or offer to create a new folder: this is the **only** pause point. Once answered, continue:
+
 ```bash
 # Append to existing note
 obsidian append vault=ObsidianPersonal file="<Note Name>" content="\n---\n\n<learning content>\n\nSource: [[YYYY-MM-DD]]"
@@ -233,11 +245,13 @@ Creates today's note from the template if it doesn't exist.
 - **Everything else is AMBIENT CONTEXT ONLY**: do not replicate other sections into today's daily note. It informs internal calibration: which rolled-over todos feel weightier (project matched `## Projects Focused`), which open `## Decisions Needed` items deserve attention, whether to flag a stale project (already covered by `## Archive Candidates`).
 
 **Avoidance Radar**, read now (after Phase 1 has finished updating it):
+
 ```bash
 obsidian read vault=ObsidianPersonal path="2_Areas/Personal Knowledge Management/Avoidance Radar.md"
 ```
 
 **Rolled-over todos:**
+
 - **If Phase 1 processed any notes:** use the action items already in memory from those Distillations, skip the archive re-read.
 - **If Phase 1 had nothing to process:** list archived notes and read the most recent one to extract rolled-over todos:
 
@@ -254,8 +268,7 @@ Find `## Distillation` → `**Action items:**`, extract every `- [ ]` line verba
 
 **Skip this entire step in non-personal vault mode.** Leave QUOTE_CONTENT, INSPIRATION_PATH, and INSPIRATION_TEASER empty/null.
 
-
-**Quote**, from **QUOTES_RAW**, extract every line beginning with `- `. Strip the leading `- `. Use today's date as a seed: hash the full ISO date string (`YYYY-MM-DD`) and mod by the number of quotes, `int(hashlib.md5(date_str.encode()).hexdigest(), 16) % num_quotes`, then select that line. Same quote all day if the skill runs twice; different quotes across years on the same calendar date.
+**Quote**, from **QUOTES_RAW**, extract every line beginning with `-`. Strip the leading `-`. Use today's date as a seed: hash the full ISO date string (`YYYY-MM-DD`) and mod by the number of quotes, `int(hashlib.md5(date_str.encode()).hexdigest(), 16) % num_quotes`, then select that line. Same quote all day if the skill runs twice; different quotes across years on the same calendar date.
 
 Store as **QUOTE_CONTENT**, the raw line text including attribution and any `[[wikilink]]`.
 
@@ -280,6 +293,7 @@ Store as **INSPIRATION_PATH** (vault-relative path) and **INSPIRATION_TEASER** (
 Sort oldest first. Append after rolled-over todos.
 
 **De-duplicate Radar items against rolled-over todos**, before appending, drop any Radar item whose intent is already covered by a rolled-over todo. A Radar item is considered superseded when:
+
 - A rolled-over todo references the same `[[Project]]` and the Radar item is generic ("move something forward", "make progress on X", "do something on Y"), OR
 - A rolled-over todo names a specific deliverable that satisfies the Radar item's intent (e.g. "Write Ecclesiastes 5:10 post" supersedes "Bible Verses Secular Relation Blog: move something forward"), OR
 - The project's most recent weekly note `## Work Produced` already lists a deliverable that satisfies the Radar item's intent, in this case, also flag the Radar item to the user in CONTEXT_CONTENT as potentially resolvable ("Resolved?: [item], [deliverable] shipped").
@@ -295,16 +309,19 @@ Skip if a rolled-over todo already references that project. Skip if all projects
 **Cap**, if PRIORITIES_CONTENT exceeds 6 items, remove from the bottom: youngest Radar items first, then stale flag. Never drop rolled-over todos.
 
 **CONTEXT_CONTENT:**
+
 - **Line 1 (personal-vault only):** One sentence from Life Domains `## Current Context`, the single most time-sensitive or seasonally relevant point. Skip in non-personal mode.
 - **Line 2 (conditional):** Only if any Radar item is 14+ days old: `Overdue: [item name] (N days), [item name] (N days).` Omit entirely if nothing qualifies.
 
 **MEETINGS_CONTENT**, derived separately from CALENDAR_EVENTS:
+
 - If CALENDAR_EVENTS is non-empty: `**Meetings:** HH:MM Event title, HH:MM Event title`, list each event's start time (12-hour, no seconds) and summary, comma-separated.
 - If CALENDAR_EVENTS is empty: substitute an empty string for `<!-- meetings -->`.
 
 ### Step 2d: Write to today's note
 
 Get today's note path:
+
 ```bash
 obsidian daily:path vault=ObsidianPersonal
 ```
@@ -318,6 +335,7 @@ Template path: `$VAULT_PATH/3_Resources/Obsidian Templates/Daily Note Template.m
 `replace()` calls are no-ops when a placeholder isn't present in the template, so the same script works across vaults. Personal-vault-only placeholders (`<!-- quote -->`, `<!-- inspiration -->`) simply go unused in non-personal templates. If a value is empty/null, substitute an empty string.
 
 **WEEKLY_FOCUS_LINE**, derive from WEEKLY_FOCUS_CONTENT (extracted in Step 2b):
+
 - If WEEKLY_FOCUS_CONTENT is non-empty: `WEEKLY_FOCUS_LINE = f"{WEEKLY_FOCUS_CONTENT}, [[{CURRENT_WEEK}]]"`, focus sentence followed by a wikilink to the weekly note.
 - If empty (no weekly note, or no `## Weekly Focus` section): substitute an empty string.
 
