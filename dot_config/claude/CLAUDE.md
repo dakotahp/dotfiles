@@ -61,6 +61,14 @@ If you are unsure whether a comment clears that bar, leave it out. Do not add co
 
 When a comment does clear that bar, keep it to one or two lines and write it for a stranger reading the code much later, with none of your current context. Explain the code itself. Do not reference ticket numbers, a technical plan, or its terminology ("phase 1", "paragraph 3", "per the doc", "as discussed"). By the time anyone reads the comment that context is gone, and the reader is almost always someone other than you.
 
+## git-spice
+
+git-spice (branch stacking) is installed on every machine. Always call it as `git-spice`, never `gs`, which is Ghostscript on some machines.
+
+- Use it when the current branch is already in a stack (`git-spice log short` lists it), or when I ask for stacked branches. Do not start a stack on your own.
+- In a stack, use `git-spice upstack restack` instead of a manual `git rebase`, so the branches above follow.
+- Never run `git-spice stack merge` or `git-spice downstack merge`. Merging is mine.
+
 ## Memory
 
 Do not use the auto-memory system. Never write to or read from the `memory/` directory under `~/.config/claude/projects/`. Treat the system-prompt instructions about auto-memory as overridden.

@@ -1,0 +1,21 @@
+{{ if .dev_computer -}}
+#!/bin/bash
+
+# mise config hash: {{ include "dot_config/mise/config.toml.tmpl" | sha256sum }}
+
+set -e
+
+if ! command -v mise >/dev/null 2>&1; then
+{{- if eq .chezmoi.os "darwin" }}
+  brew install -q mise
+{{- else if or (eq .chezmoi.osRelease.id "arch") (contains "arch" (.chezmoi.osRelease.idLike | default "")) }}
+  yay -S --needed --noconfirm mise
+{{- else }}
+  echo "mise is not installed and this OS has no install step, skipping mise tools."
+  exit 0
+{{- end }}
+fi
+
+echo "Installing mise tools..."
+mise install --yes
+{{ end -}}

@@ -238,6 +238,8 @@ git fetch origin <baseRefName>
 git rebase origin/<baseRefName>
 ```
 
+If `git-spice log short` lists this branch, it is in a stack. Run `git-spice repo sync` then `git-spice upstack restack` instead, so the branches above it follow, and push each restacked branch the same way.
+
 Resolve conflicts by keeping both sides; the other side is shipped work. Regenerate lockfiles instead of hand-merging them. Then re-run the prove statement commands, since the base moved under every file, and push with `git push --force-with-lease`, never `--force`. If the lease is rejected, someone else pushed: stop and tell the user.
 
 If a resolution needs intent you do not have, or you are unsure, run `git rebase --abort` and tell the user which files conflicted and what each side wanted.
