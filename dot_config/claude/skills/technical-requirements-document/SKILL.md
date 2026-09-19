@@ -43,7 +43,9 @@ Save to `docs/plans/YYYY-MM-DD-<slugified-name>-trd.md`.
 
 ## Interfaces and Contracts
 
-<Endpoints, function or module signatures, events, payload shapes, error shapes. Anything another piece of code calls. Mark each as new, changed, or unchanged-but-relevant. For a change, state what breaks and who consumes it.>
+<Endpoints, function or module signatures, events, payload shapes, error shapes. Anything another piece of code calls. Mark each as new, changed, or unchanged-but-relevant. For a change, state what breaks and who consumes it.
+
+This section is the contract that lets tickets run in parallel, so pin it completely: every param, field, type, nullability, and error shape. A detail left for the implementer to decide turns one ticket into a blocker for every ticket that consumes it.>
 
 ## Behavior
 
@@ -51,13 +53,15 @@ Save to `docs/plans/YYYY-MM-DD-<slugified-name>-trd.md`.
 
 ## Ticket Breakdown
 
-<The section the rest of the document exists to support. One subsection per ticket, ordered so dependencies come first.>
+<The section the rest of the document exists to support. One subsection per ticket, ordered so dependencies come first. See "Contract-first tickets" below for ticket 0, the stub swap, and lanes.>
+
+**Lanes:** <one line per lane: which tickets can start at the same time, e.g. "After ticket 0: 1, 2, 3". Omit when every ticket is serial.>
 
 ### <N>. <Ticket title>
 
 **What:** <2 to 3 sentences. What changes and why, written for someone who has not read the rest of this document.>
 **Areas:** <paths or modules touched>
-**Depends on:** <ticket numbers, or "nothing">
+**Depends on:** <"contract (ticket 0)", "implementation (ticket N)", or "nothing">
 **Size:** <S / M / L>
 
 **Acceptance criteria**
@@ -95,6 +99,22 @@ Concretely, a ticket is not ready if it uses a term defined only in conversation
 
 ---
 
+## Contract-first tickets
+
+Decide interface shapes here, in planning, not during implementation. A backend ticket that blocks frontend work only to add one param is a planning gap, not a real dependency.
+
+Apply this whenever tickets meet across a boundary: backend and frontend, service and consumer, or two repos.
+
+**Ticket 0: land the contract.** The smallest mergeable change that makes the interface real, with no business logic. For example, the endpoint or param exists, accepts the pinned request shape, and returns a fixed response in the pinned shape. Put it behind the work's feature flag. Consumers build against it while the real implementation happens in parallel. Skip ticket 0 when consumers can build and test from the written contract alone, for example with mocks, and have their tickets depend on the Interfaces section instead.
+
+**Split every dependency into one of two kinds.** `contract (ticket 0)` means the ticket needs only the shape, so it starts as soon as ticket 0 merges. `implementation (ticket N)` means it needs working behavior, so it waits. Default to `contract`. Use `implementation` only when the ticket truly cannot be built or tested without the real behavior, and say why in its What.
+
+**Last ticket: swap the stub.** When ticket 0 shipped a fixed response, end with a ticket that depends on the implementation tickets. It removes the fixed response, confirms each consumer works against the real behavior, and lists each consumer to check in its acceptance criteria. Integration surprises land here, in one visible ticket, instead of scattered across the others.
+
+**Group tickets into lanes.** A lane is a set of tickets whose dependencies are all met at the same point, so they can run in separate sessions at the same time. List the lanes above the tickets.
+
+---
+
 ## Step 2: Print a summary
 
 ```
@@ -102,6 +122,7 @@ TRD written
   Work:      <name>
   Saved to:  <file path>
   Tickets:   <count>
+  Lanes:     <e.g. "0 → 1, 2, 3 → 4", or "serial">
   Open Qs:   <count>
 
 Next steps:
