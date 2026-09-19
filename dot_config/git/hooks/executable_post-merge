@@ -1,0 +1,7 @@
+#!/bin/bash
+
+# prove_it measures churn against refs that do not move with the branch, so after
+# the base moves it treats everyone else's merged work as unreviewed changes.
+git for-each-ref --format='%(refname)' refs/worktree/prove_it/ | while read -r ref; do
+  git update-ref -d "$ref"
+done

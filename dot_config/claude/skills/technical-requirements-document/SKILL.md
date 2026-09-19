@@ -126,6 +126,7 @@ TRD written
   Open Qs:   <count>
 
 Next steps:
+  /run-lanes <trd path>   start the first lane as background /feature sessions
   /feature <ticket>   implement one ticket, TDD pipeline
   build <ticket>      implement one ticket in a fresh session
 ```

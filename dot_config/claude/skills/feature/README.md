@@ -1,71 +1,47 @@
 # /feature
 
-Full TDD feature development pipeline for Claude Code. Takes a feature description and runs it through planning, test-driven implementation,
-verification, two review passes, and PR creation.
+TDD pipeline for Claude Code. Takes a specified ticket through spec validation, failing tests, implementation, two review passes, and a draft PR.
 
 ## Usage
 
-/feature
-
-**Examples:**
-/feature add password reset flow with 1-hour expiry tokens
-/feature PROJ-412: export user data as CSV from settings page
+```
+/feature APP-412
+/feature docs/plans/2026-09-18-csv-export-trd.md ticket 3
+/feature APP-412 --lane      # started by /run-lanes, skips the plan approval wait
+```
 
 ## What it does
 
 | Step | What happens |
 |------|-------------|
-| 0 | Confirms the model and effort level, checks deps, installs anything missing, creates a worktree and feature branch, links the prove_it files |
-| 1 | Optional: assigns the referenced ticket and moves it to in progress |
-| 2 | Establishes the spec (from a ticket, TRD, or plan file), validates its assumptions against the code, decomposes it into tasks, gets your approval, then pauses to compact |
-| 3 | Writes concrete, falsifiable prove statements |
-| 4 | Writes failing tests first (TDD) |
-| 5 | Implements task-by-task via subagents, each task reviewed for correctness and readability as it lands, then pauses to compact |
-| 6 | Runs prove_it verification against each statement |
-| 7 | Two review passes: a cold reviewer with no context, then a coherence pass looking only for cross-task problems |
-| 8 | Cleans up debug code, deletes planning artifacts, lints the branch |
-| 9 | Creates the draft PR via `gh` and opens it in your browser |
-| 10 | Watches CI, mergeability, and the automated reviewer, fixes what it finds (including rebasing a conflicted branch), pushes, repeats until all three are clean, then hands the PR to you |
+| 0 | Checks dependencies, creates a worktree and feature branch, links the prove_it files |
+| 1 | Optional: assigns the ticket and moves it to In Progress |
+| 2 | Establishes the spec, validates its assumptions against the code, splits it into tasks, gets your approval |
+| 3 | Writes falsifiable prove statements |
+| 4 | Writes failing tests |
+| 5 | Implements task by task through subagents, each task reviewed as it lands |
+| 6 | Verifies each prove statement with prove_it |
+| 7 | A cold review with no context, then a cross-task coherence review |
+| 8 | Removes debug code and planning files, lints the branch |
+| 9 | Creates the draft PR |
+| 10 | Watches CI, mergeability, and the review bot, fixes what it finds, then hands the PR to you |
 
 ## Where it stops
 
-The pipeline's whole deliverable is a draft PR with green automated signals. Requesting reviews, marking the PR ready, and merging are yours, and the skill will not do them, ask about them, or offer.
+Interactive runs stop once, at plan approval in Step 2. Lane runs do not stop there. Both stop on a false spec assumption, a rebase conflict that needs your intent, or placeholder prove_it scripts.
 
-It also will not wait for a human reviewer. Step 10 polls the signals that land in minutes (CI, mergeability, the review bot) and then ends. A colleague's comments usually arrive long after the session is over, so bringing those back is a fresh `/feature` or `/code-review` run when you want it.
-
-## How much runs locally
-
-Tests and lint run once per change, by whoever made the change, scoped to the files it touched. Nothing re-runs them afterwards: the
-reviewers in Steps 5 and 7 are read-only and read the diff instead. A failing test or a lint violation is caught by CI on push regardless,
-so the pipeline spends its local time on the review passes, which find what CI cannot.
-
-Step 6 runs whatever commands `.claude/prove_statements.md` names, verbatim. The pipeline writes those statements scoped to the feature and
-announces the commands at the end of Step 3, so you can see what it picked before anything runs them. Edit that file to change what runs;
-nothing else in the pipeline broadens it.
+The deliverable is a draft PR with green automated signals. Requesting reviews, marking it ready, and merging are yours. It does not wait for human reviewers.
 
 ## Model and effort
 
-The pipeline expects `sonnet` at `high` effort, and Step 0 stops to confirm it before doing anything else. Claude Code carries the last
-session's model and effort into the next one, so the starting tier is usually an artifact of whatever you did previously rather than a
-choice. The orchestrator mostly dispatches roles and reads back summaries, and each subagent's model and effort come from its own definition
-file, so sonnet/high is enough for the main session. Escalate to opus only in reaction to something: a false assumption from the spec
-falsifier, or Critical findings at 7a.
+Run the main session at `sonnet` / `high`, the default the `claude` shell wrapper sets on every launch. `/run-lanes` passes both flags explicitly. Each subagent's model and effort come from its own definition file.
 
-Step 0 can report the model it is running but cannot see the effort level at all, so it hands that check to you.
+## prove_it files
 
-## Compaction stops
-
-The pipeline stops twice, after Step 2 and after Step 5, and asks you to run `/compact`. The Step 2 stop also asks you to `/rename` the
-session so it stays findable in the session list.
+Step 0 links `script/test`, `script/test_fast`, `.claude/prove_it/config.json`, and `.claude/rules/*.md` from the main checkout into each worktree, and adds them to `.git/info/exclude`. Fix those files once in the main checkout, and every worktree picks up the fix. The global git hooks in `~/.config/git/hooks` clear prove_it's change-tracking refs after a pull, branch switch, or rebase, so they do not go stale.
 
 ## Dependencies
 
 - [`prove_it`](https://github.com/searlsco/prove_it): `brew install searlsco/tap/prove_it && prove_it install`
-- `gh` CLI: `brew install gh`
-- The `feature-*` role definitions in `~/.config/claude/agents/`, which set each subagent's model, reasoning effort, and tool scope.
-  Without them the `subagent_type` dispatches from Step 2 onward will not resolve.
-
-## Optional
-
-- **Ticket tracking**: Step 1 assigns the ticket and moves it to in progress through whichever issue-tracker MCP is configured, when the
-  feature description references one.
+- `gh`: `brew install gh`
+- The `feature-*`, `plan-falsifier`, and `plan-rederiver` definitions in `~/.config/claude/agents/`
