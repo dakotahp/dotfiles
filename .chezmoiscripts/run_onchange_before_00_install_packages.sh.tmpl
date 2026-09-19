@@ -1,7 +1,7 @@
 #!/bin/bash
 
 {{ if eq .chezmoi.os "linux" -}}
-  {{ if eq .chezmoi.osRelease.id "arch" }}
+  {{ if or (eq .chezmoi.osRelease.id "arch") (contains "arch" (.chezmoi.osRelease.idLike | default "")) }}
     yay_packages=(
         {{ range $package := .package.common.names }}
         "{{ $package }}"

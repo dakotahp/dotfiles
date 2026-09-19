@@ -2,7 +2,7 @@
 [package.common] # Package names common to all platforms
 names = ["bat", "git", "curl", "rsync", "tree", "ripgrep", "wget", "zsh"]
 [package.yay]
-names = ["lazydocker", "lazygit", "neovim"]
+names = ["git-spice-bin", "lazydocker", "lazygit", "neovim"]
 [package.homebrew]
 names = [
   "chezmoi",
