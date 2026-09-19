@@ -15,7 +15,7 @@ verification, two review passes, and PR creation.
 
 | Step | What happens |
 |------|-------------|
-| 0 | Confirms the model and effort level, checks deps, installs anything missing, creates the feature branch |
+| 0 | Confirms the model and effort level, checks deps, installs anything missing, creates a worktree and feature branch, links the prove_it files |
 | 1 | Optional: assigns the referenced ticket and moves it to in progress |
 | 2 | Establishes the spec (from a ticket, TRD, or plan file), validates its assumptions against the code, decomposes it into tasks, gets your approval, then pauses to compact |
 | 3 | Writes concrete, falsifiable prove statements |

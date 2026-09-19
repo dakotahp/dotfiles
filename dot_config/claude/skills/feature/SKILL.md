@@ -20,7 +20,7 @@ These rules apply across the entire pipeline. They are defined once here; the st
 
 **Rules 2, 3 and 5 are already baked into the role definitions** in `~/.config/claude/agents/feature-*.md` (see "Subagent roles" in Step 5), because their text is static. You do not need to restate them at dispatch. Rules 1 and 4 carry values only you know, so pass them in every dispatch prompt with the concrete values filled in.
 
-**Rule 1: Commit only to the feature branch.** Applies to every subagent that writes or commits. Tell it the feature branch name created in Step 0 and instruct it to commit only to that branch, never to `main` or `master`. Include a line like: *"All commits must go to branch `feature/<name>`. Verify with `git branch --show-current` before committing."*
+**Rule 1: Work only in the worktree, commit only to the feature branch.** Applies to every subagent that reads, writes, or commits. Tell it the worktree path and the feature branch name created in Step 0, and instruct it to work only in that path and commit only to that branch, never to `main` or `master`. Include a line like: *"Work only in `<worktree path>`. All commits must go to branch `feature/<name>`. Verify with `git branch --show-current` before committing."*
 
 **Rule 2: Never bundle a gated command with others in one Bash call.** Applies to the main session and every subagent. The permission system *does* decompose compound commands: it splits on `&&`, `||`, `;`, `|`, and newlines and matches each segment against your allow/deny/ask rules independently. A chain auto-approves only when **every** segment matches an allow rule; if **any** segment is gated (commit, push) or unmatchable, the whole chain prompts and you cannot approve just the safe half. So the rule is not "never chain"; it is: never join a gated or unmatchable step to safe ones. Concretely: (a) keep `git commit` and `git push` in their own Bash calls, never chained after `git add`, tests, or a build; (b) `cd <repo> && <cmd>` is fine and encouraged when working from a parent dir, provided `<cmd>` is allowlisted; `cd` into the project tree or an `additionalDirectories` entry is auto-approved as read-only; (c) do not inline an `export VAR="...$HOME..."` or other expansion-bearing segment into a chain; it is unmatchable and forces a prompt for the whole chain (fix the environment at launch instead so the export is unnecessary). This keeps allowlisted reads, tests, lint, and builds running automatically while prompting only for genuinely sensitive actions.
 
@@ -78,23 +78,36 @@ For each missing tool, install it using the appropriate package manager:
 - `prove_it`: `brew install searlsco/tap/prove_it && prove_it install`
 - Project tools: use npm, brew, pip, cargo, etc. as appropriate
 
-If `prove_it` has not been initialised in this project yet, run `prove_it init`.
+Do not run `prove_it init` or `prove_it reinit` here. The worktree setup below links the project's prove_it files instead.
 
-### Feature branch
+### Worktree and feature branch
 
-**Before any planning or code**, confirm you are not on `main` or `master`:
+**Before any planning or code, move into a dedicated git worktree. Always, with no exceptions.** Being on a feature branch in the main checkout is not enough. Other sessions and the user share the main checkout, and a pipeline running there collides with whatever else is happening in it.
 
-```bash
-git branch --show-current
-```
-
-If you are on a protected branch, create a feature branch now and check it out:
+Derive a short kebab-case slug from $ARGUMENTS (e.g. `stripe-webhook`, `app-1234-csv-export`). If the session is already in a worktree under `.claude/worktrees/` that was made for this ticket, keep it. Otherwise call the `EnterWorktree` tool with that slug as the name, then rename its branch:
 
 ```bash
-git checkout -b feature/<short-kebab-case-description>
+git branch -m feature/<slug>
 ```
 
-Derive the name from $ARGUMENTS (e.g. `feature/stripe-webhook`, `feature/phase4-security`). This branch is where every commit in this pipeline lands, including commits from subagents. Never commit to `main` or `master`. Record the branch name; you will pass it explicitly to every subagent you dispatch in Step 5.
+Confirm with `git branch --show-current` and `pwd`. Record the worktree path and the branch name; you pass both to every subagent (Standing Rule 1). Every commit in this pipeline lands on this branch. Never commit to `main` or `master`.
+
+### Link the prove_it files
+
+The prove_it files are untracked, so a new worktree does not have them. Without them, prove_it falls back to placeholder scripts. Link them from the main checkout, so every worktree shares one copy:
+
+```bash
+main=$(git worktree list --porcelain | head -1 | cut -d' ' -f2)
+exclude="$(git rev-parse --git-common-dir)/info/exclude"
+for f in script/test script/test_fast .claude/prove_it/config.json .claude/rules/testing.md .claude/rules/done.md; do
+  if [ -e "$main/$f" ] && [ ! -e "$f" ]; then mkdir -p "$(dirname "$f")" && ln -s "$main/$f" "$f"; fi
+  if ! git ls-files --error-unmatch "$f" >/dev/null 2>&1; then grep -qxF "/$f" "$exclude" || echo "/$f" >> "$exclude"; fi
+done
+```
+
+The exclude lines keep the links out of `git status` in every worktree, so no agent commits them.
+
+If `script/test_fast` is missing from the main checkout, or still says "No tests configured", stop and tell the user. Do not write one. **Never edit the linked files during the pipeline.** A link writes through to the main checkout and every other worktree. Above all, never make `script/test_fast` run the full suite: it runs on every stop and commit, and a full-suite run there stalls the pipeline.
 
 ### Session display name
 
@@ -554,8 +567,10 @@ Bringing later human feedback back into a session is the user's call, and `/code
 | "There are no comments yet so the loop is done" | Only if CI is complete and `mergeable` is `MERGEABLE` too. An empty comment list on its own proves nothing; a bot may not have posted yet. |
 | "Checks are green, should I mark it ready or request a reviewer?" | Neither, and do not ask. The user does both, every time, unprompted. Asking hands them work the handoff line already covered. |
 | "The pipeline is done, I'll offer to do more" | The handoff report is the end of your turn. An open-ended offer reads as an unfinished job and puts the user back to managing you. |
-| "I'm already on a branch, subagents will use it" | Subagents start fresh, they do not inherit your branch. Pass the branch name explicitly in every subagent prompt. |
-| "I'll create the branch after planning" | By then a subagent may have already committed to master. Create the branch in Step 0, before anything else. |
+| "I'm already on a feature branch, a worktree is overkill" | The main checkout is shared with the user and other sessions. Step 0 always creates a worktree, whatever branch you are on. |
+| "I'm already on a branch, subagents will use it" | Subagents start fresh, they do not inherit your branch. Pass the worktree path and branch name explicitly in every subagent prompt. |
+| "I'll create the branch after planning" | By then a subagent may have already committed to master. Create the worktree and branch in Step 0, before anything else. |
+| "The prove_it scripts are placeholders, I'll fill them in" | Stop and tell the user. The scripts are linked and shared, so an edit here changes every worktree. |
 | "This feature is small, inline execution is fine" | Feature size is irrelevant. Inline execution has no per-task commits and no review checkpoints. Always use subagent-driven-development. |
 | "The spec is obviously right, skip the validation" | A false premise in the spec becomes implemented behavior, and by then it costs a rewrite. Run Step 2b before approval, on the real spec, before any code exists. |
 | "This session already figured out the problem, that counts as a spec" | It does not. An investigation is not a specification, and Step 2a stops rather than brainstorming. Write the ticket first, then run the pipeline against it. |
