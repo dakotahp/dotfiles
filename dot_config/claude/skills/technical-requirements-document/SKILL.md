@@ -126,12 +126,20 @@ TRD written
   Open Qs:   <count>
 
 Next steps:
-  /run-lanes <trd path>   start the first lane as background /feature sessions
+  /run-lanes <trd path>   after creating tickets, start every ready ticket in the background
   /feature <ticket>   implement one ticket, TDD pipeline
   build <ticket>      implement one ticket in a fresh session
 ```
 
-Then offer to create the tickets in the tracker, and **wait for explicit confirmation before creating anything.** Creating issues is visible to other people and tedious to undo, so never do it as a side effect of writing the document. When confirmed, create them in dependency order, put the ticket's What and acceptance criteria in the description, and report the created identifiers.
+Then offer to create the tickets in the tracker, and **wait for explicit confirmation before creating anything.** Creating issues is visible to other people and tedious to undo, so never do it as a side effect of writing the document. When confirmed, create them in dependency order, in one tracker project, and report the created identifiers. Each ticket must work for a cold session that only reads the ticket, so its description holds:
+
+- The What, Areas, and acceptance criteria.
+- The Interfaces and Contracts entries it produces or consumes, copied verbatim.
+- `TRD: <absolute path to this file>`
+
+Record each dependency as a "blocked by" relation to the blocking ticket, using the tracker's relation fields. If the tracker cannot set relations, start the description with `Blocked by: <IDs>` instead. `/run-lanes` reads these to decide what can start.
+
+Then write the identifiers back into this TRD: in each ticket heading (`### 2. APP-1234: <title>`), in each Depends on line, and in the Lanes line. The TRD and the tracker must name the same tickets.
 
 ---
 

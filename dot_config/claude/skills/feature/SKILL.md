@@ -75,7 +75,7 @@ If $ARGUMENTS references a ticket, use the tracker's MCP to assign it to me and 
 
 The input must be one of:
 
-1. A ticket identifier or URL. Fetch it.
+1. A ticket identifier or URL. Fetch it. If its description has a `TRD:` line, read that file too.
 2. A path to a spec, TRD, or plan file. Read it. For a TRD ticket, read the whole TRD, since the ticket leans on its Interfaces and Behavior sections.
 3. A TRD or technical plan produced earlier in this session. Use it, and do not re-ask what is settled.
 4. Prose that states what changes, where, and how you would know it worked.
