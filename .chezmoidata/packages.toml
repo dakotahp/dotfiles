@@ -19,6 +19,7 @@ names = [
   "ssh-copy-id",
   "starship",
   "syncthing",
+  "terminal-notifier",
   "yazi",
   "zoxide",
 ]
