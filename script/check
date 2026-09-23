@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -uo pipefail
+
+cd "$(dirname "$0")/.." || exit 1
+
+failures=0
+work=$(mktemp -d "${TMPDIR:-/tmp}/check.XXXXXX") || exit 1
+trap 'rm -rf "$work"' EXIT
+
+fail() {
+  echo "FAIL $1"
+  [ -s "$2" ] && sed 's/^/  /' "$2"
+  failures=$((failures + 1))
+}
+
+profiles=(
+  '{"chezmoi":{"os":"darwin"},"work_computer":true,"dev_computer":true}'
+  '{"chezmoi":{"os":"darwin"},"work_computer":false,"dev_computer":false}'
+  '{"chezmoi":{"os":"linux","osRelease":{"id":"arch","idLike":""}},"work_computer":false,"dev_computer":true}'
+  '{"chezmoi":{"os":"linux","osRelease":{"id":"ubuntu","idLike":"debian"}},"work_computer":false,"dev_computer":false}'
+)
+profile_names=(mac-work mac-personal arch-dev linux-other)
+
+echo "== chezmoi data"
+chezmoi data >/dev/null 2>"$work/err" || fail "chezmoi data (.chezmoidata or config)" "$work/err"
+
+echo "== .chezmoi.toml.tmpl"
+if chezmoi execute-template --init --promptBool work_computer=true,dev_computer=true \
+  <.chezmoi.toml.tmpl >"$work/config.toml" 2>"$work/err"; then
+  python3 -c 'import sys, tomllib; tomllib.load(open(sys.argv[1], "rb"))' "$work/config.toml" 2>"$work/err" \
+    || fail ".chezmoi.toml.tmpl renders invalid TOML" "$work/err"
+else
+  fail ".chezmoi.toml.tmpl" "$work/err"
+fi
+
+echo "== templates"
+while IFS= read -r tmpl; do
+  if grep -qE 'onepassword|bitwarden|keyring' "$tmpl"; then
+    echo "skip $tmpl (reads secrets)"
+    continue
+  fi
+  for i in "${!profiles[@]}"; do
+    out="$work/${tmpl//\//_}.${profile_names[$i]}"
+    if ! chezmoi execute-template --override-data "${profiles[$i]}" <"$tmpl" >"$out" 2>"$work/err"; then
+      fail "$tmpl [${profile_names[$i]}] does not render" "$work/err"
+      continue
+    fi
+    case "$tmpl" in
+      *.json.tmpl)
+        jq empty "$out" 2>"$work/err" || fail "$tmpl [${profile_names[$i]}] renders invalid JSON" "$work/err" ;;
+      *.toml.tmpl)
+        python3 -c 'import sys, tomllib; tomllib.load(open(sys.argv[1], "rb"))' "$out" 2>"$work/err" \
+          || fail "$tmpl [${profile_names[$i]}] renders invalid TOML" "$work/err" ;;
+      .chezmoiscripts/*)
+        if head -1 "$out" | grep -qE '^#!.*\b(ba)?sh$'; then
+          shellcheck -S warning "$out" >"$work/err" 2>&1 \
+            || fail "$tmpl [${profile_names[$i]}] shellcheck" "$work/err"
+        fi ;;
+    esac
+  done
+done < <(find . -name '*.tmpl' -not -path './.git/*' -not -name '.chezmoi.toml.tmpl' | sed 's|^\./||' | sort)
+
+echo "== shell scripts"
+while IFS= read -r script; do
+  if head -1 "$script" | grep -qE '^#!.*\b(ba)?sh$'; then
+    shellcheck -S warning "$script" >"$work/err" 2>&1 || fail "$script shellcheck" "$work/err"
+  fi
+done < <(find bin script .chezmoiscripts -type f -not -name '*.tmpl' | sort)
+
+echo
+if [ "$failures" -gt 0 ]; then
+  echo "$failures check(s) failed"
+  exit 1
+fi
+echo "All checks passed"

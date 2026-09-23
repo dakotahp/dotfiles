@@ -1,6 +1,6 @@
 [package]
 [package.common] # Package names common to all platforms
-names = ["bat", "git", "curl", "rsync", "tree", "ripgrep", "wget", "zsh"]
+names = ["bat", "git", "curl", "jq", "rsync", "shellcheck", "tree", "ripgrep", "wget", "zsh"]
 [package.yay]
 names = ["git-spice-bin", "lazydocker", "lazygit", "neovim"]
 [package.homebrew]
@@ -11,7 +11,6 @@ names = [
   "git-spice",
   "gnupg",
   "jless",
-  "jq",
   "lazydocker",
   "lazygit",
   "neovim",

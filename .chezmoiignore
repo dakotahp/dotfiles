@@ -2,5 +2,6 @@ Brewfile
 bin/
 git-commit-template.txt
 README.md
+script/
 setup-macos.sh
 setup.sh

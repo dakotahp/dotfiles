@@ -16,7 +16,7 @@ chezmoi cd                 # Navigate to this source repo
 chezmoi data               # Show template data (work_computer, dev_computer, etc.)
 ```
 
-There are no build, lint, or test commands — this is a dotfiles repo, not a software project.
+Run `script/check` before every commit. It renders every template for four machine profiles (Mac work, Mac personal, Arch, other Linux), validates rendered JSON and TOML, and runs `shellcheck` on the bash scripts. Templates that read secrets from 1Password are skipped.
 
 ## Chezmoi Template System
 

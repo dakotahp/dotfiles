@@ -35,6 +35,16 @@ The repo is at `chezmoi cd` to be able to commit changes for the remote repo.
 
 **A drifted file can silently halt the rest of the apply.** If a target has changed since chezmoi last wrote it, apply stops to ask before overwriting. With no terminal to prompt on it aborts at that file, and since it walks paths in order, everything alphabetically after it never applies. `~/.config/claude/settings.json` triggers this routinely because Claude Code writes to it. If an apply seems to have done nothing, resolve that file first with `chezmoi apply --force <path>`, then apply normally.
 
+## Checking Changes
+
+Run `script/check` after editing templates or scripts. It is manual, with no hook or CI, and takes a few seconds. It catches the three ways these files usually break:
+
+* **A template that does not render.** Every `.tmpl` is rendered for four machine profiles (Mac work, Mac personal, Arch, other Linux), so a typo in a branch this machine never takes still fails.
+* **Invalid JSON or TOML.** Rendered `.json` and `.toml` files are parsed, for example `settings.json`, which Claude Code refuses to load if it is broken.
+* **Shell script bugs.** `shellcheck` lints the bash scripts in `bin/`, `script/`, and `.chezmoiscripts/`, including the rendered output of templated ones.
+
+It does not render the templates that read from 1Password, and it does not lint zsh files, which `shellcheck` does not support. It also cannot tell you what `chezmoi apply` will do on a real machine; `chezmoi diff` covers that.
+
 ## Shell Architecture
 
 Shell configuration is modular. Rather than a monolithic `.zshrc`, interactive shell config is split into numbered files under `~/.config/zshell_components/` that are sourced in sort order:
