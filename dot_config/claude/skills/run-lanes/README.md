@@ -1,6 +1,6 @@
 # /run-lanes
 
-Starts every ticket that is ready to build as its own background `/feature` session, with one command. Ready means the ticket has not started and everything it depends on is merged.
+Starts every ticket that is ready to build as its own background `/feature` session, with one command. Ready means the ticket has not started, and everything it depends on is merged, or only one blocker is left and it has an open PR. In that second case the ticket starts as a git-spice stack on the blocker's branch.
 
 ## Why
 
@@ -14,8 +14,8 @@ Serial work waits on blockers that are often small, like one API param. The fix 
    - The **last ticket** swaps the fixed response for the real one and checks each consumer.
 2. **Create the tickets** when the TRD skill offers. It adds "blocked by" links in Linear, copies the relevant contract text into each ticket, and writes the ticket IDs back into the TRD.
 3. **`/run-lanes <TRD path or Linear project URL>`**. Usually this starts ticket 0 alone.
-4. **Merge** the PRs that come back, and let the tickets reach Done.
-5. **`/run-lanes` again.** Now the contract tickets are ready, and they all start at once. Repeat until nothing is left.
+4. **`/run-lanes` again** once ticket 0 has an open PR. The contract tickets now start at once, each stacked on ticket 0's branch. You do not have to merge first.
+5. **Merge** from the bottom of the stack up. After a parent merges, run `git-spice repo sync --restack` and `git-spice stack submit` to move its children onto trunk and retarget their PRs. Run `/run-lanes` again after each merge until nothing is left.
 
 ```
 /run-lanes docs/plans/2026-09-18-csv-export-trd.md
@@ -33,5 +33,6 @@ Serial work waits on blockers that are often small, like one API param. The fix 
 ## Requirements
 
 - The tickets exist in the tracker with IDs. A TRD without ticket IDs stops the run.
-- Blockers are merged, not only open. New worktrees branch from the remote default branch.
+- Each blocker is merged, or it is the only one left and has an open PR on a `feature/<id>-...` branch.
+- `git-spice auth login` has run once on the machine, for stacked tickets. Pick the GitHub CLI method so it reuses `gh`.
 - For tickets across several repos, run it from the parent folder that holds them.

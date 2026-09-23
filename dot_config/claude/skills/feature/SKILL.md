@@ -12,6 +12,8 @@ Implement the feature described in $ARGUMENTS by following every step below in o
 
 **Lane mode.** If $ARGUMENTS contains `--lane`, this session was started by `/run-lanes` in the background, from an approved TRD ticket. Lane mode changes one thing: Step 2d does not wait for approval. Every other stop still waits, because the user can attach to the session and answer.
 
+**Stacked mode.** If $ARGUMENTS contains `--stack-on <branch>`, this branch builds on another feature branch whose PR is still open. git-spice tracks the parent link, and the PR targets the parent instead of the default branch. Step 0 sets the stack up, and Steps 7a, 9, and 10 use the parent as the base. Without the flag, a branch is stacked only if `git-spice log short` already lists it with a parent other than trunk. Never start a stack without the flag or an explicit request.
+
 ---
 
 ## Standing rules
@@ -32,7 +34,7 @@ These apply to you as well:
 
 ### Dependencies
 
-Confirm `gh`, `prove_it`, and the project's own tooling (README, `package.json` scripts, `Makefile`) are on PATH. Install anything missing (`brew install gh`, `brew install searlsco/tap/prove_it && prove_it install`). Do not run `prove_it init` or `prove_it reinit`; the worktree setup links the project's prove_it files instead.
+Confirm `gh`, `git-spice`, `prove_it`, and the project's own tooling (README, `package.json` scripts, `Makefile`) are on PATH. Install anything missing (`brew install gh git-spice`, `brew install searlsco/tap/prove_it && prove_it install`). Always call git-spice as `git-spice`, never `gs`. Do not run `prove_it init` or `prove_it reinit`; the worktree setup links the project's prove_it files instead.
 
 ### Worktree and feature branch
 
@@ -45,6 +47,25 @@ git branch -m feature/<slug>
 ```
 
 Record the worktree path and branch name for every dispatch. Never commit to `main` or `master`.
+
+### Stack setup (stacked mode only)
+
+Skip this without `--stack-on`. The new worktree starts from the default branch and has no commits yet, so move it onto the parent, then record the link in git-spice:
+
+```bash
+trunk=$(git symbolic-ref --short refs/remotes/origin/HEAD | sed 's|^origin/||')
+git fetch origin <parent>
+git reset --hard origin/<parent>
+git-spice repo init --trunk "$trunk" --remote origin
+git-spice branch track <parent> --base "$trunk"
+git-spice branch track feature/<slug> --base <parent>
+```
+
+Skip `branch track <parent>` when `git-spice log short` already lists the parent. If the parent is not on `origin`, or `git-spice auth status` fails, stop and tell the user.
+
+### Base branch
+
+Record the base branch for Steps 7a, 9, and 10. In stacked mode it is the parent. Otherwise it is the default branch: the part of `git symbolic-ref --short refs/remotes/origin/HEAD` after `origin/`, or whichever of `origin/main` or `origin/master` `git rev-parse --verify` resolves.
 
 ### Link the prove_it files
 
@@ -160,7 +181,7 @@ Dispatch `feature-prove-verifier` with the full contents of `.claude/prove_state
 
 ### 7a: Cold diff review
 
-Dispatch `feature-adversarial-reviewer` with only the base branch name. Give it no plan, spec, or description of intent; inferring intent from the code is the point. Resolve the base from `git symbolic-ref --short refs/remotes/origin/HEAD` and pass the part after `origin/`. If that ref is missing, use whichever of `origin/main` or `origin/master` `git rev-parse --verify` resolves.
+Dispatch `feature-adversarial-reviewer` with only the base branch name from Step 0, as `origin/<base>`. Give it no plan, spec, or description of intent; inferring intent from the code is the point. In stacked mode the parent is the base, so the review covers only this branch's commits.
 
 Fix every Critical and High finding. Use judgment on Medium. If you disagree with a finding, give the reason.
 
@@ -188,9 +209,15 @@ Main session only.
 gh pr create --draft --title "<concise imperative title>" --body "<what changed, why, how to verify>"
 ```
 
-The body references the prove statements and their evidence. Open the URL with `xdg-open` (Linux) or `open` (macOS), and report the PR number and URL. Never run `gh pr ready`, `gh pr merge`, or `gh pr edit --add-reviewer`.
+In stacked mode, use git-spice instead. It pushes the branch, sets the PR base to the parent, and adds a comment that links the PRs in the stack:
 
-Step 10 needs a PR number from a `gh pr create` in this session. A PR found with `gh pr list` does not count.
+```
+git-spice branch submit --draft --no-prompt --title "<concise imperative title>" --body "<what changed, why, how to verify>"
+```
+
+The body references the prove statements and their evidence. In stacked mode, the body also says which PR it builds on. Open the URL with `xdg-open` (Linux) or `open` (macOS), and report the PR number and URL. Never run `gh pr ready`, `gh pr merge`, `gh pr edit --add-reviewer`, or `git-spice branch submit` with `--reviewer` or `--no-draft`.
+
+Step 10 needs a PR number from a `gh pr create` or `git-spice branch submit` in this session. A PR found with `gh pr list` does not count.
 
 ---
 
@@ -238,11 +265,19 @@ git fetch origin <baseRefName>
 git rebase origin/<baseRefName>
 ```
 
-If `git-spice log short` lists this branch, it is in a stack. Run `git-spice repo sync` then `git-spice upstack restack` instead, so the branches above it follow, and push each restacked branch the same way.
+In stacked mode, let git-spice do it instead. It rebases onto the parent's latest commits, and if the parent merged, it moves this branch onto trunk and retargets the PR:
 
-Resolve conflicts by keeping both sides; the other side is shipped work. Regenerate lockfiles instead of hand-merging them. Then re-run the prove statement commands, since the base moved under every file, and push with `git push --force-with-lease`, never `--force`. If the lease is rejected, someone else pushed: stop and tell the user.
+```
+git-spice repo sync
+git-spice branch restack
+git-spice branch submit --no-prompt
+```
 
-If a resolution needs intent you do not have, or you are unsure, run `git rebase --abort` and tell the user which files conflicted and what each side wanted.
+Restack only this branch. Branches stacked above it belong to other sessions, and each one restacks itself. Run this stacked-mode sequence on every poll, not only on `BEHIND`, because GitHub often does not report a moved parent as behind.
+
+Resolve conflicts by keeping both sides; the other side is shipped work. Regenerate lockfiles instead of hand-merging them. Then re-run the prove statement commands, since the base moved under every file. Push with `git push --force-with-lease`, never `--force`, or with `git-spice branch submit` in stacked mode, never with its `--force`. If the push is rejected, someone else pushed: stop and tell the user.
+
+If a resolution needs intent you do not have, or you are unsure, abort (`git rebase --abort`, or `git-spice rebase abort` in stacked mode) and tell the user which files conflicted and what each side wanted.
 
 ### Cadence and exit
 
@@ -274,3 +309,5 @@ Human approval is not a condition. Then post this and stop, with no offers or qu
 | "Cleanup reported back, the work is done" | Step 9 creates the PR and Step 10 reviews it. You are two steps from done. |
 | "Checks are green, so the PR is fine" | Also read `mergeable`. A conflicted branch cannot merge. |
 | "The prove_it scripts are placeholders, I'll fill them in" | Stop and tell the user. The scripts are shared through links. |
+| "The parent PR is stale, I'll restack the whole stack" | Restack only your branch. Other sessions own the branches around it. |
+| "`git-spice stack merge` would finish this" | Never merge. Merging belongs to the user. |

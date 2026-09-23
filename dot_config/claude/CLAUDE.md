@@ -67,6 +67,7 @@ git-spice (branch stacking) is installed on every machine. Always call it as `gi
 
 - Use it when the current branch is already in a stack (`git-spice log short` lists it), or when I ask for stacked branches. Do not start a stack on your own.
 - In a stack, use `git-spice upstack restack` instead of a manual `git rebase`, so the branches above follow.
+- In a stack, open and update PRs with `git-spice branch submit --draft` instead of `gh pr create`, so each PR targets its parent branch.
 - Never run `git-spice stack merge` or `git-spice downstack merge`. Merging is mine.
 
 ## Memory

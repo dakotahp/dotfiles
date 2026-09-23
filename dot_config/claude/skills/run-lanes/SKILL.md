@@ -19,14 +19,20 @@ Fetch every ticket from the tracker, with its status and its blockers. Blockers 
 
 ## Step 2: Pick the ready tickets
 
-A ticket is **ready** when both are true:
+A ticket is **ready** when its status has not started (Backlog, Todo, or the tracker's equivalent), and one of these is true:
 
-1. Its status has not started (Backlog, Todo, or the tracker's equivalent).
-2. Every blocker's status is Done.
+1. **Ready on trunk:** every blocker's status is Done.
+2. **Ready to stack:** exactly one blocker is not Done, and that blocker has an open PR in the ticket's repo. Find the PR by branch name, since `/feature` names branches `feature/<lowercase ID>-...`:
+
+   ```bash
+   gh pr list --state open --json number,headRefName --jq '.[] | select(.headRefName | startswith("feature/<lowercase blocker ID>-"))'
+   ```
+
+   Its `headRefName` is the parent branch. If the search finds no PR, or more than one, the ticket waits.
 
 Start every ready ticket, and only those. If $ARGUMENTS names IDs, start only the named IDs that are ready. Apply this rule exactly; do not skip, add, or reorder tickets by judgment. `/feature` moves each ticket to In Progress, so a second run never starts a ticket twice.
 
-Done means merged. New worktrees branch from the remote default branch, so a blocker with an open PR is not done, and its dependents wait.
+A ticket with two or more blockers not Done waits, because a git-spice branch has only one parent. A blocker that is not Done and has no open PR is still being built, so its dependents wait for the next run.
 
 If nothing is ready, report each open ticket with what it waits on, and stop.
 
@@ -34,6 +40,7 @@ If nothing is ready, report each open ticket with what it waits on, and stop.
 
 - **Repo:** the git repo that holds the ticket's Areas. From a parent directory with sibling repos, match by repo name. If any ticket is ambiguous, ask once for all of them.
 - **Slug:** kebab-case, the lowercase ID first, at most 40 characters (e.g. `app-1234-export-endpoint`).
+- **git-spice login:** if any ticket is ready to stack, run `git-spice auth status` in its repo. If it fails, do not launch the stacked tickets. Tell the user to run `! git-spice auth login` and pick the GitHub CLI method, then run `/run-lanes` again. Still launch the tickets that are ready on trunk.
 
 ## Step 4: Launch
 
@@ -48,6 +55,8 @@ cd <repo> && command claude --bg -w <slug> -n "<ID> <slug>" --model sonnet --eff
 - `-w <slug>` gives the session its own worktree. `/feature` keeps it and renames the branch to `feature/<slug>`.
 - `-n` names the session to match the branch.
 
+For a ticket that is ready to stack, append `--stack-on <parent branch>` to the prompt, for example `"/feature <ID> --lane --stack-on feature/app-1234-export-endpoint"`. `/feature` moves the worktree onto the parent and opens its PR against the parent branch.
+
 The launch writes session state outside the repo. If the sandbox blocks it, retry the same call outside the sandbox. If one launch fails, keep launching the others and report the failure.
 
 ## Step 5: Report and stop
@@ -55,6 +64,7 @@ The launch writes session state outside the repo. If the sandbox blocks it, retr
 ```
 Started
   <ID>  <repo>  <session id>
+  <ID>  <repo>  <session id>  stacked on <parent branch>
 
 Waiting
   <ID>  blocked by <IDs not yet Done>
@@ -63,4 +73,4 @@ Waiting
   claude attach <id>   open one to answer a question or watch it
 ```
 
-Each session ends with a draft PR, or stops to ask when it finds a false spec assumption, a rebase it cannot resolve, or placeholder prove_it scripts. When PRs merge and their tickets reach Done, run `/run-lanes` again to start what they unblocked.
+Each session ends with a draft PR, or stops to ask when it finds a false spec assumption, a rebase it cannot resolve, or placeholder prove_it scripts. Run `/run-lanes` again when a PR opens or merges, to start what it unblocked. After a parent PR merges, a stacked session that already finished does not move itself onto trunk. The user runs `git-spice repo sync --restack` and `git-spice stack submit` for that.

@@ -8,7 +8,12 @@ TDD pipeline for Claude Code. Takes a specified ticket through spec validation, 
 /feature APP-412
 /feature docs/plans/2026-09-18-csv-export-trd.md ticket 3
 /feature APP-412 --lane      # started by /run-lanes, skips the plan approval wait
+/feature APP-413 --stack-on feature/app-412-export-endpoint   # builds on an open PR
 ```
+
+## Stacked branches
+
+With `--stack-on <branch>`, the feature branch starts from that branch, not from trunk. git-spice records the parent link. The draft PR targets the parent, and the diff shows only this ticket's commits. While it waits on CI, the session restacks its own branch when the parent moves or merges. It never restacks branches that other sessions own, and it never merges.
 
 ## What it does
 
@@ -44,4 +49,5 @@ Step 0 links `script/test`, `script/test_fast`, `.claude/prove_it/config.json`, 
 
 - [`prove_it`](https://github.com/searlsco/prove_it): `brew install searlsco/tap/prove_it && prove_it install`
 - `gh`: `brew install gh`
+- `git-spice`, for stacked branches: installed by `packages.toml`. Run `git-spice auth login` once per machine and pick the GitHub CLI method.
 - The `feature-*`, `plan-falsifier`, and `plan-rederiver` definitions in `~/.config/claude/agents/`
