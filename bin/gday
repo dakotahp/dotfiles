@@ -31,7 +31,7 @@ set -e
 cleanup() {
   echo 'Error raised. Exiting cleanly.'
   announce "Ending amphetamine session." $BLUE
-  osascript $(chezmoi source-path)/bin/amphetamine-end-session.scpt
+  osascript "$(chezmoi source-path)"/bin/amphetamine-end-session.scpt
 }
 
 trap 'cleanup' ERR

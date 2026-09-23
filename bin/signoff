@@ -6,7 +6,7 @@ set -e
 cleanup() {
   echo 'Error raised. Exiting cleanly.'
   announce "Ending amphetamine session." $BLUE
-  osascript $(chezmoi source-path)/bin/amphetamine-end-session.scpt
+  osascript "$(chezmoi source-path)"/bin/amphetamine-end-session.scpt
 }
 
 trap 'cleanup' ERR
@@ -56,7 +56,7 @@ fi
 # https://apps.apple.com/us/app/amphetamine/id937984704?mt=12
 if test -d /Applications/Amphetamine.app; then
   announce "Amphetamine found, starting session." $BLUE
-  osascript $(chezmoi source-path)/bin/amphetamine-start-session.scpt
+  osascript "$(chezmoi source-path)"/bin/amphetamine-start-session.scpt
 else
   announce "Amphetamine not found, skipping starting session." $BLUE
 fi
@@ -92,7 +92,7 @@ fi
 
 if test -d /Applications/Amphetamine.app; then
   announce "Ending amphetamine session." $BLUE
-  osascript $(chezmoi source-path)/bin/amphetamine-end-session.scpt
+  osascript "$(chezmoi source-path)"/bin/amphetamine-end-session.scpt
 fi
 
 git commit --amend --signoff
