@@ -26,6 +26,14 @@ Ask a question only if you cannot proceed without it. If you can make a reasonab
 
 Save to `docs/plans/YYYY-MM-DD-<slugified-name>-technical-plan.md`.
 
+**Background sessions.** If this session cannot write to the shared checkout, for example a background session in a worktree, save to `docs/plans/` in the session's worktree instead. The final path is the same file under the main checkout's `docs/plans/` (the main checkout is the first path in `git worktree list --porcelain`). Report that final path in Step 2, and end with one command that moves the file there:
+
+```bash
+cp <worktree>/docs/plans/<plan file> <main checkout>/docs/plans/
+```
+
+If `/technical-requirements-document` runs next in this session, leave the command to it, so one `cp` moves both files.
+
 Respect the budget on each section. The budgets are the point of this skill: they are what keeps the document readable, and a section that runs long is almost always padding rather than substance.
 
 ```markdown

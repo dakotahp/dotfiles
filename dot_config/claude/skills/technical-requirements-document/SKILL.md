@@ -1,7 +1,7 @@
 ---
 name: technical-requirements-document
 description: Writes a detailed technical requirements document (TRD) with a ticket-by-ticket breakdown, normally run straight after /technical-plan in the same session so it can build on the approach and decisions already established. Use when a technical plan needs to become implementable specs, when someone asks for a TRD or detailed technical requirements, or when work needs breaking into tickets that separate sessions will pick up.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, AskUserQuestion, Task, mcp__linear-server__get_project, mcp__linear-server__get_issue, mcp__linear-server__list_issues, mcp__linear-server__get_document, mcp__linear-server__save_issue, mcp__linear-server__list_teams, mcp__linear-server__list_projects
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, AskUserQuestion, Task, ListAgents, SendMessage, mcp__linear-server__save_comment, mcp__linear-server__list_comments, mcp__linear-server__get_project, mcp__linear-server__get_issue, mcp__linear-server__list_issues, mcp__linear-server__get_document, mcp__linear-server__save_issue, mcp__linear-server__save_document, mcp__linear-server__list_teams, mcp__linear-server__list_projects
 ---
 
 Write a technical requirements document for the work in $ARGUMENTS, or for the work already established in this session.
@@ -24,12 +24,17 @@ Fill gaps from the code, not from assumption. Where the plan left something open
 
 Save to `docs/plans/YYYY-MM-DD-<slugified-name>-trd.md`.
 
+Fill in **Planner session** from `ListAgents`. Its first line gives this session's name and ref. This session becomes the planner: the session that implementers ask about the spec (see "Act as the planner" below).
+
+**Background sessions.** If this session cannot write to the shared checkout, for example a background session in a worktree, save to `docs/plans/` in the session's worktree instead. The final path is the same file under the main checkout's `docs/plans/` (the main checkout is the first path in `git worktree list --porcelain`). Use that final path everywhere a path is written down, including every ticket's `TRD:` line. Step 2 ends with the command that moves the file there.
+
 ```markdown
 # TRD: <Name>
 
 **Date:** YYYY-MM-DD
 **Status:** Draft
 **Technical plan:** <relative path, or "none">
+**Planner session:** <name> [ref]
 
 ---
 
@@ -107,11 +112,13 @@ Apply this whenever tickets meet across a boundary: backend and frontend, servic
 
 **Ticket 0: land the contract.** The smallest mergeable change that makes the interface real, with no business logic. For example, the endpoint or param exists, accepts the pinned request shape, and returns a fixed response in the pinned shape. Put it behind the work's feature flag. Consumers build against it while the real implementation happens in parallel. Skip ticket 0 when consumers can build and test from the written contract alone, for example with mocks, and have their tickets depend on the Interfaces section instead.
 
-**Split every dependency into one of two kinds.** `contract (ticket 0)` means the ticket needs only the shape, so it starts as soon as ticket 0 merges. `implementation (ticket N)` means it needs working behavior, so it waits. Default to `contract`. Use `implementation` only when the ticket truly cannot be built or tested without the real behavior, and say why in its What.
+**Split every dependency into one of two kinds.** `contract (ticket 0)` means the ticket needs only the shape, so it starts as soon as ticket 0 has an open PR, stacked on ticket 0's branch. `implementation (ticket N)` means it needs working behavior, so it starts as soon as ticket N has an open PR, stacked on ticket N's branch. Neither kind waits for a merge. Default to `contract`. Use `implementation` only when the ticket truly cannot be built or tested without the real behavior, and say why in its What.
 
 **Last ticket: swap the stub.** When ticket 0 shipped a fixed response, end with a ticket that depends on the implementation tickets. It removes the fixed response, confirms each consumer works against the real behavior, and lists each consumer to check in its acceptance criteria. Integration surprises land here, in one visible ticket, instead of scattered across the others.
 
 **Group tickets into lanes.** A lane is a set of tickets whose dependencies are all met at the same point, so they can run in separate sessions at the same time. List the lanes above the tickets.
+
+**List direct dependencies only.** If ticket 3 needs ticket 2, and ticket 2 needs ticket 1, ticket 3 depends on ticket 2 alone. A redundant dependency becomes a redundant blocker in the tracker, and `/run-lanes` can make a ticket wait for it.
 
 ---
 
@@ -131,15 +138,57 @@ Next steps:
   build <ticket>      implement one ticket in a fresh session
 ```
 
-Then offer to create the tickets in the tracker, and **wait for explicit confirmation before creating anything.** Creating issues is visible to other people and tedious to undo, so never do it as a side effect of writing the document. When confirmed, create them in dependency order, in one tracker project, and report the created identifiers. Each ticket must work for a cold session that only reads the ticket, so its description holds:
+Then offer to create the tickets in the tracker, and **wait for explicit confirmation before creating or editing anything.** Creating issues is visible to other people and tedious to undo, so never do it as a side effect of writing the document.
+
+### Create new tickets
+
+When confirmed, create them in dependency order, in one tracker project, and report the created identifiers. Each ticket must work for a cold session that only reads the ticket, so its description holds:
 
 - The What, Areas, and acceptance criteria.
 - The Interfaces and Contracts entries it produces or consumes, copied verbatim.
 - `TRD: <absolute path to this file>`
+- `Planner: <name> [ref]`, from the TRD header.
 
-Record each dependency as a "blocked by" relation to the blocking ticket, using the tracker's relation fields. If the tracker cannot set relations, start the description with `Blocked by: <IDs>` instead. `/run-lanes` reads these to decide what can start.
+Record each **direct** dependency as a "blocked by" relation to the blocking ticket, using the tracker's relation fields. Never add a transitive one: if 3 needs 2 and 2 needs 1, ticket 3 is blocked by 2 only. Redundant blockers make `/run-lanes` wait. If the tracker cannot set relations, start the description with `Blocked by: <IDs>` instead. `/run-lanes` reads these to decide what can start.
 
-Then write the identifiers back into this TRD: in each ticket heading (`### 2. APP-1234: <title>`), in each Depends on line, and in the Lanes line. The TRD and the tracker must name the same tickets.
+If a ticket must wait for something the tracker cannot express, such as a deploy, start its description with `Start after: <condition>`, for example "Start after: APP-4508 deployed to production". `/run-lanes` asks the user before it starts that ticket.
+
+### Adopt existing tickets
+
+If the work already has tickets, do not create duplicates. Match each TRD ticket to its existing ticket, and create only the TRD tickets with no match. For each existing ticket:
+
+- After the TRD is published (below), add a "Read first" block at the top of its description, below any `Blocked by:` or `Start after:` line. Keep the old text below it.
+
+  ```markdown
+  **Read first. This block supersedes the text below.**
+  TRD: <absolute path to this file> (Linear: <document URL>)
+  Planner: <name> [ref]
+  - <each correction, e.g. "The endpoint is /exports, not /reports/export.">
+  ```
+
+- Add any missing direct "blocked by" relations. Remove none without asking.
+
+### Write back and publish
+
+Write the identifiers back into this TRD: in each ticket heading (`### 2. APP-1234: <title>`), in each Depends on line, and in the Lanes line. The TRD and the tracker must name the same tickets.
+
+Then publish the TRD as a Linear document on the project with `mcp__linear-server__save_document`, so teammates and their agents can read it without the local file. Add its URL to every ticket, next to the local path: `TRD: <absolute path> (Linear: <document URL>)`. If you edit the TRD later, update the document too.
+
+### Background sessions
+
+If Step 1 saved into the session's worktree, end with one command that moves the TRD, and the technical plan if this session wrote it, to their final paths:
+
+```bash
+cp <worktree>/docs/plans/<plan file> <worktree>/docs/plans/<trd file> <main checkout>/docs/plans/
+```
+
+### Act as the planner
+
+After the tickets exist, stay in this session as the planner. Lane sessions message you here with `SendMessage`. Reply to the `from` name on each message.
+
+- **Spec questions:** answer from the TRD, the plan, and the code. If the answer changes or adds to the spec, update the TRD, the Linear document, and the ticket's "Read first" block before you reply, so later sessions get it too. If the question needs a decision the user has not made, ask the user, then relay the answer.
+- **`<ID> PR open: <url>`:** tell the user, and ask whether to run `/run-lanes <TRD path>` now. Run it only when the user says so.
+- **Reaching an implementer:** each lane session comments `Implementer: <name> [ref]` on its ticket. Use that name to send a correction or a question down to it.
 
 ---
 

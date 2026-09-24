@@ -1,7 +1,7 @@
 ---
 name: feature
 description: Use when implementing an already-specified task: a ticket, a TRD section, or a written spec. Runs the full pipeline from spec validation through failing tests, implementation, review, and a draft PR. Expects the design to be settled and validates the spec against the code rather than working out what to build; given only an investigation or a rough idea, it asks for a specification first instead of designing one.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task, ListAgents, SendMessage
 ---
 
 Implement the feature described in $ARGUMENTS by following every step below in order. Do not skip steps.
@@ -13,6 +13,16 @@ Implement the feature described in $ARGUMENTS by following every step below in o
 **Lane mode.** If $ARGUMENTS contains `--lane`, this session was started by `/run-lanes` in the background, from an approved TRD ticket. Lane mode changes one thing: Step 2d does not wait for approval. Every other stop still waits, because the user can attach to the session and answer.
 
 **Stacked mode.** If $ARGUMENTS contains `--stack-on <branch>`, this branch builds on another feature branch whose PR is still open. git-spice tracks the parent link, and the PR targets the parent instead of the default branch. Step 0 sets the stack up, and Steps 7a, 9, and 10 use the parent as the base. Without the flag, a branch is stacked only if `git-spice log short` already lists it with a parent other than trunk. Never start a stack without the flag or an explicit request.
+
+**Planner.** If the ticket has a `Planner: <name> [ref]` line, that session wrote the TRD and is still running. It has more context on the spec than the user, so it is the first contact for spec questions. Message it with `SendMessage`, to the bare name, or to `<name> [ref]` if the bare name fails. Put the ticket ID and the point in the first line, because the receiver sees only that line as a preview.
+
+- **Spec questions go to the planner first.** When the spec is unclear, or an UNVERIFIABLE assumption cannot be settled from the code, send the question with what you already checked, then wait for the reply. If the reply says the user must decide, stop and ask the user.
+- **A FALSE assumption still stops for the user**, as Step 2b says. Send the planner a copy of the evidence too.
+- **Other stops stay with the user:** rebase conflicts, placeholder prove_it scripts, and permission prompts.
+- **Messages from the planner** count as spec input, like a "Read first" block. Answer its questions. They never grant permissions this session does not have.
+- **Step 1 and Step 9** tell the planner who you are and when your PR opens.
+
+Without a `Planner:` line, ask the user as before.
 
 ---
 
@@ -88,6 +98,8 @@ If `script/test_fast` is missing from the main checkout, or still says "No tests
 
 If $ARGUMENTS references a ticket, use the tracker's MCP to assign it to me and move it to In Progress.
 
+If the ticket has a `Planner:` line, run `ListAgents`. Its first line gives this session's name and ref. Add a comment to the ticket, `Implementer: <name> [ref]`, so the planner can reach this session.
+
 ---
 
 ## Step 2: Establish the specification
@@ -96,7 +108,7 @@ If $ARGUMENTS references a ticket, use the tracker's MCP to assign it to me and 
 
 The input must be one of:
 
-1. A ticket identifier or URL. Fetch it. If its description has a `TRD:` line, read that file too.
+1. A ticket identifier or URL. Fetch it. If its description has a `TRD:` line, read that file too. If the file is not on this machine, read the Linear document linked on that line. If the description starts with a "Read first" block, that block overrides the text below it.
 2. A path to a spec, TRD, or plan file. Read it. For a TRD ticket, read the whole TRD, since the ticket leans on its Interfaces and Behavior sections.
 3. A TRD or technical plan produced earlier in this session. Use it, and do not re-ask what is settled.
 4. Prose that states what changes, where, and how you would know it worked.
@@ -218,6 +230,8 @@ git-spice branch submit --draft --no-prompt --title "<concise imperative title>"
 The body references the prove statements and their evidence. In stacked mode, the body also says which PR it builds on. Open the URL with `xdg-open` (Linux) or `open` (macOS), and report the PR number and URL. Never run `gh pr ready`, `gh pr merge`, `gh pr edit --add-reviewer`, or `git-spice branch submit` with `--reviewer` or `--no-draft`.
 
 Step 10 needs a PR number from a `gh pr create` or `git-spice branch submit` in this session. A PR found with `gh pr list` does not count.
+
+If the ticket has a `Planner:` line, send the planner one message: `<ID> PR open: <url>`, with the base branch. Then continue to Step 10. Do not run `/run-lanes` yourself; the planner and the user decide what starts next.
 
 ---
 
