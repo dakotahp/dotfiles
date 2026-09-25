@@ -83,7 +83,7 @@ If nothing is ready, report each open ticket with what it waits on, and stop.
 Run one Bash call per ticket:
 
 ```bash
-cd <repo> && command claude --bg -w <slug> -n "<ID> <slug>" --model sonnet --effort high "/feature <ID> --lane"
+cd <repo> && command claude --bg -w <slug> -n "<ID> <slug>" --model opus --effort medium "/feature <ID> --lane"
 ```
 
 - `command` skips the user's `claude` shell wrapper, which only loads partly inside the Bash tool and would add a second set of model flags.

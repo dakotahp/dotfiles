@@ -1,6 +1,6 @@
 # /feature
 
-TDD pipeline for Claude Code. Takes a specified ticket through spec validation, failing tests, implementation, two review passes, and a draft PR.
+TDD pipeline for Claude Code. Takes a specified ticket through spec validation, failing tests, implementation, a cold review, and a draft PR.
 
 ## Usage
 
@@ -24,10 +24,10 @@ With `--stack-on <branch>`, the feature branch starts from that branch, not from
 | 2 | Establishes the spec, validates its assumptions against the code, splits it into tasks, gets your approval |
 | 3 | Writes falsifiable prove statements |
 | 4 | Writes failing tests |
-| 5 | Implements task by task through subagents, each task reviewed as it lands |
+| 5 | Implements task by task in the main session, one commit per task. Independent tasks can run in parallel subagents |
 | 6 | Verifies each prove statement with prove_it |
-| 7 | A cold review with no context, then a cross-task coherence review |
-| 8 | Removes debug code and planning files, lints the branch |
+| 7 | A cold review of the branch diff, with no plan or spec |
+| 8 | Removes debug code, lints the branch |
 | 9 | Creates the draft PR |
 | 10 | Watches CI, mergeability, and the review bot, fixes what it finds, then hands the PR to you |
 
@@ -39,7 +39,7 @@ The deliverable is a draft PR with green automated signals. Requesting reviews, 
 
 ## Model and effort
 
-Run the main session at `sonnet` / `high`, the default the `claude` shell wrapper sets on every launch. `/run-lanes` passes both flags explicitly. Each subagent's model and effort come from its own definition file.
+Run the main session at `opus` / `medium`. The main session writes the code, so it needs the stronger model. `settings.json` sets both as the default, and `/run-lanes` passes them as flags. Set them at launch and leave them, because a change in the middle of a session clears the prompt cache. Each subagent's model and effort come from its own definition file.
 
 ## prove_it files
 
@@ -50,4 +50,4 @@ Step 0 links `script/test`, `script/test_fast`, `.claude/prove_it/config.json`, 
 - [`prove_it`](https://github.com/searlsco/prove_it): `brew install searlsco/tap/prove_it && prove_it install`
 - `gh`: `brew install gh`
 - `git-spice`, for stacked branches: installed by `packages.toml`. Run `git-spice auth login` once per machine and pick the GitHub CLI method.
-- The `feature-*`, `plan-falsifier`, and `plan-rederiver` definitions in `~/.config/claude/agents/`
+- The `feature-implementer`, `feature-prove-verifier`, and `feature-adversarial-reviewer` definitions in `~/.config/claude/agents/`
