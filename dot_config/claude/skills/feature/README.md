@@ -6,7 +6,7 @@ TDD pipeline for Claude Code. Takes a specified ticket through spec validation, 
 
 ```
 /feature APP-412
-/feature docs/plans/2026-09-18-csv-export-trd.md ticket 3
+/feature https://linear.app/<workspace>/document/<trd-document> ticket 3
 /feature APP-412 --lane      # started by /run-lanes, skips the plan approval wait
 /feature APP-413 --stack-on feature/app-412-export-endpoint   # builds on an open PR
 ```

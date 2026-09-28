@@ -14,7 +14,7 @@ Act as a **staff engineer writing the spec someone else will build from**. Every
 
 **If a technical plan was produced earlier in this session, use it and the conversation around it.** That is the intended path: this skill runs second, and the approach, the decisions, the alternatives already rejected, and the code you traced are all still in context. Do not re-derive them, and do not re-ask the user anything already settled. Re-litigating decided questions is the main failure mode of this skill.
 
-Otherwise, locate the plan: read the path in $ARGUMENTS, look for a recent file in `docs/plans/`, or fetch the Linear project or issue. If there is no plan and no brief, say so and ask for one rather than inventing an approach; producing a TRD on top of an unstated approach buries the design decision inside implementation detail where nobody will review it.
+Otherwise, locate the plan from $ARGUMENTS: fetch a Linear document, project, or issue link with the Linear tools, and read a local path if the user gave one. For a project, look for a technical plan among its documents. If there is no plan and no brief, say so and ask for one rather than inventing an approach; producing a TRD on top of an unstated approach buries the design decision inside implementation detail where nobody will review it.
 
 Fill gaps from the code, not from assumption. Where the plan left something open, either resolve it by reading the code and say so, or carry it into Open Questions with an owner.
 
@@ -22,18 +22,18 @@ Fill gaps from the code, not from assumption. Where the plan left something open
 
 ## Step 1: Write the TRD
 
-Save to `docs/plans/YYYY-MM-DD-<slugified-name>-trd.md`.
+Write a working draft to `docs/plans/YYYY-MM-DD-<slugified-name>-trd.md`, or to `$TMPDIR` if this session cannot write to the shared checkout. The draft is only for editing. Once published (Step 2), the Linear document is the TRD of record, and every reference to the TRD uses its URL.
+
+**Never write a local filesystem path into the tracker.** No absolute or home-relative path in a ticket, comment, or document. It exposes the user's machine and means nothing to anyone else. Repo-relative code paths, such as `app/models/user.rb`, are fine.
 
 Fill in **Planner session** from `ListAgents`. Its first line gives this session's name and ref. This session becomes the planner: the session that implementers ask about the spec (see "Act as the planner" below).
-
-**Background sessions.** If this session cannot write to the shared checkout, for example a background session in a worktree, save to `docs/plans/` in the session's worktree instead. The final path is the same file under the main checkout's `docs/plans/` (the main checkout is the first path in `git worktree list --porcelain`). Use that final path everywhere a path is written down, including every ticket's `TRD:` line. Step 2 ends with the command that moves the file there.
 
 ```markdown
 # TRD: <Name>
 
 **Date:** YYYY-MM-DD
 **Status:** Draft
-**Technical plan:** <relative path, or "none">
+**Technical plan:** <Linear document URL, or "none">
 **Planner session:** <name> [ref]
 
 ---
@@ -127,26 +127,30 @@ Apply this whenever tickets meet across a boundary: backend and frontend, servic
 ```
 TRD written
   Work:      <name>
-  Saved to:  <file path>
+  Draft:     <working draft path>
   Tickets:   <count>
   Lanes:     <e.g. "0 → 1, 2, 3 → 4", or "serial">
   Open Qs:   <count>
 
 Next steps:
-  /run-lanes <trd path>   after creating tickets, start every ready ticket in the background
+  /run-lanes <TRD document URL>   after creating tickets, start every ready ticket in the background
   /feature <ticket>   implement one ticket, TDD pipeline
   build <ticket>      implement one ticket in a fresh session
 ```
 
-Then offer to create the tickets in the tracker, and **wait for explicit confirmation before creating or editing anything.** Creating issues is visible to other people and tedious to undo, so never do it as a side effect of writing the document.
+Then offer to publish the TRD and create the tickets in the tracker, and **wait for explicit confirmation before creating or editing anything.** Creating issues and documents is visible to other people and tedious to undo, so never do it as a side effect of writing the document.
+
+### Publish the TRD
+
+When confirmed, first publish the TRD as a Linear document on the project with `mcp__linear-server__save_document`, so the tickets can link to it.
 
 ### Create new tickets
 
-When confirmed, create them in dependency order, in one tracker project, and report the created identifiers. Each ticket must work for a cold session that only reads the ticket, so its description holds:
+Then create the tickets in dependency order, in the same project, and report the created identifiers. Each ticket must work for a cold session that only reads the ticket, so its description holds:
 
 - The What, Areas, and acceptance criteria.
 - The Interfaces and Contracts entries it produces or consumes, copied verbatim.
-- `TRD: <absolute path to this file>`
+- `TRD: <Linear document URL>`
 - `Planner: <name> [ref]`, from the TRD header.
 
 Record each **direct** dependency as a "blocked by" relation to the blocking ticket, using the tracker's relation fields. Never add a transitive one: if 3 needs 2 and 2 needs 1, ticket 3 is blocked by 2 only. Redundant blockers make `/run-lanes` wait. If the tracker cannot set relations, start the description with `Blocked by: <IDs>` instead. `/run-lanes` reads these to decide what can start.
@@ -157,37 +161,27 @@ If a ticket must wait for something the tracker cannot express, such as a deploy
 
 If the work already has tickets, do not create duplicates. Match each TRD ticket to its existing ticket, and create only the TRD tickets with no match. For each existing ticket:
 
-- After the TRD is published (below), add a "Read first" block at the top of its description, below any `Blocked by:` or `Start after:` line. Keep the old text below it.
+- Add a "Read first" block at the top of its description, below any `Blocked by:` or `Start after:` line. Keep the old text below it.
 
   ```markdown
   **Read first. This block supersedes the text below.**
-  TRD: <absolute path to this file> (Linear: <document URL>)
+  TRD: <Linear document URL>
   Planner: <name> [ref]
   - <each correction, e.g. "The endpoint is /exports, not /reports/export.">
   ```
 
 - Add any missing direct "blocked by" relations. Remove none without asking.
 
-### Write back and publish
+### Write back
 
-Write the identifiers back into this TRD: in each ticket heading (`### 2. APP-1234: <title>`), in each Depends on line, and in the Lanes line. The TRD and the tracker must name the same tickets.
-
-Then publish the TRD as a Linear document on the project with `mcp__linear-server__save_document`, so teammates and their agents can read it without the local file. Add its URL to every ticket, next to the local path: `TRD: <absolute path> (Linear: <document URL>)`. If you edit the TRD later, update the document too.
-
-### Background sessions
-
-If Step 1 saved into the session's worktree, end with one command that moves the TRD, and the technical plan if this session wrote it, to their final paths:
-
-```bash
-cp <worktree>/docs/plans/<plan file> <worktree>/docs/plans/<trd file> <main checkout>/docs/plans/
-```
+Write the identifiers back into the Linear document and the draft: in each ticket heading (`### 2. APP-1234: <title>`), in each Depends on line, and in the Lanes line. The TRD and the tracker must name the same tickets. If you edit the TRD later, update the Linear document first.
 
 ### Act as the planner
 
 After the tickets exist, stay in this session as the planner. Lane sessions message you here with `SendMessage`. Reply to the `from` name on each message.
 
 - **Spec questions:** answer from the TRD, the plan, and the code. If the answer changes or adds to the spec, update the TRD, the Linear document, and the ticket's "Read first" block before you reply, so later sessions get it too. If the question needs a decision the user has not made, ask the user, then relay the answer.
-- **`<ID> PR open: <url>`:** tell the user, and ask whether to run `/run-lanes <TRD path>` now. Run it only when the user says so.
+- **`<ID> PR open: <url>`:** tell the user, and ask whether to run `/run-lanes <TRD document URL>` now. Run it only when the user says so.
 - **Reaching an implementer:** each lane session comments `Implementer: <name> [ref]` on its ticket. Use that name to send a correction or a question down to it.
 
 ---

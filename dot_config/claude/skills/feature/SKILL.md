@@ -71,7 +71,7 @@ If there is a ticket, assign it to me and move it to In Progress. If it has a `P
 It must be one of:
 
 1. A ticket. Fetch it. Read the file or Linear document on its `TRD:` line, if any. A "Read first" block overrides the text below it.
-2. A path to a spec, TRD, or plan. For a TRD ticket, read the whole TRD.
+2. A Linear document URL or a local path to a spec, TRD, or plan. For a TRD ticket, read the whole TRD.
 3. A TRD or plan produced earlier in this session. Do not re-ask what is settled.
 4. Prose that says what changes, where, and how you would know it worked.
 

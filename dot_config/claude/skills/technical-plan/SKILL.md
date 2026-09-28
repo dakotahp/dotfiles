@@ -1,7 +1,7 @@
 ---
 name: technical-plan
 description: Writes a concise technical plan from a project brief, Linear project or issue, or a rough description. Produces a human-facing overview of the approach, the decisions that matter, blast radius, risks, and sequencing. Use when someone needs to understand how a piece of work will be built before it is broken into tickets, or asks for a technical plan, a technical approach, or a design overview. Follow it with /technical-requirements-document in the same session when detailed specs are needed.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, AskUserQuestion, Task, mcp__linear-server__get_project, mcp__linear-server__get_issue, mcp__linear-server__list_issues, mcp__linear-server__get_document
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, AskUserQuestion, Task, mcp__linear-server__get_project, mcp__linear-server__get_issue, mcp__linear-server__list_issues, mcp__linear-server__get_document, mcp__linear-server__list_projects, mcp__linear-server__save_document
 ---
 
 Write a technical plan for the work described in $ARGUMENTS.
@@ -14,7 +14,7 @@ Best run in a `plan` session, where the model and effort are already pinned for 
 
 ## Step 0: Get the input and ground it in the code
 
-If $ARGUMENTS is a Linear project or issue identifier or URL, fetch it. If it is a file path, read it. If it is a URL, fetch it. If it is prose, use it directly.
+If $ARGUMENTS is a Linear project, issue, or document identifier or URL, fetch it with the Linear tools. If it is a file path, read it. If it is a URL, fetch it. If it is prose, use it directly.
 
 Then read the actual code. A technical plan that has not been checked against the repository is a guess, and the most expensive kind of error here is an approach built on a seam that does not exist. Trace each significant noun in the request to what it really maps to in this codebase and note the path. Watch for similarly-named decoys.
 
@@ -24,15 +24,9 @@ Ask a question only if you cannot proceed without it. If you can make a reasonab
 
 ## Step 1: Write the plan
 
-Save to `docs/plans/YYYY-MM-DD-<slugified-name>-technical-plan.md`.
+Write a working draft to `docs/plans/YYYY-MM-DD-<slugified-name>-technical-plan.md`, or to `$TMPDIR` if this session cannot write to the shared checkout. The draft is only for editing. Once published (Step 2), the Linear document is the plan of record, and every reference to the plan uses its URL.
 
-**Background sessions.** If this session cannot write to the shared checkout, for example a background session in a worktree, save to `docs/plans/` in the session's worktree instead. The final path is the same file under the main checkout's `docs/plans/` (the main checkout is the first path in `git worktree list --porcelain`). Report that final path in Step 2, and end with one command that moves the file there:
-
-```bash
-cp <worktree>/docs/plans/<plan file> <main checkout>/docs/plans/
-```
-
-If `/technical-requirements-document` runs next in this session, leave the command to it, so one `cp` moves both files.
+**Never write a local filesystem path into the tracker.** No absolute or home-relative path in a ticket, comment, or document. Repo-relative code paths, such as `app/models/user.rb`, are fine.
 
 Respect the budget on each section. The budgets are the point of this skill: they are what keeps the document readable, and a section that runs long is almost always padding rather than substance.
 
@@ -105,15 +99,17 @@ Leave these out. Some belong in the TRD, and the rest belong nowhere.
 ```
 Technical plan written
   Work:      <name>
-  Saved to:  <file path>
+  Draft:     <working draft path>
   Decisions: <count>
   Risks:     <count>
 
 Next steps:
   /technical-requirements-document   detailed specs and ticket breakdown, same session
-  plan-falsifier <path>             verify the plan's assumptions against the code
+  plan-falsifier <draft path>       verify the plan's assumptions against the code
   plan-rederiver                    independent plan from the brief, to diff for blind spots
 ```
+
+Then offer to publish the plan as a Linear document on the work's project with `mcp__linear-server__save_document`, and wait for explicit confirmation. If no project is known, ask which one. Report the document URL. `/technical-requirements-document` links the plan by that URL.
 
 Offer `plan-falsifier` and `plan-rederiver` explicitly rather than assuming the user knows about them. The plan stage is where they pay off most, since an error here propagates into every ticket downstream. Dispatch both in one message so they run concurrently, and pass `plan-rederiver` only the original brief, never the plan.
 

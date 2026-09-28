@@ -4,7 +4,7 @@ description: Starts one background /feature session for every ticket in a TRD's 
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, mcp__linear-server__get_project, mcp__linear-server__get_issue, mcp__linear-server__list_issues, mcp__linear-server__get_document, mcp__linear-server__get_attachment
 ---
 
-Start every ready ticket from a TRD as a background `/feature` session. $ARGUMENTS is a TRD file path or a tracker project URL. It may also name ticket IDs, which limits the run to those tickets.
+Start every ready ticket from a TRD as a background `/feature` session. $ARGUMENTS is a TRD's Linear document URL or a tracker project URL. It may also name ticket IDs, which limits the run to those tickets.
 
 This skill only launches sessions. It does not implement, monitor, or merge anything.
 
@@ -12,7 +12,7 @@ This skill only launches sessions. It does not implement, monitor, or merge anyt
 
 ## Step 1: Get the tickets
 
-- **TRD file path:** read the TRD. Take the ticket IDs from its ticket headings. If the headings carry no IDs, the tickets were never created: stop and tell the user to create them from `/technical-requirements-document` first.
+- **TRD document URL:** fetch the document with `mcp__linear-server__get_document`. Take the ticket IDs from its ticket headings, its Lanes line, or its ticket table. If the headings carry no IDs, the tickets were never created: stop and tell the user to create them from `/technical-requirements-document` first.
 - **Project URL:** fetch the project and list its issues.
 
 Fetch every ticket from the tracker, with its status, its blockers, and its attachments. Fetch each blocker too. Blockers are the ticket's "blocked by" relations, or the `Blocked by:` line at the top of its description. A `Start after: <condition>` line at the top of a description is a condition the tracker cannot check, for example "Start after: APP-4508 deployed to production".

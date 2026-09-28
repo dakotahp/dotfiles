@@ -18,12 +18,12 @@ Serial work waits on blockers that are often small, like one API param. The fix 
    - Middle tickets depend on the **contract** only, so they run in parallel. They start as soon as ticket 0 has an open PR.
    - The **last ticket** swaps the fixed response for the real one and checks each consumer.
 2. **Create the tickets** when the TRD skill offers. It adds "blocked by" links in Linear for direct blockers only, copies the relevant contract text into each ticket, writes the ticket IDs back into the TRD, and publishes the TRD as a Linear document. If the tickets already exist, it adopts them instead of making duplicates.
-3. **`/run-lanes <TRD path or Linear project URL>`**. Usually this starts ticket 0 alone.
+3. **`/run-lanes <TRD document URL or Linear project URL>`**. Usually this starts ticket 0 alone.
 4. **`/run-lanes` again** once ticket 0 has an open PR. The contract tickets now start at once, each stacked on ticket 0's branch. An implementation dependency starts the same way, as soon as the ticket it needs has an open PR.
 5. **Merge** from the bottom of the stack up. After a parent merges, run `git-spice repo sync --restack` and `git-spice stack submit` to move its children onto trunk and retarget their PRs. Run `/run-lanes` again whenever a PR opens or merges, until nothing is left.
 
 ```
-/run-lanes docs/plans/2026-09-18-csv-export-trd.md
+/run-lanes https://linear.app/<workspace>/document/<trd-document>
 /run-lanes https://linear.app/<workspace>/project/<project>
 /run-lanes <project URL> APP-1235 APP-1236    # only these, if ready
 ```
