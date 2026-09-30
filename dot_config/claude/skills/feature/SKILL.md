@@ -45,6 +45,14 @@ git-spice branch track feature/<slug> --base <parent>
 
 Skip `branch track <parent>` if `git-spice log short` already lists it. If the parent is not on `origin`, or `git-spice auth status` fails, stop and tell the user.
 
+Tracking does not link the parent's open PR, so the stack comment on this PR would not name it. If `git-spice log short` shows the parent without a `(#<n>)`, link it:
+
+```bash
+[ "$(git rev-parse <parent>)" = "$(git rev-parse origin/<parent>)" ] && git-spice branch submit --branch <parent> --no-prompt --force
+```
+
+With the SHAs equal this pushes nothing; `--force` only skips the "outdated branch" check when trunk has moved. If the SHAs differ, skip it and tell the user. Never push or restack another session's branch.
+
 **Base branch.** In stacked mode, the parent. Otherwise the default branch from `git symbolic-ref --short refs/remotes/origin/HEAD`, or whichever of `origin/main` / `origin/master` exists.
 
 **Link the prove_it files.** They are untracked, so a new worktree lacks them. Link them from the main checkout and keep them out of `git status`:
