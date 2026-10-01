@@ -32,16 +32,21 @@ Without a `Planner:` line, ask the user.
 
 **Worktree.** Work in a dedicated worktree before any planning or code; the main checkout is shared. Derive a kebab-case slug, ticket reference first (`app-1234-csv-export`). If already in a worktree under `.claude/worktrees/`, keep it. Otherwise call `EnterWorktree` with the slug. Then run `git branch -m feature/<slug>`. Never commit to `main` or `master`.
 
+**Right repo.** Before planning, check that this repo holds the ticket: at least one of its Areas paths, or the parent folder of a new file, exists here. If not, stop and tell the user which repo the ticket belongs in. Never create a worktree in another repo with `git worktree add`. The session stays tied to the repo it started in, and a hand-made worktree can track the wrong remote branch.
+
 **Stack setup** (stacked mode only):
 
 ```bash
 trunk=$(git symbolic-ref --short refs/remotes/origin/HEAD | sed 's|^origin/||')
 git fetch origin <parent>
-git reset --hard origin/<parent>
+git switch --no-track -C feature/<slug> origin/<parent>
 git-spice repo init --trunk "$trunk" --remote origin
 git-spice branch track <parent> --base "$trunk"
 git-spice branch track feature/<slug> --base <parent>
+git branch --unset-upstream 2>/dev/null || true
 ```
+
+`--no-track` matters: a plain `-C` from `origin/<parent>` sets the branch's upstream to the parent's remote branch. git-spice pushes to a branch's upstream, so this ticket's commits would land on the parent's PR. The first `git-spice branch submit` creates `origin/feature/<slug>`. Do not use `git reset --hard`; a permission rule denies it.
 
 Skip `branch track <parent>` if `git-spice log short` already lists it. If the parent is not on `origin`, or `git-spice auth status` fails, stop and tell the user.
 

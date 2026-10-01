@@ -74,13 +74,13 @@ If nothing is ready, report each open ticket with what it waits on, and stop.
 
 ## Step 3: Resolve each ticket
 
-- **Repo:** the git repo that holds the ticket's Areas. From a parent directory with sibling repos, match by repo name. If this session runs in a worktree, use the main checkout (the first path in `git worktree list --porcelain`) and look for sibling repos next to it. If any ticket is ambiguous, ask once for all of them.
+- **Repo:** the git repo that holds the ticket's Areas. Record `<repo>` as an absolute path. From a parent directory with sibling repos, match by repo name. If this session runs in a worktree, use the main checkout (the first path in `git worktree list --porcelain`) and look for sibling repos next to it. If any ticket is ambiguous, ask once for all of them.
 - **Slug:** kebab-case, the lowercase ID first, at most 40 characters (e.g. `app-1234-export-endpoint`).
 - **git-spice login:** if any ticket is ready to stack, run `git-spice auth status` in its repo. If it fails, do not launch the stacked tickets. Tell the user to run `! git-spice auth login` and pick the GitHub CLI method, then run `/run-lanes` again. Still launch the tickets that are ready on trunk.
 
 ## Step 4: Launch
 
-Run one Bash call per ticket:
+Launch one ticket at a time. Each launch is its own Bash call in its own message: wait for it to return and pass the repo check below before you launch the next. Never put two launch calls in one message. Parallel launches have started sessions in the wrong repo, even when each call changed into the right one first.
 
 ```bash
 cd <repo> && command claude --bg -w <slug> -n "<ID> <slug>" --model opus --effort medium "/feature <ID> --lane"
@@ -90,6 +90,14 @@ cd <repo> && command claude --bg -w <slug> -n "<ID> <slug>" --model opus --effor
 - `--bg` starts the session in the background and prints its short ID.
 - `-w <slug>` gives the session its own worktree. `/feature` keeps it and renames the branch to `feature/<slug>`.
 - `-n` names the session to match the branch.
+
+**Check the repo.** Right after each launch, confirm the worktree landed in `<repo>`:
+
+```bash
+timeout 60 bash -c 'until git -C <repo> worktree list --porcelain | grep -q "/.claude/worktrees/<slug>$"; do sleep 2; done' && echo "repo ok"
+```
+
+If it times out, look for `<slug>` in the sibling repos' `git worktree list`. If it landed in another repo: run `command claude stop <session id>` and `command claude rm <session id>`; in that repo, delete the leftover `feature/<slug>` branch if it has no commits beyond trunk and is not on origin; then relaunch once. If it lands in the wrong repo again, stop launching and report it.
 
 For a ticket that is ready to stack, append `--stack-on <parent branch>` to the prompt, for example `"/feature <ID> --lane --stack-on feature/app-1234-export-endpoint"`. `/feature` moves the worktree onto the parent and opens its PR against the parent branch.
 
