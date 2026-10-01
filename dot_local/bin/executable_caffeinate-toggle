@@ -4,6 +4,9 @@ export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 if pkill -f "caffeinate -d -t 3600"; then
   terminal-notifier -title "Caffeinate" -message "Off" -group caffeinate-toggle
 else
-  nohup caffeinate -d -t 3600 >/dev/null 2>&1 &
+  (
+    caffeinate -d -t 3600 &&
+      terminal-notifier -title "Caffeinate" -message "Off, the hour ran out" -group caffeinate-toggle
+  ) >/dev/null 2>&1 &
   terminal-notifier -title "Caffeinate" -message "On for 1 hour" -group caffeinate-toggle
 fi
