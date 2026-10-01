@@ -1,0 +1,240 @@
+#!/usr/bin/env bash
+#
+# Go/no-go check before merging to abodo-rails main. A merge auto-cancels the running build-and-deploy
+# workflow, which is only harmless once the edge deploy job has pushed the new task definition to ECS.
+#
+# Usage: merge-window [-w] [-n PIPELINES_TO_CHECK]
+#   -w  Re-check every 10s until GO, then send a "Deploy now" notification and exit.
+# Exit:  0 = GO, 1 = NO-GO, 2 = error
+
+set -euo pipefail
+
+# Bash 3.2 has no inherit_errexit, so die() signals the top-level shell to stop from inside $(...).
+trap 'exit 2' USR1
+
+PROJECT="gh/abodo-dev/abodo-rails"
+BRANCH="main"
+DEPLOY_JOB="edge_ecs_deploy_apartmentiq_web"
+SERVICE_UPDATE_STEP="Update service with registered task definition"
+FALLBACK_SAFE_SECONDS=60
+NEW_PIPELINE_GRACE_SECONDS=180
+PIPELINES_TO_CHECK=5
+WATCH_INTERVAL_SECONDS=30
+API="https://circleci.com/api"
+APP="https://app.circleci.com/pipelines/$PROJECT"
+
+if [[ -t 1 ]]; then
+  GREEN=$'\033[0;32m' RED=$'\033[0;31m' DIM=$'\033[2m' RESET=$'\033[0m'
+else
+  GREEN="" RED="" DIM="" RESET=""
+fi
+
+die() {
+  echo "merge-window: $1" >&2
+  kill -USR1 $$
+  exit 2
+}
+
+usage() {
+  sed -n '3,8s/^# \{0,1\}//p' "$0"
+  exit 0
+}
+
+circle_token() {
+  if [[ -n "${CIRCLECI_CLI_TOKEN:-}" ]]; then
+    echo "$CIRCLECI_CLI_TOKEN"
+    return
+  fi
+  awk '/^token:/ { print $2 }' "$HOME/.circleci/cli.yml" 2>/dev/null || true
+}
+
+api() {
+  curl -fsS --max-time 15 -H "Circle-Token: $TOKEN" "$API/$1" || die "CircleCI request failed: $1"
+}
+
+epoch() {
+  jq -rn --arg t "$1" '$t | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601'
+}
+
+minutes() {
+  echo "$((($1 + 30) / 60))m"
+}
+
+collect_workflows() {
+  api "v2/project/$PROJECT/pipeline?branch=$BRANCH" |
+    jq -c ".items[:$PIPELINES_TO_CHECK][] |
+      {id, number, created_at, subject: .vcs.commit.subject, actor: .trigger.actor.login}" |
+    while read -r pipeline; do
+      api "v2/pipeline/$(jq -r .id <<<"$pipeline")/workflow" | jq -c --argjson p "$pipeline" '
+        if (.items | length) == 0 then {pipeline: $p, id: null, status: "pending", created_at: $p.created_at}
+        else .items[] | {pipeline: $p, id, status, created_at} end'
+    done
+}
+
+deploy_offset_seconds() {
+  local workflow_id created jobs started
+  workflow_id=$(jq -r 'select(.status == "success") | .id' <<<"$WORKFLOWS" | head -1)
+  [[ -z $workflow_id ]] && return 0
+  created=$(jq -r --arg id "$workflow_id" 'select(.id == $id) | .created_at' <<<"$WORKFLOWS")
+  jobs=$(api "v2/workflow/$workflow_id/job")
+  started=$(jq -r --arg n "$DEPLOY_JOB" '.items[] | select(.name == $n) | .started_at // empty' <<<"$jobs")
+  [[ -z $started ]] && return 0
+  echo $(($(epoch "$started") - $(epoch "$created")))
+}
+
+service_update_state() {
+  api "v1.1/project/$PROJECT/$1" | jq -r --arg s "$SERVICE_UPDATE_STEP" '
+    [.steps[]? | select(.name == $s) | .actions[0].status] |
+    if length == 0 then "unknown" elif .[0] == "success" then "done" else "pending" end'
+}
+
+deploy_not_started() {
+  local jobs=$1 created=$2 failed running offset eta
+  failed=$(jq -r '[.items[] | select(.status | test("failed|infrastructure_fail|timedout")) | .name] | join(", ")' <<<"$jobs")
+  if [[ -n $failed ]]; then
+    echo "GO"
+    echo "  Failed: $failed. The deploy will not run."
+    return
+  fi
+
+  running=$(jq -r '[.items[] | select(.status == "running") | .name] | join(", ")' <<<"$jobs")
+  echo "❌ NO-GO"
+  echo "  Deploy not started. Running: ${running:-nothing yet}."
+  offset=$(deploy_offset_seconds)
+  [[ -z $offset ]] && return 0
+  eta=$(($(epoch "$created") + offset - NOW))
+  if ((eta > 0)); then
+    echo "  Deploy usually starts in about $(minutes "$eta")."
+  else
+    echo "  Deploy should start any moment."
+  fi
+}
+
+deploy_running() {
+  local deploy=$1 elapsed state
+  elapsed=$((NOW - $(epoch "$(jq -r .started_at <<<"$deploy")")))
+  state=$(service_update_state "$(jq -r .job_number <<<"$deploy")")
+
+  if [[ $state == "done" ]]; then
+    echo "🟢 GO"
+    echo "  Deploy has updated the ECS service (${elapsed}s in, now verifying)."
+  elif [[ $state == "unknown" ]] && ((elapsed >= FALLBACK_SAFE_SECONDS)); then
+    echo "GO"
+    echo "  Deploy is ${elapsed}s in. Step \"$SERVICE_UPDATE_STEP\" not found, so this is a timer guess."
+  else
+    echo "NO-GO"
+    echo "  Deploy is ${elapsed}s in. The ECS service is not updated yet."
+  fi
+}
+
+evaluate_workflow() {
+  local workflow=$1 id jobs deploy deploy_status
+  id=$(jq -r .id <<<"$workflow")
+
+  if [[ $id == "null" ]]; then
+    echo "NO-GO"
+    echo "  Pipeline just started. The workflow does not exist yet."
+    return
+  fi
+
+  jobs=$(api "v2/workflow/$id/job")
+  deploy=$(jq -c --arg n "$DEPLOY_JOB" '.items[] | select(.name == $n)' <<<"$jobs")
+  deploy_status=$(jq -r '.status // "missing"' <<<"${deploy:-null}")
+
+  case $deploy_status in
+  success)
+    echo "GO"
+    echo "  Deploy finished. Only post-deploy jobs are still running."
+    ;;
+  running)
+    deploy_running "$deploy"
+    ;;
+  missing)
+    echo "GO"
+    echo "  This workflow has no $DEPLOY_JOB job."
+    ;;
+  failed | infrastructure_fail | timedout | canceled)
+    echo "GO"
+    echo "  Deploy $deploy_status."
+    ;;
+  *)
+    deploy_not_started "$jobs" "$(jq -r .created_at <<<"$workflow")"
+    ;;
+  esac
+  echo "  ${DIM}$APP/$(jq -r .pipeline.number <<<"$workflow")/workflows/$id${RESET}"
+}
+
+notify_deploy_now() {
+  printf "\a"
+  if command -v terminal-notifier >/dev/null; then
+    terminal-notifier -title "merge-window" -message "Deploy now" -sound default >/dev/null 2>&1 || true
+  fi
+}
+
+watch() {
+  local out rc
+  while true; do
+    rc=0
+    out=$("$0" -n "$PIPELINES_TO_CHECK") || rc=$?
+    [[ -t 1 ]] && clear
+    echo "${DIM}$(date +%H:%M:%S), checking every ${WATCH_INTERVAL_SECONDS}s${RESET}"
+    echo "$out"
+    if ((rc == 0)); then
+      notify_deploy_now
+      return 0
+    fi
+    sleep "$WATCH_INTERVAL_SECONDS"
+  done
+}
+
+main() {
+  local watch_mode=0
+  while getopts "wn:h" opt; do
+    case $opt in
+    w) watch_mode=1 ;;
+    n) PIPELINES_TO_CHECK=$OPTARG ;;
+    *) usage ;;
+    esac
+  done
+
+  if ((watch_mode)); then
+    watch
+    return
+  fi
+
+  TOKEN=$(circle_token)
+  [[ -z $TOKEN ]] && die "no CircleCI token. Set CIRCLECI_CLI_TOKEN or run 'circleci setup'."
+  NOW=$(date +%s)
+  WORKFLOWS=$(collect_workflows)
+
+  local active verdict="GO" report="" blocking=0 count=0 workflow result
+  active=$(jq -c --argjson now "$NOW" --argjson grace "$NEW_PIPELINE_GRACE_SECONDS" '
+    select(.status == "running" or .status == "failing" or .status == "on_hold" or
+      (.status == "pending" and ($now - (.created_at | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601)) < $grace))
+  ' <<<"$WORKFLOWS")
+
+  while read -r workflow; do
+    [[ -z $workflow ]] && continue
+    count=$((count + 1))
+    result=$(evaluate_workflow "$workflow")
+    if [[ ${result%%$'\n'*} == "NO-GO" ]]; then
+      verdict="NO-GO"
+      blocking=$((blocking + 1))
+    fi
+    report+=$'\n'"$(jq -r '"#\(.pipeline.number) \(.pipeline.subject) (\(.pipeline.actor))"' <<<"$workflow")"
+    report+=$'\n'"${result#*$'\n'}"$'\n'
+  done <<<"$active"
+
+  if ((count == 0)); then
+    echo "${GREEN}GO${RESET}  Nothing is running on $BRANCH."
+  elif [[ $verdict == "GO" ]]; then
+    echo "${GREEN}GO${RESET}  A merge will not cancel an in-flight deploy."
+  else
+    echo "${RED}NO-GO${RESET}  A merge now cancels $blocking workflow(s) before their deploy lands."
+  fi
+  printf "%s" "$report"
+
+  [[ $verdict == "GO" ]]
+}
+
+main "$@"
