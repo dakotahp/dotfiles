@@ -6,6 +6,7 @@ names = ["git-spice-bin", "lazydocker", "lazygit", "neovim"]
 [package.homebrew]
 names = [
   "chezmoi",
+  "coreutils",
   "eza",
   "fzf",
   "git-spice",

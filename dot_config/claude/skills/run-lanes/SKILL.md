@@ -94,7 +94,7 @@ cd <repo> && command claude --bg -w <slug> -n "<ID> <slug>" --model opus --effor
 **Check the repo.** Right after each launch, confirm the worktree landed in `<repo>`:
 
 ```bash
-timeout 60 bash -c 'until git -C <repo> worktree list --porcelain | grep -q "/.claude/worktrees/<slug>$"; do sleep 2; done' && echo "repo ok"
+t=$(command -v gtimeout || command -v timeout); "$t" 60 bash -c 'until git -C <repo> worktree list --porcelain | grep -q "/.claude/worktrees/<slug>$"; do sleep 2; done' && echo "repo ok"
 ```
 
 If it times out, look for `<slug>` in the sibling repos' `git worktree list`. If it landed in another repo: run `command claude stop <session id>` and `command claude rm <session id>`; in that repo, delete the leftover `feature/<slug>` branch if it has no commits beyond trunk and is not on origin; then relaunch once. If it lands in the wrong repo again, stop launching and report it.
