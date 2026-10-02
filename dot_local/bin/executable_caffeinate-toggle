@@ -2,11 +2,11 @@
 export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 if pkill -f "caffeinate -d -t 3600"; then
-  terminal-notifier -title "Caffeinate" -message "Off" -group caffeinate-toggle
+  terminal-notifier -title "Caffeinate" -message "Awake-mode off" -group caffeinate-toggle
 else
   (
     caffeinate -d -t 3600 &&
-      terminal-notifier -title "Caffeinate" -message "Off, the hour ran out" -group caffeinate-toggle
+      terminal-notifier -title "Caffeinate" -message "Awake-mode off, the hour ran out" -group caffeinate-toggle
   ) >/dev/null 2>&1 &
-  terminal-notifier -title "Caffeinate" -message "On for 1 hour" -group caffeinate-toggle
+  terminal-notifier -title "Caffeinate" -message "Awake for 1 hour" -group caffeinate-toggle
 fi
