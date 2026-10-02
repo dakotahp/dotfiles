@@ -58,7 +58,7 @@ Package lists live in `.chezmoidata/packages.toml` with sections for `common`, `
 
 ### Git Configuration
 
-`dot_config/git/config` uses conditional includes: repos under `~/Code/work/` load `~/.gitconfig-work` for work identity. GPG signing is on by default. The pre-commit hook in `dot_config/git/hooks/` prevents direct commits to master/main.
+`dot_config/git/config` uses conditional includes: repos under `~/Code/work/` load `~/.gitconfig-work` for work identity. GPG signing is on by default. The pre-commit hook in `dot_config/git/hooks/` prevents direct commits to master/main unless a repo sets `hooks.allowMasterCommit`.
 
 ### Machine-Local Overrides
 
@@ -87,6 +87,8 @@ Before every `git push`:
 This is non-negotiable. Lint and test failures caught after commit/push waste time on churn commits. Catch them before.
 
 ## Conventions
+
+- Commit directly to master. This repo uses no feature branches or pull requests, and sets `hooks.allowMasterCommit` so the pre-commit hook allows it.
 
 - 2-space indentation, UTF-8, LF line endings (`.editorconfig`)
 - Files ignored by chezmoi are listed in `.chezmoiignore`

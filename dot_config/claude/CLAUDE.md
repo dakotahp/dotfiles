@@ -14,7 +14,7 @@ Do not commit until all three pass cleanly. If a step fails, fix the issue and r
 
 Run the whole suite only when I ask for it, or when the change is broad enough that "the tests covering the files you changed" honestly means most of them: a shared helper, a base class, a config every test loads.
 
-**Exception:** If a check fails due to pre-existing failures on the main branch (not caused by your changes), stop and report what is failing and why you believe it's pre-existing. Do not proceed until the user explicitly says "skip pre-commit checks" or "you can commit anyway."
+**Exception:** If a check fails due to pre-existing failures on the main branch (not caused by your changes), stop and report what is failing and why you believe it's pre-existing. Do not proceed until I explicitly say "skip pre-commit checks" or "you can commit anyway."
 
 ## Response Style
 
@@ -42,10 +42,6 @@ Default to short and simple. I would rather start with a small, correct picture 
 **Code in explanations:** show the smallest snippet that makes the point, not the surrounding function and not the whole file.
 
 Brevity applies to the explanation, not to the work. Investigate as thoroughly as you otherwise would, and never drop a real risk, a wrong assumption in my request, or a failing test to save words. State those plainly and briefly. If a question genuinely cannot be answered well in a few sentences, give me the short version first and tell me it's the short version.
-
-## Writing Style
-
-Never use em dashes (—) in any output. Use a comma, period, or restructure the sentence instead. Em dashes read as AI-generated and the user has to manually replace every one.
 
 ## Code Comments
 

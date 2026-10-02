@@ -1,6 +1,7 @@
 Brewfile
 bin/
 git-commit-template.txt
+CLAUDE.md
 README.md
 script/
 setup-macos.sh
