@@ -46,6 +46,8 @@ git-spice branch track feature/<slug> --base <parent>
 git branch --unset-upstream 2>/dev/null || true
 ```
 
+Run `git fetch origin <parent>` as its own Bash call, with nothing before it on the line. The sandbox exclusion for `git fetch` likely matches only a command that starts with it, so a fetch inside a longer block can stay sandboxed and fail on SSH remotes.
+
 `--no-track` matters: a plain `-C` from `origin/<parent>` sets the branch's upstream to the parent's remote branch. git-spice pushes to a branch's upstream, so this ticket's commits would land on the parent's PR. The first `git-spice branch submit` creates `origin/feature/<slug>`. Do not use `git reset --hard`; a permission rule denies it.
 
 Skip `branch track <parent>` if `git-spice log short` already lists it. If the parent is not on `origin`, or `git-spice auth status` fails, stop and tell the user.
