@@ -92,22 +92,21 @@ deploy_not_started() {
   local jobs=$1 created=$2 failed running offset eta
   failed=$(jq -r '[.items[] | select(.status | test("failed|infrastructure_fail|timedout")) | .name] | join(", ")' <<<"$jobs")
   if [[ -n $failed ]]; then
-    echo "GO"
     echo "  Failed: $failed. The deploy will not run."
-    return
+    return 0
   fi
 
   running=$(jq -r '[.items[] | select(.status == "running") | .name] | join(", ")' <<<"$jobs")
-  echo "❌ NO-GO"
   echo "  Deploy not started. Running: ${running:-nothing yet}."
   offset=$(deploy_offset_seconds)
-  [[ -z $offset ]] && return 0
+  [[ -z $offset ]] && return 1
   eta=$(($(epoch "$created") + offset - NOW))
   if ((eta > 0)); then
     echo "  Deploy usually starts in about $(minutes "$eta")."
   else
     echo "  Deploy should start any moment."
   fi
+  return 1
 }
 
 deploy_running() {
@@ -116,25 +115,22 @@ deploy_running() {
   state=$(service_update_state "$(jq -r .job_number <<<"$deploy")")
 
   if [[ $state == "done" ]]; then
-    echo "🟢 GO"
     echo "  Deploy has updated the ECS service (${elapsed}s in, now verifying)."
   elif [[ $state == "unknown" ]] && ((elapsed >= FALLBACK_SAFE_SECONDS)); then
-    echo "GO"
     echo "  Deploy is ${elapsed}s in. Step \"$SERVICE_UPDATE_STEP\" not found, so this is a timer guess."
   else
-    echo "NO-GO"
     echo "  Deploy is ${elapsed}s in. The ECS service is not updated yet."
+    return 1
   fi
 }
 
 evaluate_workflow() {
-  local workflow=$1 id jobs deploy deploy_status
+  local workflow=$1 id jobs deploy deploy_status rc=0
   id=$(jq -r .id <<<"$workflow")
 
   if [[ $id == "null" ]]; then
-    echo "NO-GO"
     echo "  Pipeline just started. The workflow does not exist yet."
-    return
+    return 1
   fi
 
   jobs=$(api "v2/workflow/$id/job")
@@ -143,25 +139,23 @@ evaluate_workflow() {
 
   case $deploy_status in
   success)
-    echo "GO"
     echo "  Deploy finished. Only post-deploy jobs are still running."
     ;;
   running)
-    deploy_running "$deploy"
+    deploy_running "$deploy" || rc=1
     ;;
   missing)
-    echo "GO"
     echo "  This workflow has no $DEPLOY_JOB job."
     ;;
   failed | infrastructure_fail | timedout | canceled)
-    echo "GO"
     echo "  Deploy $deploy_status."
     ;;
   *)
-    deploy_not_started "$jobs" "$(jq -r .created_at <<<"$workflow")"
+    deploy_not_started "$jobs" "$(jq -r .created_at <<<"$workflow")" || rc=1
     ;;
   esac
   echo "  ${DIM}$APP/$(jq -r .pipeline.number <<<"$workflow")/workflows/$id${RESET}"
+  return $rc
 }
 
 notify_deploy_now() {
@@ -207,7 +201,7 @@ main() {
   NOW=$(date +%s)
   WORKFLOWS=$(collect_workflows)
 
-  local active verdict="GO" report="" blocking=0 count=0 workflow result
+  local active verdict="GO" report="" blocking=0 count=0 workflow result mark
   active=$(jq -c --argjson now "$NOW" --argjson grace "$NEW_PIPELINE_GRACE_SECONDS" '
     select(.status == "running" or .status == "failing" or .status == "on_hold" or
       (.status == "pending" and ($now - (.created_at | sub("\\.[0-9]+Z$"; "Z") | fromdateiso8601)) < $grace))
@@ -216,21 +210,23 @@ main() {
   while read -r workflow; do
     [[ -z $workflow ]] && continue
     count=$((count + 1))
-    result=$(evaluate_workflow "$workflow")
-    if [[ ${result%%$'\n'*} == "NO-GO" ]]; then
+    if result=$(evaluate_workflow "$workflow"); then
+      mark="🟢"
+    else
+      mark="❌"
       verdict="NO-GO"
       blocking=$((blocking + 1))
     fi
-    report+=$'\n'"$(jq -r '"#\(.pipeline.number) \(.pipeline.subject) (\(.pipeline.actor))"' <<<"$workflow")"
-    report+=$'\n'"${result#*$'\n'}"$'\n'
+    report+=$'\n'"$mark $(jq -r '"#\(.pipeline.number) \(.pipeline.subject) (\(.pipeline.actor))"' <<<"$workflow")"
+    report+=$'\n'"$result"$'\n'
   done <<<"$active"
 
   if ((count == 0)); then
-    echo "${GREEN}GO${RESET}  Nothing is running on $BRANCH."
+    echo "🟢 ${GREEN}GO${RESET}  Nothing is running on $BRANCH."
   elif [[ $verdict == "GO" ]]; then
-    echo "${GREEN}GO${RESET}  A merge will not cancel an in-flight deploy."
+    echo "🟢 ${GREEN}GO${RESET}  A merge will not cancel an in-flight deploy."
   else
-    echo "${RED}NO-GO${RESET}  A merge now cancels $blocking workflow(s) before their deploy lands."
+    echo "❌ ${RED}NO-GO${RESET}  A merge now cancels $blocking workflow(s) before their deploy lands."
   fi
   printf "%s" "$report"
 
