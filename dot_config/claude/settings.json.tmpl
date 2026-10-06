@@ -152,6 +152,12 @@
             "type": "command",
             "command": "env -u CLAUDE_PROJECT_DIR prove_it hook claude:SessionStart"
           },
+{{- if .work_computer }}
+          {
+            "type": "command",
+            "command": "{{ .chezmoi.homeDir }}/.local/bin/claude-vault-context"
+          },
+{{- end }}
           {
             "type": "command",
             "command": "gpgconf --launch gpg-agent >/dev/null 2>&1 || true"

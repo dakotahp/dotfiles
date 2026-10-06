@@ -22,11 +22,17 @@ Fill gaps from the code, not from assumption. Where the plan left something open
 
 ## Step 1: Write the TRD
 
-Write a working draft to `docs/plans/YYYY-MM-DD-<slugified-name>-trd.md`, or to `$TMPDIR` if this session cannot write to the shared checkout. The draft is only for editing. Once published (Step 2), the Linear document is the TRD of record, and every reference to the TRD uses its URL.
+Write a working draft. The draft is only for editing. Once published (Step 2), the Linear document is the TRD of record, and every reference to the TRD uses its URL.
+
+- **Work project with a vault folder:** write to `Plans/YYYY-MM-DD <Name> TRD.md` in that folder. Find the folder from the session-start context, or with `claude-vault-context --find <Linear project ID>`. The vault is outside the sandbox write list, so vault writes need the sandbox off.
+- **Otherwise:** write to `docs/plans/YYYY-MM-DD-<slugified-name>-trd.md`, or to `$TMPDIR` if this session cannot write to the shared checkout.
 
 **Never write a local filesystem path into the tracker.** No absolute or home-relative path in a ticket, comment, or document. It exposes the user's machine and means nothing to anyone else. Repo-relative code paths, such as `app/models/user.rb`, are fine.
 
-Fill in **Planner session** from `ListAgents`. Its first line gives this session's name and ref. This session becomes the planner: the session that implementers ask about the spec (see "Act as the planner" below).
+This session becomes the planner: the session that implementers ask about the spec (see "Act as the planner" below). `ListAgents` gives its name and ref on the first line.
+
+- **With a vault folder:** session names stay out of Linear. Set `planner-session:` in the vault main file to the name from `ListAgents`, and drop the **Planner session** line from the TRD.
+- **Otherwise:** fill in **Planner session** from `ListAgents`.
 
 ```markdown
 # TRD: <Name>
@@ -151,7 +157,7 @@ Then create the tickets in dependency order, in the same project, and report the
 - The What, Areas, and acceptance criteria.
 - The Interfaces and Contracts entries it produces or consumes, copied verbatim.
 - `TRD: <Linear document URL>`
-- `Planner: <name> [ref]`, from the TRD header.
+- `Planner: <name> [ref]`, from the TRD header. Only without a vault folder.
 
 Record each **direct** dependency as a "blocked by" relation to the blocking ticket, using the tracker's relation fields. Never add a transitive one: if 3 needs 2 and 2 needs 1, ticket 3 is blocked by 2 only. Redundant blockers make `/run-lanes` wait. If the tracker cannot set relations, start the description with `Blocked by: <IDs>` instead. `/run-lanes` reads these to decide what can start.
 
@@ -170,11 +176,17 @@ If the work already has tickets, do not create duplicates. Match each TRD ticket
   - <each correction, e.g. "The endpoint is /exports, not /reports/export.">
   ```
 
+  Leave out the `Planner:` line when there is a vault folder.
+
 - Add any missing direct "blocked by" relations. Remove none without asking.
 
 ### Write back
 
 Write the identifiers back into the Linear document and the draft: in each ticket heading (`### 2. APP-1234: <title>`), in each Depends on line, and in the Lanes line. The TRD and the tracker must name the same tickets. If you edit the TRD later, update the Linear document first.
+
+With a vault folder, also:
+- Add every created and adopted ticket ID to `tickets:` in the vault main file. Keep the inline list form, for example `tickets: [APP-101, APP-102]`. The session-start hook finds the project by this list.
+- Add `status: published` and `linear-url: <TRD document URL>` to the draft's frontmatter. From then on the draft is a frozen snapshot. Make later TRD edits in Linear.
 
 ### Act as the planner
 
@@ -182,7 +194,7 @@ After the tickets exist, stay in this session as the planner. Lane sessions mess
 
 - **Spec questions:** answer from the TRD, the plan, and the code. If the answer changes or adds to the spec, update the TRD, the Linear document, and the ticket's "Read first" block before you reply, so later sessions get it too. If the question needs a decision the user has not made, ask the user, then relay the answer.
 - **`<ID> PR open: <url>`:** tell the user, and ask whether to run `/run-lanes <TRD document URL>` now. Run it only when the user says so.
-- **Reaching an implementer:** each lane session comments `Implementer: <name> [ref]` on its ticket. Use that name to send a correction or a question down to it.
+- **Reaching an implementer:** with a vault folder, each lane session adds a line with its name under `## Sessions` in the vault main file. Otherwise, it comments `Implementer: <name> [ref]` on its ticket. Use that name to send a correction or a question down to it.
 
 ---
 

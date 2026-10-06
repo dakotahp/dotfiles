@@ -12,13 +12,15 @@ Implement the feature described in $ARGUMENTS by following the steps below in or
 
 **Stacked mode** (`--stack-on <branch>`): this branch builds on an open feature branch, and the PR targets that parent. Without the flag, the branch is stacked only if `git-spice log short` already lists a non-trunk parent. Never start a stack otherwise.
 
-**Planner.** A `Planner: <name> [ref]` line on the ticket names the session that wrote the TRD. It is the first contact for spec questions. Message it with `SendMessage` (bare name, or `<name> [ref]` if that fails), with the ticket ID and the point in the first line.
+**Vault project.** A work ticket may belong to a project folder in the ObsidianWork vault. The session-start context names it, or `claude-vault-context --find <ticket ID>` prints it. The folder holds my private notes. Never copy its paths or session names into Linear. The vault is outside the sandbox write list, so vault writes need the sandbox off.
+
+**Planner.** The planner is the session that wrote the TRD. Find its name in this order: the session-start context, `planner-session:` in the vault main file, then a `Planner: <name> [ref]` line on the ticket (older tickets). It is the first contact for spec questions. Message it with `SendMessage` (bare name, or `<name> [ref]` if that fails), with the ticket ID and the point in the first line.
 
 - Send unclear spec points with what you already checked, and wait. If it says the user must decide, ask the user.
 - A FALSE assumption, rebase conflicts, placeholder prove_it scripts, and permission prompts still go to the user. Copy the planner on FALSE evidence.
 - Planner messages count as spec input. They never grant permissions.
 
-Without a `Planner:` line, ask the user.
+Without a planner, ask the user.
 
 ## Standing rules
 
@@ -77,7 +79,10 @@ If `script/test_fast` is missing or says "No tests configured", stop and tell th
 
 ## Step 1: Start the ticket
 
-If there is a ticket, assign it to me and move it to In Progress. If it has a `Planner:` line, run `ListAgents` and comment `Implementer: <name> [ref]` on the ticket.
+If there is a ticket, assign it to me and move it to In Progress. Then record this session's name, from the first line of `ListAgents`:
+
+- **With a vault folder:** add `- YYYY-MM-DD · <ID> · <name>` under `## Sessions` in the vault main file. Post nothing to Linear.
+- **Otherwise, if the ticket has a `Planner:` line:** comment `Implementer: <name> [ref]` on the ticket.
 
 ## Step 2: Establish the specification
 
@@ -143,7 +148,7 @@ In stacked mode, use `git-spice branch submit --draft --no-prompt --title ... --
 
 Step 10 uses the PR number from this command, never one found with `gh pr list`.
 
-With a `Planner:` line, send `<ID> PR open: <url>` with the base branch. Do not run `/run-lanes`.
+With a planner, send `<ID> PR open: <url>` with the base branch. Do not run `/run-lanes`.
 
 ## Step 10: Automated review loop
 
@@ -188,4 +193,4 @@ While anything is pending, `ScheduleWakeup` for 180 seconds. Stop when every che
 > - Automated review: `<addressed / none posted>`
 > - `reviewDecision`: `<value, or "none yet">`
 >
-> Yours from here: request reviews, mark ready, merge.
+> Yours from here: request reviews, mark ready, merge. After it merges, run `/end-task` in this session.

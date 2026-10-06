@@ -51,7 +51,7 @@ while IFS= read -r tmpl; do
       *.toml.tmpl)
         python3 -c 'import sys, tomllib; tomllib.load(open(sys.argv[1], "rb"))' "$out" 2>"$work/err" \
           || fail "$tmpl [${profile_names[$i]}] renders invalid TOML" "$work/err" ;;
-      .chezmoiscripts/*)
+      .chezmoiscripts/*|dot_local/bin/*)
         if head -1 "$out" | grep -qE '^#!.*\b(ba)?sh$'; then
           shellcheck -S warning "$out" >"$work/err" 2>&1 \
             || fail "$tmpl [${profile_names[$i]}] shellcheck" "$work/err"

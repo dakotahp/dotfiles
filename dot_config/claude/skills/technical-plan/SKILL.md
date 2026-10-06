@@ -14,7 +14,7 @@ Best run in a `plan` session, where the model and effort are already pinned for 
 
 ## Step 0: Get the input and ground it in the code
 
-If $ARGUMENTS is a Linear project, issue, or document identifier or URL, fetch it with the Linear tools. If it is a file path, read it. If it is a URL, fetch it. If it is prose, use it directly.
+If $ARGUMENTS is a Linear project, issue, or document identifier or URL, fetch it with the Linear tools. If it is a file path, read it. If it is a URL, fetch it. If it is prose, use it directly. If this is a work project with a vault folder, also read the brief and answered open questions in its main file.
 
 Then read the actual code. A technical plan that has not been checked against the repository is a guess, and the most expensive kind of error here is an approach built on a seam that does not exist. Trace each significant noun in the request to what it really maps to in this codebase and note the path. Watch for similarly-named decoys.
 
@@ -24,7 +24,10 @@ Ask a question only if you cannot proceed without it. If you can make a reasonab
 
 ## Step 1: Write the plan
 
-Write a working draft to `docs/plans/YYYY-MM-DD-<slugified-name>-technical-plan.md`, or to `$TMPDIR` if this session cannot write to the shared checkout. The draft is only for editing. Once published (Step 2), the Linear document is the plan of record, and every reference to the plan uses its URL.
+Write a working draft. The draft is only for editing. Once published (Step 2), the Linear document is the plan of record, and every reference to the plan uses its URL.
+
+- **Work project with a vault folder:** write to `Plans/YYYY-MM-DD <Name> Technical Plan.md` in that folder. Find the folder from the session-start context, or with `claude-vault-context --find <Linear project ID>`. The vault is outside the sandbox write list, so the write needs the sandbox off.
+- **Otherwise:** write to `docs/plans/YYYY-MM-DD-<slugified-name>-technical-plan.md`, or to `$TMPDIR` if this session cannot write to the shared checkout.
 
 **Never write a local filesystem path into the tracker.** No absolute or home-relative path in a ticket, comment, or document. Repo-relative code paths, such as `app/models/user.rb`, are fine.
 
@@ -110,6 +113,10 @@ Next steps:
 ```
 
 Then offer to publish the plan as a Linear document on the work's project with `mcp__linear-server__save_document`, and wait for explicit confirmation. If no project is known, ask which one. Report the document URL. `/technical-requirements-document` links the plan by that URL.
+
+Publishing does not need to wait for this session. The draft may sit in the vault for days while I refine it. Publish only when I say so.
+
+For a vault draft, after publishing, add `status: published` and `linear-url: <document URL>` to the draft's frontmatter. From then on the vault copy is a frozen snapshot. Make later edits in Linear, not in the draft.
 
 Offer `plan-falsifier` and `plan-rederiver` explicitly rather than assuming the user knows about them. The plan stage is where they pay off most, since an error here propagates into every ticket downstream. Dispatch both in one message so they run concurrently, and pass `plan-rederiver` only the original brief, never the plan.
 

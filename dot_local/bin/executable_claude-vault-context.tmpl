@@ -1,0 +1,77 @@
+#!/usr/bin/env bash
+#
+# Links Claude sessions to their work project folder in the Obsidian vault.
+#
+# Usage: claude-vault-context              SessionStart hook: reads hook JSON on stdin
+#        claude-vault-context --find KEY   Prints the project folder for a ticket ID or Linear project ID
+# Exit:  0 = found (or hook mode), 1 = not found, 2 = usage error
+
+set -uo pipefail
+
+PROJECTS="${CLAUDE_VAULT_PROJECTS:-{{ .chezmoi.homeDir }}/{{ .workVault }}/1_Projects}"
+
+frontmatter() {
+  awk 'NR == 1 { if ($0 != "---") exit; next } $0 == "---" { exit } { print }' "$1"
+}
+
+field() {
+  frontmatter "$1" | sed -n "s/^$2:[[:space:]]*//p" | head -1 | sed -e 's/^"\(.*\)"$/\1/' -e "s/^'\(.*\)'$/\1/"
+}
+
+tickets() {
+  frontmatter "$1" | awk '
+    /^tickets:/ { t = 1; sub(/^tickets:/, ""); print; next }
+    t && /^[[:space:]]*-/ { print; next }
+    { t = 0 }
+  ' | grep -oE '[A-Za-z]+-[0-9]+' | tr '[:lower:]' '[:upper:]'
+}
+
+find_project() {
+  local key upper dir main
+  key=$1
+  upper=$(printf '%s' "$key" | tr '[:lower:]' '[:upper:]')
+  for dir in "$PROJECTS"/*/; do
+    main="$dir$(basename "$dir").md"
+    [ -f "$main" ] || continue
+    if [ "$(field "$main" linear-project-id)" = "$key" ] || tickets "$main" | grep -qxF "$upper"; then
+      printf '%s\n' "${dir%/}"
+      return 0
+    fi
+  done
+  return 1
+}
+
+hook() {
+  local cwd branch ticket dir name main color planner context
+  cwd=$(jq -r '.cwd // empty' 2>/dev/null) || return 0
+  [ -n "$cwd" ] || return 0
+  branch=$(git -C "$cwd" symbolic-ref --short HEAD 2>/dev/null) || return 0
+  ticket=$(printf '%s' "${branch##*/}" | grep -oE '[A-Za-z]+-[0-9]+' | head -1 | tr '[:lower:]' '[:upper:]')
+  [ -n "$ticket" ] || return 0
+  dir=$(find_project "$ticket") || return 0
+  name=$(basename "$dir")
+  main="$dir/$name.md"
+  color=$(field "$main" color)
+  planner=$(field "$main" planner-session)
+
+  context="This session works on ticket $ticket in the work project \"$name\".
+Vault project folder: $dir
+Main file: $main
+Published plans and tickets in Linear are the source of truth. The vault folder holds personal notes for this project. Never copy vault paths or session names into Linear.
+Planner session: ${planner:-none recorded}
+Project color: ${color:-none}. If this session has no color, tell the user to run /color ${color:-<color>}.
+When the ticket is done, run /end-task."
+
+  jq -n --arg ctx "$context" '{hookSpecificOutput: {hookEventName: "SessionStart", additionalContext: $ctx}}'
+}
+
+case "${1:-}" in
+  --find)
+    [ -n "${2:-}" ] || { echo "usage: claude-vault-context --find KEY" >&2; exit 2; }
+    find_project "$2"
+    ;;
+  *)
+    hook
+    exit 0
+    ;;
+esac
