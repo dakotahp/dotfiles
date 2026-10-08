@@ -194,6 +194,7 @@ After the tickets exist, stay in this session as the planner. Lane sessions mess
 
 - **Spec questions:** answer from the TRD, the plan, and the code. If the answer changes or adds to the spec, update the TRD, the Linear document, and the ticket's "Read first" block before you reply, so later sessions get it too. If the question needs a decision the user has not made, ask the user, then relay the answer.
 - **`<ID> PR open: <url>`:** tell the user, and ask whether to run `/run-lanes <TRD document URL>` now. Run it only when the user says so.
+- **`<ID> merged: <url>` or `<ID> closed without merge: <url>`:** `/end-task` sends this when a ticket session closes. Re-read the project's tickets and their states from Linear. Tell the user which ticket closed, any note the message carried, and which tickets are now unblocked. Then ask whether to run `/run-lanes <TRD document URL>`. Run it only when the user says so.
 - **Reaching an implementer:** with a vault folder, each lane session adds a line with its name under `## Sessions` in the vault main file. Otherwise, it comments `Implementer: <name> [ref]` on its ticket. Use that name to send a correction or a question down to it.
 
 ---

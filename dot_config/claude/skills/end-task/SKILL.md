@@ -1,7 +1,7 @@
 ---
 name: end-task
 description: Closes out a finished ticket session. Writes a task note to the work project's vault folder with what was built and evidence-backed highlights of my contribution, then removes the worktree and local branch. Use when a ticket's PR has merged, when the user is done with a ticket session, or runs /end-task.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ExitWorktree, mcp__linear-server__get_issue, mcp__linear-server__list_comments
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ExitWorktree, ListAgents, SendMessage, mcp__linear-server__get_issue, mcp__linear-server__list_comments
 ---
 
 Close out the ticket in $ARGUMENTS, or the ticket this session worked on.
@@ -79,7 +79,20 @@ In `1_Projects/<Name>/<Name>.md`:
 
 Edit the file in place. Keep everything else.
 
-## Step 6: Clean up
+## Step 6: Tell the planner
+
+The planner is the session that wrote the TRD. Find its name in this order: the session-start context, `planner-session:` in the vault main file, then a `Planner: <name> [ref]` line on the ticket. With no planner, skip this step.
+
+Send it one message with `SendMessage` (bare name, or `<name> [ref]` if that fails):
+
+- PR merged: `<ID> merged: <PR url>`
+- PR not merged: `<ID> closed without merge: <PR url>`
+
+Add one line on anything the planner needs for the next tickets, such as a contract change or a loose end that blocks other work. Leave it out when there is nothing.
+
+If the send fails, for example because the planner session has ended, note it in the report and continue.
+
+## Step 7: Clean up
 
 Only after Steps 4 and 5 succeed, and only with a merged PR or my go-ahead. Cleanup is half the point of this skill: do it yourself, and never hand it to me without trying first.
 
@@ -93,12 +106,13 @@ Do not use `git -C <main checkout>` or `git worktree remove` from inside the wor
 
 If a step still fails, report the error and the exact command to run by hand. The task note is already saved.
 
-## Step 7: Report
+## Step 8: Report
 
 ```
 Task closed
   Ticket:      <ID>
   Note:        1_Projects/<Name>/Tasks/<ID>.md
   Highlights:  <count>
+  Planner:     <told, none, or send failed>
   Cleanup:     <done, or what is left to do>
 ```
