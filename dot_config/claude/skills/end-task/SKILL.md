@@ -81,13 +81,17 @@ Edit the file in place. Keep everything else.
 
 ## Step 6: Clean up
 
-Only after Steps 4 and 5 succeed, and only with a merged PR or my go-ahead:
+Only after Steps 4 and 5 succeed, and only with a merged PR or my go-ahead. Cleanup is half the point of this skill: do it yourself, and never hand it to me without trying first.
 
 1. Check `git status`. If there are uncommitted changes, list them and ask before you continue.
-2. Note the branch name, then leave and remove the worktree with `ExitWorktree` (action `remove`). If this session did not create the worktree, give me the `git worktree remove <path>` command instead.
-3. Delete the local branch with `git branch -D <branch>`. Leave the remote branch alone.
+2. Note the current branch name (usually `feature/<slug>`).
+3. Call `ExitWorktree` with action `remove`. This works for any worktree under `.claude/worktrees/`, including one `/run-lanes` or `claude -w` created before this session started.
+   - If it refuses because the worktree has commits, and the PR is merged, those commits are in the PR. Call it again with `discard_changes: true`. Without a merged PR, ask me first.
+4. From the main checkout, where `ExitWorktree` leaves you, run `git branch -D <branch>` with the sandbox off. The sandbox blocks writes to `.git/config`, which leaves a stale `branch.<name>` section behind. Leave the remote branch alone.
 
-If any cleanup step fails, report it with the command to run by hand. The task note is already saved.
+Do not use `git -C <main checkout>` or `git worktree remove` from inside the worktree. The worktree guard refuses them.
+
+If a step still fails, report the error and the exact command to run by hand. The task note is already saved.
 
 ## Step 7: Report
 
