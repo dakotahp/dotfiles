@@ -41,6 +41,8 @@ Conditional blocks control OS-specific and machine-type-specific behavior throug
 5. `dot_config/zshell_components/2-aliases.sh.tmpl` — shell aliases
 6. `dot_config/zshell_components/mise.sh.tmpl` — mise activation (dev machines only)
 
+`3-claude-launcher.sh.tmpl` wraps `claude` so mise shims are on PATH for agent shells.
+
 The numeric prefixes control load order. New shell components go here as numbered files.
 
 ### Secrets
@@ -68,28 +70,23 @@ Files not managed by chezmoi for per-machine customization (created by `run_once
 - `~/.aliases.local` — extra aliases
 - `~/.env.local` — extra environment variables
 
+### Claude Code Config (`dot_config/claude/`)
+
+Source for `~/.config/claude/`: global `CLAUDE.md`, `settings.json.tmpl`, `skills/`, `agents/`, `plugins/`. Always edit here, never the deployed copy; the sandbox blocks writes to the deployed paths. Vault paths for skills live in `.chezmoidata/vaults.toml`.
+
 ### Utility Scripts (`bin/`)
 
 Not deployed by chezmoi (listed in `.chezmoiignore`). Added to `$PATH` via `dot_zshrc.tmpl`. Notable: `branch-manager` (git branch lifecycle), `gday` (daily setup runner), `signoff` (CI validation + signed tag creation).
 
-## Pre-commit Discipline (applies to all repos)
+`dot_local/bin/` is deployed to `~/.local/bin` (e.g. `merge-window`, `caffeinate-toggle`, `claude-vault-context`).
 
-Before every `git commit`:
-1. Run the project linter on all files you changed and fix any offenses
-2. Run tests relevant to the changed files and confirm they pass
-3. Do not commit until both are clean
+## Pre-commit
 
-Before every `git push`:
-1. Run the broader test suite covering all changed areas
-2. Confirm 0 failures in tests related to your changes
-3. Do not push until tests pass
-
-This is non-negotiable. Lint and test failures caught after commit/push waste time on churn commits. Catch them before.
+`script/check` is the full lint and test step for this repo. Run it before every commit and push.
 
 ## Conventions
 
 - Commit directly to master. This repo uses no feature branches or pull requests, and sets `hooks.allowMasterCommit` so the pre-commit hook allows it.
-
 - 2-space indentation, UTF-8, LF line endings (`.editorconfig`)
 - Files ignored by chezmoi are listed in `.chezmoiignore`
 - XDG Base Directory Specification is enforced — tools should not pollute `$HOME`
