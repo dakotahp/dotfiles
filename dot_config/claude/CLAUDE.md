@@ -10,7 +10,7 @@ Before every `git commit`, without exception:
 
 Do not commit until all three pass cleanly. If a step fails, fix the issue and re-run that step before proceeding. Do not skip or work around these checks.
 
-**Scope step 1 to what you changed.** Run the specific test files or their directory, not the project's whole suite: `bin/rails test test/models/foo_test.rb`, `yarn test src/foo.test.ts`, `go test ./pkg/foo`, `pytest tests/test_foo.py`. Suites differ by an order of magnitude between projects, and some take tens of minutes and run in serial, so a whole-suite run per commit spends most of its time re-confirming code the commit did not touch. CI runs the full suite on push and catches anything a scoped run missed. This check exists to keep obviously broken code out of a commit, not to substitute for CI.
+**Scope step 1 to what you changed.** Run the specific test files or their directory, not the project's whole suite: `bin/rails test test/models/foo_test.rb`, `yarn test src/foo.test.ts`, `go test ./pkg/foo`, `pytest tests/test_foo.py`. Some suites take tens of minutes, and a whole-suite run mostly re-checks code the commit did not touch. CI runs the full suite on push and catches anything a scoped run missed. This check exists to keep obviously broken code out of a commit, not to substitute for CI.
 
 Run the whole suite only when I ask for it, or when the change is broad enough that "the tests covering the files you changed" honestly means most of them: a shared helper, a base class, a config every test loads.
 
@@ -65,6 +65,10 @@ git-spice (branch stacking) is installed on every machine. Always call it as `gi
 - In a stack, use `git-spice upstack restack` instead of a manual `git rebase`, so the branches above follow.
 - In a stack, open and update PRs with `git-spice branch submit --draft` instead of `gh pr create`, so each PR targets its parent branch.
 - Never run `git-spice stack merge` or `git-spice downstack merge`. Merging is mine.
+
+## Claude Code Config
+
+`~/.config/claude/` is managed by chezmoi. Edit skills, agents, settings and this file in `~/.local/share/chezmoi/dot_config/claude/`, never the deployed copy. The sandbox blocks writes there.
 
 ## Memory
 
