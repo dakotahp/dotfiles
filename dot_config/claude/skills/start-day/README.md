@@ -49,11 +49,10 @@ Reads from (must exist):
 
 ## Part of the skill trio
 
-This skill is part of a three-skill daily/weekly workflow:
+This skill is part of a two-skill daily workflow:
 
 - **`/start-day`** ← you are here, primes the note each morning
 - **`/end-day`**: classifies, routes, distills, archives
-- **`/end-week`**: weekly cofounder session; surveys the week, picks highest-leverage project, does real work
 
 ## Invocation
 

@@ -4,7 +4,7 @@ description: Audits agent-context files (vault/project/area scope) for staleness
 allowed-tools: Bash, Read, Edit, Write, AskUserQuestion
 ---
 
-Agent-context files (frontmatter `agent-context: vault | project | area`) are loaded automatically by start-day, end-week, and per-folder sessions. They drift silently, Life Domains, project Index.md, area files, and that drift miscalibrates every downstream agent decision. This skill makes the drift visible and easy to fix.
+Agent-context files (frontmatter `agent-context: vault | project | area`) are loaded automatically by start-day and per-folder sessions. They drift silently, Life Domains, project Index.md, area files, and that drift miscalibrates every downstream agent decision. This skill makes the drift visible and easy to fix.
 
 ---
 
@@ -115,4 +115,4 @@ If a file's frontmatter is malformed (no closing `---`), report it to the user i
 
 ## Done
 
-Refreshed files now carry an honest `last-reviewed` date. end-week's stale-context check (60+ day threshold) will flag the rest naturally over time.
+Refreshed files now carry an honest `last-reviewed` date. Run this skill again later to catch the rest.

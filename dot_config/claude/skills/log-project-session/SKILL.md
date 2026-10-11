@@ -166,7 +166,7 @@ The `obsidian create` command will create the `Session Logs/` folder if it doesn
 
 ### Step 7.25: Update `last-touched` Frontmatter on Canonical File
 
-Stamp the canonical project/area file with today's date. Authoritative engagement signal consumed by `/continue-project` (stale-warning) and `/end-week` (neglect scoring). Applies equally to projects and areas, both have a canonical `{ProjectName}.md` at the root of their folder.
+Stamp the canonical project/area file with today's date. Authoritative engagement signal consumed by `/continue-project` (stale-warning) and `/start-day` (stale project flag). Applies equally to projects and areas, both have a canonical `{ProjectName}.md` at the root of their folder.
 
 **Never use `obsidian property:set`**, it is known to destroy the file body on success. Instead, do an atomic read → modify-frontmatter-in-memory → write-back, mirroring `/update-project-state` Step 6:
 

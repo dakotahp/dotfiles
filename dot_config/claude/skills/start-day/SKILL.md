@@ -72,17 +72,11 @@ After VAULT_PATH resolves, fire this second batch (also in parallel):
 # Inbox contents (Phase 1 input: folder derived from daily:path result)
 obsidian files vault=ObsidianPersonal folder="0_Inbox"
 
-# Current ISO week: capture stdout as CURRENT_WEEK label (shell vars don't persist across Bash tool calls)
-date +%Y-%V
-
-# Weekly notes folder listing
-obsidian files vault=ObsidianPersonal folder="4_Archive/Weekly Notes"
-
 # Project-scope agent-context files modified within 14 days
 find "$VAULT_PATH/1_Projects" -name "*.md" -mtime -14 | xargs grep -l "^agent-context: project" 2>/dev/null
 ```
 
-Store all results under these labels for use in Phase 2: **CALENDAR_EVENTS**, **VAULT_PATH**, **QUOTES_RAW**, **INSPIRATION_FILES**, **LIFE_DOMAINS**, **VAULT_AGENT_CONTEXT**, **PROJECT_LAST_TOUCHED**, **CURRENT_WEEK**, **WEEKLY_FILES**, **PROJECT_CONTEXT_FILES**, **WEATHER_FORECAST**, **AIR_QUALITY**. If any call fails, store empty/null and continue silently.
+Store all results under these labels for use in Phase 2: **CALENDAR_EVENTS**, **VAULT_PATH**, **QUOTES_RAW**, **INSPIRATION_FILES**, **LIFE_DOMAINS**, **VAULT_AGENT_CONTEXT**, **PROJECT_LAST_TOUCHED**, **PROJECT_CONTEXT_FILES**, **WEATHER_FORECAST**, **AIR_QUALITY**. If any call fails, store empty/null and continue silently.
 
 Filter the inbox list to files matching the `YYYY-MM-DD.md` pattern **where the date is before today**. Sort ascending (oldest first). These are unprocessed prior notes.
 
@@ -238,11 +232,6 @@ Creates today's note from the template if it doesn't exist.
 
 **Read project-scope agent-context files**, for each path in **PROJECT_CONTEXT_FILES**, read the file. Build the **project context map**: project name (from path or frontmatter title) → key details (goal, current status, constraints, blockers). This map is shared across Phase 1 and Phase 2.
 
-**Weekly note**, from **WEEKLY_FILES**, find the file matching `$CURRENT_WEEK.md`. If found, read it.
-
-- **Extract `## Weekly Focus`**: if the section exists, take the single sentence beneath the heading and store as **WEEKLY_FOCUS_CONTENT** (the verbatim sentence, no heading, no surrounding whitespace). If the section is absent, the file is empty, or the weekly note doesn't exist at all, leave WEEKLY_FOCUS_CONTENT empty. This is the **only** content from the weekly note that gets replicated into today's daily note, it powers the `<!-- weekly-focus -->` placeholder.
-- **Everything else is AMBIENT CONTEXT ONLY**: do not replicate other sections into today's daily note. It informs internal calibration: which rolled-over todos feel weightier (project matched `## Projects Focused`), which open `## Decisions Needed` items deserve attention, whether to flag a stale project (already covered by `## Archive Candidates`).
-
 **Avoidance Radar**, read now (after Phase 1 has finished updating it):
 
 ```bash
@@ -294,8 +283,7 @@ Sort oldest first. Append after rolled-over todos.
 **De-duplicate Radar items against rolled-over todos**, before appending, drop any Radar item whose intent is already covered by a rolled-over todo. A Radar item is considered superseded when:
 
 - A rolled-over todo references the same `[[Project]]` and the Radar item is generic ("move something forward", "make progress on X", "do something on Y"), OR
-- A rolled-over todo names a specific deliverable that satisfies the Radar item's intent (e.g. "Write Ecclesiastes 5:10 post" supersedes "Bible Verses Secular Relation Blog: move something forward"), OR
-- The project's most recent weekly note `## Work Produced` already lists a deliverable that satisfies the Radar item's intent, in this case, also flag the Radar item to the user in CONTEXT_CONTENT as potentially resolvable ("Resolved?: [item], [deliverable] shipped").
+- A rolled-over todo names a specific deliverable that satisfies the Radar item's intent (e.g. "Write Ecclesiastes 5:10 post" supersedes "Bible Verses Secular Relation Blog: move something forward").
 
 When in doubt, prefer suppression: a stale Radar item next to its concrete rolled-over counterpart adds noise, not signal.
 
@@ -333,11 +321,6 @@ Template path: `$VAULT_PATH/3_Resources/Obsidian Templates/Daily Note Template.m
 
 `replace()` calls are no-ops when a placeholder isn't present in the template, so the same script works across vaults. Personal-vault-only placeholders (`<!-- quote -->`, `<!-- inspiration -->`) simply go unused in non-personal templates. If a value is empty/null, substitute an empty string.
 
-**WEEKLY_FOCUS_LINE**, derive from WEEKLY_FOCUS_CONTENT (extracted in Step 2b):
-
-- If WEEKLY_FOCUS_CONTENT is non-empty: `WEEKLY_FOCUS_LINE = f"{WEEKLY_FOCUS_CONTENT}, [[{CURRENT_WEEK}]]"`, focus sentence followed by a wikilink to the weekly note.
-- If empty (no weekly note, or no `## Weekly Focus` section): substitute an empty string.
-
 **INSPIRATION_FILENAME** is the bare note name (no path, no `.md`) for the wikilink. The `*italics*` wrapper around `<!-- quote -->` is already in the personal template.
 
 **YESTERDAY_DATE** / **TOMORROW_DATE**, `YYYY-MM-DD` strings for the calendar day before and after today. Compute from today's date (e.g. `(date.today() - timedelta(days=1)).isoformat()`).
@@ -351,7 +334,6 @@ note_path = f"{vault}/<TODAY_VAULT_PATH>"
 with open(template_path, 'r', encoding='utf-8') as f:
     content = f.read()
 
-content = content.replace('<!-- weekly-focus -->', 'WEEKLY_FOCUS_LINE')
 content = content.replace('<!-- quote -->', 'QUOTE_CONTENT')
 content = content.replace('<!-- inspiration -->', '[[INSPIRATION_FILENAME]], INSPIRATION_TEASER')
 content = content.replace('<!-- weather -->', 'WEATHER_FORECAST')
