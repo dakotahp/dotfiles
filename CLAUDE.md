@@ -87,6 +87,7 @@ Not deployed by chezmoi (listed in `.chezmoiignore`). Added to `$PATH` via `dot_
 ## Conventions
 
 - Commit directly to master. This repo uses no feature branches or pull requests, and sets `hooks.allowMasterCommit` so the pre-commit hook allows it.
+- Work in the main checkout on master. Do not create a branch or a worktree. Commit to master once I approve the change.
 - 2-space indentation, UTF-8, LF line endings (`.editorconfig`)
 - Files ignored by chezmoi are listed in `.chezmoiignore`
 - XDG Base Directory Specification is enforced — tools should not pollute `$HOME`
