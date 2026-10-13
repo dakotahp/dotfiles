@@ -121,6 +121,10 @@ Commits are signed and the sandbox blocks that by default, so `settings.json.tmp
 
 Allowlisting is therefore not an option for the CLI, only exclusion. The `circleci.com` and `app.circleci.com` entries in `allowedDomains` and the matching `WebFetch` rules are for everything else that talks to CircleCI, a sandboxed `curl` against `api/v2` or fetching a pipeline page, which do work through the normal allowlist.
 
+### Git over SSH cannot be sandboxed
+
+`git push *`, `git ls-remote *` and `git-spice *` are excluded for the same reason as `git fetch`. The trailing ` *` matters: an entry with no wildcard matches only the bare command with no arguments. The sandbox routes git's SSH through its SOCKS proxy with `nc -X 5`, but the proxy requires a username and password that `nc` never sends, so the handshake dies with `Connection to UNKNOWN port 65535: Broken pipe`. The SSH key also lives in the 1Password agent socket, which the sandbox does not expose.
+
 Note that `excludedCommands` is read at session start and does not hot-reload, so a change here needs a new session. The filesystem and network rules above do reload live.
 
 ### Mode agents
