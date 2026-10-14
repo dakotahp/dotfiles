@@ -46,6 +46,7 @@ git-spice repo init --trunk "$trunk" --remote origin
 git-spice branch track <parent> --base "$trunk"
 git-spice branch track feature/<slug> --base <parent>
 git branch --unset-upstream 2>/dev/null || true
+git config spice.submit.navigationCommentSync downstack
 ```
 
 Run `git fetch origin <parent>` as its own Bash call, with nothing before it on the line. The sandbox exclusion for `git fetch` likely matches only a command that starts with it, so a fetch inside a longer block can stay sandboxed and fail on SSH remotes.
@@ -61,6 +62,8 @@ Tracking does not link the parent's open PR, so the stack comment on this PR wou
 ```
 
 With the SHAs equal this pushes nothing; `--force` only skips the "outdated branch" check when trunk has moved. If the SHAs differ, skip it and tell the user. Never push or restack another session's branch.
+
+The `navigationCommentSync` setting makes each `branch submit` also rewrite the stack comment on every PR below this one. Without it, a parent PR never lists the children that stack on it later. Editing those comments pushes no code, so it is safe on another session's PR.
 
 **Base branch.** In stacked mode, the parent. Otherwise the default branch from `git symbolic-ref --short refs/remotes/origin/HEAD`, or whichever of `origin/main` / `origin/master` exists.
 

@@ -58,6 +58,8 @@
   tag = false
 [tag]
   gpgSign = true
+[spice "submit"]
+  navigationCommentSync = downstack
 
 #
 # Allows for a local machine override. Legacy functionality now that
