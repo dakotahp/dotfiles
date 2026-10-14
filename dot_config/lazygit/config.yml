@@ -1,12 +1,5 @@
 gui:
   nerdFontsVersion: "3"
-  authorColors:
-    "DP": "#b4befe"
-    "Dakotah Peña": "#b4befe"
-    "*": "#23446d"
-  branchColorPatterns:
-    "main$": "red"
-    "master$": "red"
   # https://github.com/catppuccin/lazygit/tree/main/themes/mocha
   theme:
     activeBorderColor:
@@ -28,6 +21,13 @@ gui:
       - "#cdd6f4"
     searchingActiveBorderColor:
       - "#f9e2af"
+    authorColors:
+      "DP": "#b4befe"
+      "Dakotah Peña": "#b4befe"
+      "*": "#23446d"
+    branchColorPatterns:
+      "main$": "red"
+      "master$": "red"
   spinner:
     # yarn style spinner
     frames:
@@ -39,7 +39,6 @@ gui:
       - "⣟"
       - "⣯"
       - "⣷"
-
     # milliseconds. Slowed speed down by 2x
     rate: 100
 git:
