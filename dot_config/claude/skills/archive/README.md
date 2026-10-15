@@ -9,7 +9,7 @@ Moves a note (or an entire project folder) into `4_Archive/` while preserving it
 ## Usage
 
 ```
-/archive                     # archives the file currently open in Obsidian
+/archive                     # picks from the notes changed most recently
 /archive "Note Name"         # archives a file by name
 /archive --folder "Project"  # archives an entire project folder
 ```

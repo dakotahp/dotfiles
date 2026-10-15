@@ -1,7 +1,7 @@
 ---
 name: technical-requirements-document
 description: Writes a detailed technical requirements document (TRD) with a ticket-by-ticket breakdown, normally run straight after /technical-plan in the same session so it can build on the approach and decisions already established. Use when a technical plan needs to become implementable specs, when someone asks for a TRD or detailed technical requirements, or when work needs breaking into tickets that separate sessions will pick up.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, AskUserQuestion, Task, ListAgents, SendMessage, mcp__linear-server__save_comment, mcp__linear-server__list_comments, mcp__linear-server__get_project, mcp__linear-server__get_issue, mcp__linear-server__list_issues, mcp__linear-server__get_document, mcp__linear-server__save_issue, mcp__linear-server__save_document, mcp__linear-server__list_teams, mcp__linear-server__list_projects
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, AskUserQuestion, Task, ListAgents, SendMessage, mcp__linear-server__save_comment, mcp__linear-server__list_comments, mcp__linear-server__get_project, mcp__linear-server__get_issue, mcp__linear-server__list_issues, mcp__linear-server__get_document, mcp__linear-server__save_issue, mcp__linear-server__save_document, mcp__linear-server__list_teams, mcp__linear-server__list_projects, mcp__obsidian-vault
 ---
 
 Write a technical requirements document for the work in $ARGUMENTS, or for the work already established in this session.
@@ -24,14 +24,14 @@ Fill gaps from the code, not from assumption. Where the plan left something open
 
 Write a working draft. The draft is only for editing. Once published (Step 2), the Linear document is the TRD of record, and every reference to the TRD uses its URL.
 
-- **Work project with a vault folder:** write to `Plans/YYYY-MM-DD <Name> TRD.md` in that folder. Find the folder from the session-start context, or with `claude-vault-context --find <Linear project ID>`. The vault is outside the sandbox write list, so vault writes need the sandbox off.
+- **Work project with a vault folder:** create `Plans/YYYY-MM-DD <Name> TRD.md` in that folder with `create_note`. Find the folder from the session-start context, or with `find_notes` in the Work vault (`frontmatter_key: linear-project-id`, the Linear project ID as the value).
 - **Otherwise:** write to `docs/plans/YYYY-MM-DD-<slugified-name>-trd.md`, or to `$TMPDIR` if this session cannot write to the shared checkout.
 
 **Never write a local filesystem path into the tracker.** No absolute or home-relative path in a ticket, comment, or document. It exposes the user's machine and means nothing to anyone else. Repo-relative code paths, such as `app/models/user.rb`, are fine.
 
 This session becomes the planner: the session that implementers ask about the spec (see "Act as the planner" below). `ListAgents` gives its name and ref on the first line.
 
-- **With a vault folder:** session names stay out of Linear. Set `planner-session:` in the vault main file to the name from `ListAgents`, and drop the **Planner session** line from the TRD.
+- **With a vault folder:** session names stay out of Linear. Set `planner-session:` in the vault main file to the name from `ListAgents` with `update_frontmatter`, and drop the **Planner session** line from the TRD.
 - **Otherwise:** fill in **Planner session** from `ListAgents`.
 
 ```markdown
@@ -185,8 +185,8 @@ If the work already has tickets, do not create duplicates. Match each TRD ticket
 Write the identifiers back into the Linear document and the draft: in each ticket heading (`### 2. APP-1234: <title>`), in each Depends on line, and in the Lanes line. The TRD and the tracker must name the same tickets. If you edit the TRD later, update the Linear document first.
 
 With a vault folder, also:
-- Add every created and adopted ticket ID to `tickets:` in the vault main file. Keep the inline list form, for example `tickets: [APP-101, APP-102]`. The session-start hook finds the project by this list.
-- Add `status: published` and `linear-url: <TRD document URL>` to the draft's frontmatter. From then on the draft is a frozen snapshot. Make later TRD edits in Linear.
+- Add every created and adopted ticket ID to `tickets:` in the vault main file with `update_frontmatter`. `set` replaces the whole list, so keep the IDs already there. The session-start hook and `find_notes` find the project by this list.
+- Add `status: published` and `linear-url: <TRD document URL>` to the draft's frontmatter with `update_frontmatter`. From then on the draft is a frozen snapshot. Make later TRD edits in Linear.
 
 ### Act as the planner
 

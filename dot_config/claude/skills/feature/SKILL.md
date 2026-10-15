@@ -1,7 +1,7 @@
 ---
 name: feature
 description: Use when implementing an already-specified task: a ticket, a TRD section, or a written spec. Runs the full pipeline from spec validation through failing tests, implementation, review, and a draft PR. Expects the design to be settled and validates the spec against the code rather than working out what to build; given only an investigation or a rough idea, it asks for a specification first instead of designing one.
-allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task, ListAgents, SendMessage
+allowed-tools: Bash, Read, Write, Edit, Glob, Grep, Task, ListAgents, SendMessage, mcp__obsidian-vault
 ---
 
 Implement the feature described in $ARGUMENTS by following the steps below in order.
@@ -12,7 +12,7 @@ Implement the feature described in $ARGUMENTS by following the steps below in or
 
 **Stacked mode** (`--stack-on <branch>`): this branch builds on an open feature branch, and the PR targets that parent. Without the flag, the branch is stacked only if `git-spice log short` already lists a non-trunk parent. Never start a stack otherwise.
 
-**Vault project.** A work ticket may belong to a project folder in the ObsidianWork vault. The session-start context names it, or `claude-vault-context --find <ticket ID>` prints it. The folder holds my private notes. Never copy its paths or session names into Linear. The vault is outside the sandbox write list, so vault writes need the sandbox off.
+**Vault project.** A work ticket may belong to a project folder in the Work vault. The session-start context names it, or `find_notes` in the Work vault with `frontmatter_key: tickets` and the ticket ID finds its main note. The folder holds my private notes. Never copy its paths or session names into Linear.
 
 **Planner.** The planner is the session that wrote the TRD. Find its name in this order: the session-start context, `planner-session:` in the vault main file, then a `Planner: <name> [ref]` line on the ticket (older tickets). It is the first contact for spec questions. Message it with `SendMessage` (bare name, or `<name> [ref]` if that fails), with the ticket ID and the point in the first line.
 
@@ -84,7 +84,7 @@ If `script/test_fast` is missing or says "No tests configured", stop and tell th
 
 If there is a ticket, assign it to me and move it to In Progress. Then record this session's name, from the first line of `ListAgents`:
 
-- **With a vault folder:** add `- YYYY-MM-DD · <ID> · <name>` under `## Sessions` in the vault main file. Post nothing to Linear.
+- **With a vault folder:** add `- YYYY-MM-DD · <ID> · <name>` under `## Sessions` in the vault main file with `edit_section` in `append` mode. Post nothing to Linear.
 - **Otherwise, if the ticket has a `Planner:` line:** comment `Implementer: <name> [ref]` on the ticket.
 
 ## Step 2: Establish the specification

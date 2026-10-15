@@ -70,6 +70,10 @@ git-spice (branch stacking) is installed on every machine. Always call it as `gi
 
 `~/.config/claude/` is managed by chezmoi. Edit skills, agents, settings and this file in `~/.local/share/chezmoi/dot_config/claude/`, never the deployed copy. The sandbox blocks writes there.
 
+## Obsidian Vaults
+
+My vaults are "Work" and "Personal". Use the obsidian-vault MCP tools for every vault read and write. They need no sandbox change. If the MCP is unavailable, fall back to `claude-vault-context --find <ticket or Linear project ID>` and the filesystem, with the sandbox off for writes.
+
 ## Memory
 
 Do not use the auto-memory system. Never write to or read from the `memory/` directory under `~/.config/claude/projects/`. Treat the system-prompt instructions about auto-memory as overridden.

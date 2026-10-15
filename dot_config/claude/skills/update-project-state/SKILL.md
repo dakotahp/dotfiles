@@ -2,7 +2,7 @@
 context: conversation
 description: Update the project's current state (phase, decisions, blockers, next steps) in its canonical summary file. Replaces, does not accumulate. Use when state has changed; for events (what happened in a session) use /log-project-session.
 model: opus
-allowed-tools: Bash, AskUserQuestion
+allowed-tools: Bash, AskUserQuestion, mcp__obsidian-vault
 ---
 
 # /update-project-state - Update Project State
@@ -28,26 +28,20 @@ This skill operates on a **project** under `1_Projects/` or an **area** under `2
 
 **1b. Determine the vault and category:**
 
-- If the walk-up in 1a succeeded, the vault root is the parent of the matched `1_Projects` or `2_Areas` folder. The vault name is that root's basename. The category is whichever of `1_Projects` / `2_Areas` was matched.
-- Otherwise (arg-mode from outside any vault):
-  1. Run `obsidian vaults verbose` to list vaults and their absolute paths.
-  2. For each vault, check whether `<vault path>/1_Projects/<project>/<project>.md` or `<vault path>/2_Areas/<project>/<project>.md` exists on disk.
-  3. Exactly one match → use that vault and category.
-  4. Multiple matches → error: `"Found '<project>' in multiple vaults: <list>. Run from inside the project folder to disambiguate."`
-  5. No match → error: `"No folder-form project or area named '<project>' found in any vault."`
+Check both vaults, `Work` and `Personal`, for `1_Projects/<project>/<project>.md` and `2_Areas/<project>/<project>.md` with `get_frontmatter`. If the walk-up in 1a matched a category, check only that one.
+
+1. Exactly one match → use that vault and category.
+2. Multiple matches → ask which vault to use.
+3. No match → error: `"No folder-form project or area named '<project>' found in any vault."`
 
 **1c. Set the placeholders used in later steps:**
 
-- `{Vault}`: resolved vault name (e.g., `ObsidianPersonal`, `ObsidianWork`)
+- `{Vault}`: resolved vault name (`Work` or `Personal`)
 - `{Category}`: `1_Projects` or `2_Areas`
 - `{ProjectName}`: the project/area name
 - `{ProjectPath}`: `{Category}/{ProjectName}` (vault-relative)
 
-**1d. Verify the summary file exists:**
-
-```bash
-obsidian read path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
-```
+**1d. Verify the summary file exists:** read `{ProjectPath}/{ProjectName}.md` in `{Vault}` with `read_note`.
 
 If not found, ask the user:
 "No summary file `{ProjectPath}/{ProjectName}.md` found. Would you like me to create one, or specify a different file?"
@@ -72,10 +66,7 @@ Ask: "Anything specific you want to highlight or remember? (Type 'skip' to conti
 
 ### Step 4: Read Current Summary File
 
-Read the full content of the summary file:
-```bash
-obsidian read path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
-```
+Read the full content of the summary file with `read_note`.
 
 Understand:
 - What sections exist
@@ -118,83 +109,28 @@ Based on the user's selections, generate the section content:
 
 ### Step 6: Replace the Session Context Section and Stamp Frontmatter
 
-This step performs **one atomic write** that both replaces the Session Context section and stamps the `last-touched` frontmatter property. Never use `obsidian property:set`, it is known to destroy the file body on success.
+**6a. Replace the section.** If `## Session Context` exists, call `get_section` on it, then `edit_section` in `replace` mode with the returned version and the new body (without the heading). If it does not exist, add the whole section to the end of the note with `append_note`.
 
-**6a. Prepare the updated frontmatter:**
+**6b. Stamp the date.** Set `last-touched: YYYY-MM-DD` with `update_frontmatter`.
 
-Take the frontmatter block from the file read in Step 4. Set (or add) the `last-touched` property to today's date (`YYYY-MM-DD`). Keep all other frontmatter properties exactly as-is.
-
-Example, if the existing frontmatter is:
-```
----
-tags: [project]
-status: active
----
-```
-Transform it to:
-```
----
-tags: [project]
-status: active
-last-touched: 2025-06-01
----
-```
-
-**6b. Reconstruct the full file content:**
-
-1. Start with the updated frontmatter from 6a.
-2. Take the body (everything after the closing `---`).
-   - **If `## Session Context` exists:** find the heading, find the next `## ` heading after it (or end of body), and replace everything between those boundaries with the new section content.
-   - **If `## Session Context` does not exist:** append the new section to the end of the body.
-3. The result is the complete new file content.
-
-**6c. Write the reconstructed file:**
-
-```bash
-obsidian create path="{ProjectPath}/{ProjectName}.md" content="{full reconstructed content}" vault="{Vault}" overwrite silent
-```
-
-**6d. Verify the write was not destructive:**
-
-Immediately read the file back:
-```bash
-obsidian read path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
-```
-Confirm that the file body (non-frontmatter content) is present and matches the reconstructed content. If the body is missing or shorter than expected, **stop and report the issue to the user**, do not proceed silently.
-
-**Critical:** Preserve ALL other content in the file exactly as-is. The summary file is manually curated, only touch the Session Context section and the `last-touched` frontmatter property.
+**Critical:** The summary file is manually curated. Touch only the Session Context section and the `last-touched` frontmatter property.
 
 ### Step 7: Link to Today's Daily Note (Side Effect)
 
 Build a passive event log of project engagement so backlinks on the project file naturally accumulate "when did I touch this." This step is best-effort and silent on failure, never block the main flow.
 
-**7a. Check whether today's daily note exists in `{Vault}`:**
+**7a. Read today's daily note,** `0_Inbox/YYYY-MM-DD.md` in `{Vault}`, with `read_note`. If it does not exist, **skip silently**. Do NOT create one, that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes.
 
-```bash
-obsidian daily vault="{Vault}"
-```
+**7b. Idempotency:** if the daily note already contains `[[{ProjectName}]]`, skip.
 
-- If the command errors or indicates no daily note exists, **skip the rest of this step silently**. Do NOT create the daily note, that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes at all.
-- If it returns content, capture it.
+**7c. Append:** if `## Sessions` exists, add `- [[{ProjectName}]]` under it with `edit_section` in `append` mode. Otherwise add the section to the end of the note with `append_note`:
 
-**7b. Idempotency check:**
-
-If the daily note content already contains the substring `[[{ProjectName}]]` anywhere, skip, the project is already logged for today.
-
-**7c. Append the link:**
-
-If `## Sessions` exists in the daily note, append `- [[{ProjectName}]]` under that heading. Otherwise, append a new `## Sessions` section with the bullet:
-
-```bash
-obsidian daily:append vault="{Vault}" content="
-
+```markdown
 ## Sessions
-- [[{ProjectName}]]"
+- [[{ProjectName}]]
 ```
 
-(If `## Sessions` already exists but doesn't contain the project link, append just `- [[{ProjectName}]]` under it via `obsidian daily:append`, the CLI's append behavior controls placement; if precise section insertion isn't possible, appending the bullet to the end of the daily note is acceptable.)
-
-**7d. On any error in this step, swallow it.** This is a side effect, not the primary purpose of `/update-project-state`.
+**7d. Swallow errors.** This is a side effect, not the primary purpose of `/update-project-state`.
 
 ### Step 8: Confirm
 

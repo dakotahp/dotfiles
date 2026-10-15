@@ -1,7 +1,7 @@
 ---
 name: start-work-project
-description: Starts a work project from a Linear project. Creates the project's folder in the ObsidianWork vault, links it to Linear, picks a session color, writes a brief with open questions, and names this session as the project's planner. Use at the start of a Linear project, before /technical-plan and /technical-requirements-document, or when the user runs /start-work-project.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, mcp__linear-server__get_project, mcp__linear-server__list_issues, mcp__linear-server__get_issue, mcp__linear-server__list_documents, mcp__linear-server__get_document, mcp__linear-server__list_milestones, mcp__linear-server__list_projects
+description: Starts a work project from a Linear project. Creates the project's folder in the Work vault, links it to Linear, picks a session color, writes a brief with open questions, and names this session as the project's planner. Use at the start of a Linear project, before /technical-plan and /technical-requirements-document, or when the user runs /start-work-project.
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, mcp__linear-server__get_project, mcp__linear-server__list_issues, mcp__linear-server__get_issue, mcp__linear-server__list_documents, mcp__linear-server__get_document, mcp__linear-server__list_milestones, mcp__linear-server__list_projects, mcp__obsidian-vault
 ---
 
 Start the work project for the Linear project in $ARGUMENTS (a URL, ID, or name).
@@ -10,9 +10,7 @@ The vault project folder is my private home for this project. Linear stays the t
 
 ## Where things live
 
-- Vault: `~/Syncthing/ObsidianWork` (the ObsidianWork vault). Projects are `1_Projects/<Name>/`. Archived projects are `4_Archive/1_Projects/<Name>/`.
-- The vault is outside the sandbox write list, so vault writes need the sandbox off. Reads work inside it.
-- `claude-vault-context --find <ticket ID or Linear project ID>` prints a project folder, or exits 1.
+- Vault: the Work vault. Projects are `1_Projects/<Name>/`. Archived projects are `4_Archive/1_Projects/<Name>/`.
 
 ## Step 1: Read the Linear project
 
@@ -20,19 +18,19 @@ Fetch the project, its documents, milestones, and tickets. If $ARGUMENTS is a na
 
 ## Step 2: Check for an existing folder
 
-Run `claude-vault-context --find <Linear project ID>`. If it finds a folder, stop and suggest `/continue-project "<Name>"`.
+Find the project note: `find_notes` in the Work vault with `frontmatter_key: linear-project-id` and the Linear project ID as the value. If it finds one, stop and suggest `/continue-project "<Name>"`.
 
-The folder name is the Linear project name, minus characters a file name cannot hold. If `1_Projects/<Name>/<Name>.md` exists without `linear-project-id`, ask before adding the Linear fields to it. Keep its body.
+The folder name is the Linear project name, minus characters a file name cannot hold. If `1_Projects/<Name>/<Name>.md` exists without `linear-project-id`, ask before adding the Linear fields to it with `update_frontmatter`, which keeps its body.
 
 ## Step 3: Pick a color
 
 Palette, in tie-break order: `purple`, `blue`, `green`, `orange`, `pink`, `cyan`, `yellow`, `red`.
 
-Count the `color:` values in each `1_Projects/*/<Name>.md` (2 points each) and each `4_Archive/1_Projects/*/<Name>.md` (1 point each). Pick the color with the lowest score.
+`find_notes` in the Work vault with `frontmatter_key: color` returns every note with a color. Count only main notes (`<Name>/<Name>.md`): 2 points each under `1_Projects/`, 1 point each under `4_Archive/1_Projects/`. Pick the color with the lowest score.
 
 ## Step 4: Write the main file
 
-Create `1_Projects/<Name>/<Name>.md`:
+Create `1_Projects/<Name>/<Name>.md` in the Work vault with `create_note`:
 
 ```markdown
 ---

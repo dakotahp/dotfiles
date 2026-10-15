@@ -1,7 +1,7 @@
 ---
-description: Load project context from summary file + recent session logs via Obsidian CLI
+description: Load project context from summary file + recent session logs through the obsidian-vault MCP
 model: opus
-allowed-tools: Bash
+allowed-tools: Bash, mcp__obsidian-vault
 ---
 
 # /continue-project - Continue Work with Full Context
@@ -49,13 +49,11 @@ This skill operates on a **project** under `1_Projects/` or an **area** under `2
 
 **2b. Determine the vault and category:**
 
-- If the walk-up succeeded, the vault root is the parent of the matched `1_Projects` or `2_Areas` folder. The vault name is that root's basename. The category is whichever of `1_Projects` / `2_Areas` was matched.
-- Otherwise (arg-mode from outside any vault):
-  1. Run `obsidian vaults verbose` to list vaults and their absolute paths.
-  2. For each vault, check whether `<vault path>/1_Projects/<project>/<project>.md` or `<vault path>/2_Areas/<project>/<project>.md` exists on disk.
-  3. Exactly one match → use that vault and category.
-  4. Multiple matches → error: `"Found '<project>' in multiple vaults: <list>. Run from inside the project folder to disambiguate."`
-  5. No match → error: `"No folder-form project or area named '<project>' found in any vault."`
+Check both vaults, `Work` and `Personal`, for `1_Projects/<project>/<project>.md` and `2_Areas/<project>/<project>.md` with `get_frontmatter`. If the walk-up in 2a matched a category, check only that one.
+
+1. Exactly one match → use that vault and category.
+2. Multiple matches → ask which vault to use.
+3. No match → error: `"No folder-form project or area named '<project>' found in any vault."`
 
 **2c. Set placeholders:**
 
@@ -63,13 +61,8 @@ This skill operates on a **project** under `1_Projects/` or an **area** under `2
 - `{Category}`: `1_Projects` or `2_Areas`
 - `{ProjectName}`: the project/area name
 - `{ProjectPath}`: `{Category}/{ProjectName}` (vault-relative)
-- `{ProjectAbsPath}`: absolute filesystem path to the project folder (for `ls` of session logs)
 
-**2d. Read the summary file:**
-
-```bash
-obsidian read path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
-```
+**2d. Read the summary file** `{ProjectPath}/{ProjectName}.md` in `{Vault}` with `read_note`.
 
 **If the summary file is not found:**
 ```
@@ -93,12 +86,9 @@ Extract from the summary file:
 
 ### Step 3: Find Session Logs
 
-List session log files in the project's `Session Logs/` folder:
-```bash
-ls -1r "{ProjectAbsPath}/Session Logs/"*.md 2>/dev/null
-```
+List the newest N session logs with `list_notes` in `{Vault}`: `dir: "{ProjectPath}/Session Logs"`, `order: desc`, `limit: N`.
 
-Files are named `YYYY-MM-DD-HH_MM-{topic}.md`, so reverse-sorted `ls` gives newest first.
+Files are named `YYYY-MM-DD-HH_MM-{topic}.md`, so descending order gives newest first.
 
 **If no session logs exist** (folder missing or empty):
 - Skip all session log sections
@@ -107,10 +97,7 @@ Files are named `YYYY-MM-DD-HH_MM-{topic}.md`, so reverse-sorted `ls` gives newe
 ### Step 4: Read Last N Session Logs
 
 For each of the last N session log files:
-1. Read the full file via:
-   ```bash
-   obsidian read path="{ProjectPath}/Session Logs/{filename}" vault="{Vault}"
-   ```
+1. Read the full file with `read_note`, or all N at once with `read_notes`.
 2. Extract:
    - **Date and topic** (from filename: `YYYY-MM-DD-HH_MM-{topic}.md`)
    - **Keywords** (from Quick Reference section)
@@ -125,33 +112,23 @@ If fewer than N logs exist, read all available and note: "Found {X} session logs
 
 If the user provided a topic keyword:
 
-```bash
-obsidian search query="{keyword}" vault="{Vault}"
-```
+Search with `search_notes` in `{Vault}`: `query: "{keyword}"`, `glob: "{ProjectPath}/Session Logs/**"`, `output: files`.
 
-Filter results to only files within `{ProjectPath}/Session Logs/`. For each matched session not already in the last N, read it and extract the same fields as Step 4.
+For each matched session not already in the last N, read it and extract the same fields as Step 4.
 
 ### Step 5.5: Link to Today's Daily Note (Side Effect)
 
 Resuming a project counts as touching it. Append a backlink to today's daily note so the project's backlink graph naturally records engagement. Best-effort and silent on failure.
 
-**a. Check whether today's daily note exists in `{Vault}`:**
+**a. Read today's daily note,** `0_Inbox/YYYY-MM-DD.md` in `{Vault}`, with `read_note`. If it does not exist, **skip silently**. Do NOT create one, that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes.
 
-```bash
-obsidian daily vault="{Vault}"
-```
+**b. Idempotency:** if the daily note already contains `[[{ProjectName}]]`, skip.
 
-- If the command errors or indicates no daily note exists, **skip silently**. Do NOT create one, that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes.
+**c. Append:** if `## Sessions` exists, add `- [[{ProjectName}]]` under it with `edit_section` in `append` mode. Otherwise add the section to the end of the note with `append_note`:
 
-**b. Idempotency:** if the daily note content already contains `[[{ProjectName}]]`, skip.
-
-**c. Append:** if `## Sessions` exists, add `- [[{ProjectName}]]` under it. Otherwise append a new `## Sessions` section with the bullet:
-
-```bash
-obsidian daily:append vault="{Vault}" content="
-
+```markdown
 ## Sessions
-- [[{ProjectName}]]"
+- [[{ProjectName}]]
 ```
 
 **d. Swallow errors.** This is a side effect; never block the resume report.
@@ -246,4 +223,4 @@ Example: `2026-04-24-14_30-api-auth-refactor.md`
 - **Default N=3:** Keeps token usage low while providing recent context
 - **Max N=50:** Reasonable upper limit for scanning
 - **Full file reads are fine:** Session logs contain no raw transcripts, so they're compact
-- **Obsidian search** handles keyword matching efficiently across the vault
+- **`search_notes`** handles keyword matching efficiently across the vault

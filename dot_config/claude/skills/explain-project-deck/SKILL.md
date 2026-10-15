@@ -13,7 +13,7 @@ The level of detail is the point. A slide earns its place by answering a questio
 
 Read, in this order, whatever exists:
 
-1. The work project's vault main file (`claude-vault-context --find <Linear project ID>`): brief, decisions, open questions.
+1. The work project's main note (`find_notes` in the Work vault, `frontmatter_key: linear-project-id`): brief, decisions, open questions.
 2. The technical plan and TRD (Linear documents on the project).
 3. The Linear project description: the original request.
 4. The code in the area the project touches. Slides 5 and 6 need the real classes and the request paths through them, so trace them in the repo; never draw them from the plan alone.
@@ -66,8 +66,10 @@ Slides 5 and 6 share one fixed layout, so the difference between them is visible
 ## Step 4: Build and publish
 
 - Load `artifact-design` before writing. The deck is HTML: stacked 16:9 slides with a sticky pager, arrow-key navigation, and a single-column layout on phones. If the project already has a live sequencing page, reuse its fonts and colors so the two read as a set.
-- Write the source to the vault project's `Artifacts/` folder as `<slug>-briefing.html`. The scratch copy is deleted with the session.
+- Write the source to this session's scratch directory as `<slug>-briefing.html`. Never put the HTML in the vault: the vault does not sync HTML files.
 - Publish it as an Artifact titled "<Project name> Briefing". Statuses never go into it, so it needs no `db` capability.
+- Save only the link in the project's main note. Add `**Briefing deck:** <Artifact URL>` under `## Brief` with `edit_section` in `append` mode, and set `briefing-url: <Artifact URL>` with `update_frontmatter`.
+- To edit the deck later, read its source back from the `briefing-url` Artifact, then republish to that same URL.
 
 ## Step 5: Check before handing it over
 

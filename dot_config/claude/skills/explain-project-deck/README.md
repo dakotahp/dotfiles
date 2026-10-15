@@ -4,7 +4,7 @@ Builds a short briefing deck for a project, so you can understand it well enough
 
 ## What it does
 
-Reads the project's vault brief, technical plan, TRD and original request, traces the real code in the area, and publishes a 14-slide HTML deck as an Artifact. The deck stays at the "what and why" level: names of things, params and per-ticket detail stay out. The source is saved to the project's vault `Artifacts/` folder.
+Reads the project's vault brief, technical plan, TRD and original request, traces the real code in the area, and publishes a 14-slide HTML deck as an Artifact. The deck stays at the "what and why" level: names of things, params and per-ticket detail stay out. The vault keeps only the Artifact link, under the Brief heading and in `briefing-url`.
 
 The 14 slides, in order:
 

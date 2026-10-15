@@ -1,7 +1,7 @@
 ---
 name: archive
 description: Archive a file (or folder with --folder) to 4_Archive/ by mirroring its source path so the archive stays navigable
-allowed-tools: Bash, AskUserQuestion
+allowed-tools: AskUserQuestion, mcp__obsidian-vault
 model: haiku
 ---
 
@@ -12,23 +12,15 @@ Move a file to `4_Archive/`, preserving its full vault-relative path so it stays
 - `2_Areas/My Area/Old Note.md` → `4_Archive/2_Areas/My Area/Old Note.md`
 
 **Usage:**
-- `/archive`: archive the file currently open in the Obsidian app
-- `/archive "Note Name"`: find and archive a named file (safer if there's a gap between opening and running)
+- `/archive`: pick from the notes changed most recently
+- `/archive "Note Name"`: find and archive a named file
 - `/archive --folder "Project Name"`: archive an entire project/area folder
 
----
-
-## Step 1: Resolve vault and vault path
-
-```bash
-VAULT=$(obsidian vaults | grep -m1 "Obsidian" | awk '{print $1}')
-# Default to ObsidianPersonal if detection fails
-VAULT_PATH=$(obsidian vault=$VAULT eval code="app.vault.adapter.basePath" | sed 's/^=> //')
-```
+The vaults are `Work` and `Personal`. Set `$VAULT` to the one that holds the target.
 
 ---
 
-## Step 2: Determine the target
+## Step 1: Determine the target
 
 ### Case A: `--folder` flag
 
@@ -36,72 +28,38 @@ If `$ARGUMENTS` starts with `--folder`, strip that flag and treat the remainder 
 
 ### Case B: Named file argument
 
-If `$ARGUMENTS` is provided (and does not start with `--folder`), search for the file:
+If `$ARGUMENTS` is provided (and does not start with `--folder`), search both vaults with `search_notes`: `query: "$ARGUMENTS"`, `output: files`. Prefer results flagged `title_match`.
 
-```bash
-obsidian vault=$VAULT search query="$ARGUMENTS" format=json
-```
+If multiple results come back, filter to files under `1_Projects/`, `2_Areas/`, or `3_Resources/` (skip files already under `4_Archive/`). If still ambiguous, present the top matches and ask the user which one. Set `$VAULT` and `$FILE_PATH` to the chosen file's vault and vault-relative path.
 
-If multiple results come back, filter to files under `1_Projects/`, `2_Areas/`, or `3_Resources/` (skip files already under `4_Archive/`). If still ambiguous, present the top matches and ask the user which one. Set `$FILE_PATH` to the vault-relative path of the chosen file.
+### Case C: No argument
 
-### Case C: Active file (default, no argument)
-
-```bash
-obsidian vault=$VAULT eval code="app.workspace.getActiveFile()?.path"
-```
-
-Strip the `=> ` prefix. Set `$FILE_PATH` to the returned vault-relative path.
+The MCP cannot see which note is open in the Obsidian app. Call `recent_notes` with `limit: 5` in both vaults, show the newest few, and ask which one to archive.
 
 If nothing resolves, stop:
 ```
-No file specified and no active file detected. Run from inside the vault with a file open, or pass a file name.
+No file specified. Pass a file name: /archive "Note Name"
 ```
 
 ---
 
-## Step 3: Validate source and compute destination
-
-Confirm the file exists:
-```bash
-test -f "$VAULT_PATH/$FILE_PATH" && echo "found" || echo "missing"
-```
-
-If missing, stop: `File not found: $FILE_PATH`
+## Step 2: Validate source and compute destination
 
 If the file is already under `4_Archive/`, stop: `File is already archived: $FILE_PATH`
 
-**Compute destination:**
-```bash
-DEST_PATH="4_Archive/$FILE_PATH"
-DEST_DIR=$(dirname "$VAULT_PATH/$DEST_PATH")
-```
-
-Check for collision:
-```bash
-test -f "$VAULT_PATH/$DEST_PATH" && echo "exists" || echo "clear"
-```
-
-If destination already exists, stop: `Destination already exists: $DEST_PATH, aborting.`
+Set `$DEST_PATH` to `4_Archive/$FILE_PATH`.
 
 ---
 
-## Step 4: Move (individual file)
+## Step 3: Move (individual file)
 
-Create the destination directory and move using the Obsidian CLI so wikilinks are updated:
+Call `move_note` in `$VAULT` with `path: $FILE_PATH`, `new_path: $DEST_PATH` and `update_links: true`, so wikilinks keep pointing at the note.
 
-```bash
-mkdir -p "$DEST_DIR"
-obsidian vault=$VAULT move path="$FILE_PATH" to="$DEST_PATH"
-```
-
-If `obsidian move` fails, fall back to `mv`:
-```bash
-mv "$VAULT_PATH/$FILE_PATH" "$VAULT_PATH/$DEST_PATH"
-```
+If it fails because the destination exists, stop: `Destination already exists: $DEST_PATH, aborting.` If the source is missing, stop: `File not found: $FILE_PATH`
 
 ---
 
-## Step 5: Confirm
+## Step 4: Confirm
 
 Output one line:
 ```
@@ -112,55 +70,40 @@ No further action needed for individual files. Done.
 
 ---
 
----
-
 ## Folder Archive path (`--folder`)
 
 Used only when the `--folder` flag was passed. Archive an entire project or area folder.
 
 ### F1: Locate source folder
 
-From the argument (with `--folder` stripped), set `$NAME`. Check in parallel:
+From the argument (with `--folder` stripped), set `$NAME`. In both vaults, `list_notes` on `1_Projects/$NAME` and `2_Areas/$NAME`.
 
-```bash
-test -d "$VAULT_PATH/1_Projects/$NAME" && echo "1_Projects"
-test -d "$VAULT_PATH/2_Areas/$NAME"    && echo "2_Areas"
-```
+If found in more than one place, ask the user which to archive. If none, stop: `No folder "$NAME" found under 1_Projects/ or 2_Areas/.`
 
-If found in both, ask the user which to archive. If neither, stop: `No folder "$NAME" found under 1_Projects/ or 2_Areas/.`
+Set `$VAULT` and `$CATEGORY`.
 
-Set `$CATEGORY` and `$SRC_DIR="$VAULT_PATH/$CATEGORY/$NAME"`.
+### F2: Check for a collision
 
-### F2: Compute destination and check collision
-
-```bash
-DEST_DIR="$VAULT_PATH/4_Archive/$CATEGORY/$NAME"
-test -e "$DEST_DIR" && echo "exists" || echo "clear"
-```
-
-If exists, stop: `Destination already exists: 4_Archive/$CATEGORY/$NAME, aborting.`
+`list_notes` on `4_Archive/$CATEGORY/$NAME`. If it holds anything, stop: `Destination already exists: 4_Archive/$CATEGORY/$NAME, aborting.`
 
 ### F3: Confirm
 
-```bash
-find "$SRC_DIR" -name "*.md" | wc -l
-```
+`list_notes` on `$CATEGORY/$NAME` with `recursive: true`, and count the notes.
 
 Show:
 ```
 Archive folder: $CATEGORY/$NAME
              → 4_Archive/$CATEGORY/$NAME
-         Files: N markdown files
+         Notes: N
 ```
 
 Ask: "Proceed?" (Yes / No). If No, stop.
 
 ### F4: Move folder
 
-```bash
-mkdir -p "$VAULT_PATH/4_Archive/$CATEGORY"
-mv "$SRC_DIR" "$VAULT_PATH/4_Archive/$CATEGORY/$NAME"
-```
+Move each note with `move_note` to `4_Archive/<its path>`, with `update_links: true`.
+
+The MCP moves Markdown notes only. Tell the user that attachments, such as images or PDFs, and the empty source folder stay behind for them to move or delete in Obsidian.
 
 ### F5: Confirm
 

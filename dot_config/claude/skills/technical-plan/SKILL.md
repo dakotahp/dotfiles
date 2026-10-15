@@ -1,7 +1,7 @@
 ---
 name: technical-plan
 description: Writes a concise technical plan from a project brief, Linear project or issue, or a rough description. Produces a human-facing overview of the approach, the decisions that matter, blast radius, risks, and sequencing. Use when someone needs to understand how a piece of work will be built before it is broken into tickets, or asks for a technical plan, a technical approach, or a design overview. Follow it with /technical-requirements-document in the same session when detailed specs are needed.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, AskUserQuestion, Task, mcp__linear-server__get_project, mcp__linear-server__get_issue, mcp__linear-server__list_issues, mcp__linear-server__get_document, mcp__linear-server__list_projects, mcp__linear-server__save_document
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, AskUserQuestion, Task, mcp__linear-server__get_project, mcp__linear-server__get_issue, mcp__linear-server__list_issues, mcp__linear-server__get_document, mcp__linear-server__list_projects, mcp__linear-server__save_document, mcp__obsidian-vault
 ---
 
 Write a technical plan for the work described in $ARGUMENTS.
@@ -26,7 +26,7 @@ Ask a question only if you cannot proceed without it. If you can make a reasonab
 
 Write a working draft. The draft is only for editing. Once published (Step 2), the Linear document is the plan of record, and every reference to the plan uses its URL.
 
-- **Work project with a vault folder:** write to `Plans/YYYY-MM-DD <Name> Technical Plan.md` in that folder. Find the folder from the session-start context, or with `claude-vault-context --find <Linear project ID>`. The vault is outside the sandbox write list, so the write needs the sandbox off.
+- **Work project with a vault folder:** create `Plans/YYYY-MM-DD <Name> Technical Plan.md` in that folder with `create_note`. Find the folder from the session-start context, or with `find_notes` in the Work vault (`frontmatter_key: linear-project-id`, the Linear project ID as the value).
 - **Otherwise:** write to `docs/plans/YYYY-MM-DD-<slugified-name>-technical-plan.md`, or to `$TMPDIR` if this session cannot write to the shared checkout.
 
 **Never write a local filesystem path into the tracker.** No absolute or home-relative path in a ticket, comment, or document. Repo-relative code paths, such as `app/models/user.rb`, are fine.
@@ -116,7 +116,7 @@ Then offer to publish the plan as a Linear document on the work's project with `
 
 Publishing does not need to wait for this session. The draft may sit in the vault for days while I refine it. Publish only when I say so.
 
-For a vault draft, after publishing, add `status: published` and `linear-url: <document URL>` to the draft's frontmatter. From then on the vault copy is a frozen snapshot. Make later edits in Linear, not in the draft.
+For a vault draft, after publishing, add `status: published` and `linear-url: <document URL>` to the draft's frontmatter with `update_frontmatter`. From then on the vault copy is a frozen snapshot. Make later edits in Linear, not in the draft.
 
 Offer `plan-falsifier` and `plan-rederiver` explicitly rather than assuming the user knows about them. The plan stage is where they pay off most, since an error here propagates into every ticket downstream. Dispatch both in one message so they run concurrently, and pass `plan-rederiver` only the original brief, never the plan.
 

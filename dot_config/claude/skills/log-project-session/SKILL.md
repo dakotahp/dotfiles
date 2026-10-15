@@ -1,6 +1,6 @@
 ---
-description: Save a structured session log to a project's or area's Session Logs folder via Obsidian CLI
-allowed-tools: Bash, AskUserQuestion
+description: Save a structured session log to a project's or area's Session Logs folder through the obsidian-vault MCP
+allowed-tools: Bash, AskUserQuestion, mcp__obsidian-vault
 ---
 
 # /log-project-session - Save Structured Session Log
@@ -28,13 +28,11 @@ This skill operates on a **project** under `1_Projects/` or an **area** under `2
 
 **1b. Determine the vault and category:**
 
-- If the walk-up succeeded, the vault root is the parent of the matched `1_Projects` or `2_Areas` folder. The vault name is that root's basename. The category is whichever of `1_Projects` / `2_Areas` was matched.
-- Otherwise (arg-mode from outside any vault):
-  1. Run `obsidian vaults verbose` to list vaults and their absolute paths.
-  2. For each vault, check whether `<vault path>/1_Projects/<project>/` or `<vault path>/2_Areas/<project>/` exists on disk.
-  3. Exactly one match → use that vault and category.
-  4. Multiple matches → error: `"Found '<project>' in multiple vaults: <list>. Run from inside the project folder to disambiguate."`
-  5. No match → error: `"No folder-form project or area named '<project>' found in any vault."`
+Check both vaults, `Work` and `Personal`, for `1_Projects/<project>/<project>.md` and `2_Areas/<project>/<project>.md` with `get_frontmatter`. If the walk-up in 1a matched a category, check only that one.
+
+1. Exactly one match → use that vault and category.
+2. Multiple matches → ask which vault to use.
+3. No match → error: `"No folder-form project or area named '<project>' found in any vault."`
 
 **1c. Set the placeholders used in later steps:**
 
@@ -157,56 +155,29 @@ Example: `2026-04-24-14_30-api-auth-refactor.md`
 date +"%Y-%m-%d-%H_%M"
 ```
 
-**Save via Obsidian CLI:**
-```bash
-obsidian create path="{ProjectPath}/Session Logs/{filename}" content="{session log content}" vault="{Vault}" silent
-```
-
-The `obsidian create` command will create the `Session Logs/` folder if it doesn't exist.
+**Save it** with `create_note` in `{Vault}` at `{ProjectPath}/Session Logs/{filename}`. It creates the `Session Logs/` folder if needed.
 
 ### Step 7.25: Update `last-touched` Frontmatter on Canonical File
 
 Stamp the canonical project/area file with today's date. Authoritative engagement signal consumed by `/continue-project` (stale-warning) and `/start-day` (stale project flag). Applies equally to projects and areas, both have a canonical `{ProjectName}.md` at the root of their folder.
 
-**Never use `obsidian property:set`**, it is known to destroy the file body on success. Instead, do an atomic read → modify-frontmatter-in-memory → write-back, mirroring `/update-project-state` Step 6:
+Set `last-touched: YYYY-MM-DD` on `{ProjectPath}/{ProjectName}.md` with `update_frontmatter`. It leaves the body and the other fields alone.
 
-**a. Read the file:**
-```bash
-obsidian read path="{ProjectPath}/{ProjectName}.md" vault="{Vault}"
-```
-
-**b. Update the frontmatter in memory:** if a `---`-delimited frontmatter block exists at the top of the file, set (or add) `last-touched: YYYY-MM-DD`. If no frontmatter block exists, prepend one containing only that property. Preserve every other frontmatter property and the entire file body exactly as-is.
-
-**c. Write back atomically:**
-```bash
-obsidian create path="{ProjectPath}/{ProjectName}.md" content="{full reconstructed content}" vault="{Vault}" overwrite silent
-```
-
-**d. Verify the write was not destructive** by reading the file back and confirming the body length matches what was reconstructed. If anything looks wrong, **stop and report to the user**, do not proceed silently.
-
-Swallow non-destructive errors (e.g., file not found), a failure here should not block the session-log save. But never swallow a verify failure: a truncated canonical file is worse than a missing date stamp.
+Swallow errors (e.g., file not found): a failure here should not block the session-log save.
 
 ### Step 7.5: Link to Today's Daily Note (Side Effect)
 
 Build a passive event log of project engagement so backlinks on the project file naturally accumulate "when did I touch this." Best-effort and silent on failure.
 
-**a. Check whether today's daily note exists in `{Vault}`:**
+**a. Read today's daily note,** `0_Inbox/YYYY-MM-DD.md` in `{Vault}`, with `read_note`. If it does not exist, **skip silently**. Do NOT create one, that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes.
 
-```bash
-obsidian daily vault="{Vault}"
-```
+**b. Idempotency:** if the daily note already contains `[[{ProjectName}]]`, skip.
 
-- If the command errors or indicates no daily note exists, **skip silently**. Do NOT create one, that is `start-day`'s job. Some vaults (e.g., work) may not use daily notes.
+**c. Append:** if `## Sessions` exists, add `- [[{ProjectName}]]` under it with `edit_section` in `append` mode. Otherwise add the section to the end of the note with `append_note`:
 
-**b. Idempotency:** if the daily note content already contains `[[{ProjectName}]]`, skip.
-
-**c. Append:** if `## Sessions` exists, add `- [[{ProjectName}]]` under it. Otherwise append a new `## Sessions` section with the bullet:
-
-```bash
-obsidian daily:append vault="{Vault}" content="
-
+```markdown
 ## Sessions
-- [[{ProjectName}]]"
+- [[{ProjectName}]]
 ```
 
 **d. Swallow errors.** This is a side effect; never block the save.

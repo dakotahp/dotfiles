@@ -72,7 +72,7 @@ Files not managed by chezmoi for per-machine customization (created by `run_once
 
 ### Claude Code Config (`dot_config/claude/`)
 
-Source for `~/.config/claude/`: global `CLAUDE.md`, `settings.json.tmpl`, `skills/`, `agents/`, `plugins/`. Always edit here, never the deployed copy; the sandbox blocks writes to the deployed paths. Vault paths for skills live in `.chezmoidata/vaults.toml`.
+Source for `~/.config/claude/`: global `CLAUDE.md`, `settings.json.tmpl`, `skills/`, `agents/`, `plugins/`. Always edit here, never the deployed copy; the sandbox blocks writes to the deployed paths. Skills reach the Obsidian vaults through the obsidian-vault MCP server. `.chezmoidata/vaults.toml` holds the work vault path, which only `claude-vault-context` uses.
 
 ### Utility Scripts (`bin/`)
 

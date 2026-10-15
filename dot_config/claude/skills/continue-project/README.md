@@ -28,14 +28,14 @@ Supports loading a configurable number of recent sessions and searching past ses
 1. Detects the project from the current working directory
 2. Reads the summary file (including `## Session Context` if present)
 3. Lists and reads recent session logs from `Session Logs/`
-4. Optionally searches for topic-matched sessions via Obsidian search
+4. Optionally searches for topic-matched sessions via vault search
 5. Outputs a formatted report with project context, recent sessions, and next steps
 
 ## Requirements
 
-- Obsidian desktop app must be running
+- The obsidian-vault MCP server must be connected
 - Working directory must be inside a project folder with a matching summary file
-- Default vault: `ObsidianWork`
+- Vaults: `Work` and `Personal`. The skill finds which one holds the project.
 
 ## Relationship to other skills
 

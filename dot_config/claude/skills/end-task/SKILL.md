@@ -1,7 +1,7 @@
 ---
 name: end-task
 description: Closes out a finished ticket session. Writes a task note to the work project's vault folder with what was built and evidence-backed highlights of my contribution, then removes the worktree and local branch. Use when a ticket's PR has merged, when the user is done with a ticket session, or runs /end-task.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ExitWorktree, ListAgents, SendMessage, mcp__linear-server__get_issue, mcp__linear-server__list_comments
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, AskUserQuestion, ExitWorktree, ListAgents, SendMessage, mcp__linear-server__get_issue, mcp__linear-server__list_comments, mcp__obsidian-vault
 ---
 
 Close out the ticket in $ARGUMENTS, or the ticket this session worked on.
@@ -10,15 +10,13 @@ Act as a **supportive manager writing up my part in this ticket**. Find the mome
 
 ## Where things live
 
-- Vault: `~/Syncthing/ObsidianWork`. The project folder is `1_Projects/<Name>/`, with the main file `<Name>.md` and task notes in `Tasks/`.
-- The vault is outside the sandbox write list, so vault writes need the sandbox off.
-- `claude-vault-context --find <ticket ID>` prints the project folder, or exits 1.
+- Vault: the Work vault. The project folder is `1_Projects/<Name>/`, with the main file `<Name>.md` and task notes in `Tasks/`.
 
 ## Step 1: Find the ticket and project
 
 The ticket ID comes from $ARGUMENTS, else the branch name (`feature/app-1234-slug` is `APP-1234`), else the session-start context. If none, ask.
 
-Find the project with `claude-vault-context --find <ID>`. If none matches, ask which project folder to use, or whether to stop. If I pick one, add the ID to its `tickets:` list.
+Find the project note: `find_notes` in the Work vault with `frontmatter_key: tickets` and the ticket ID as the value. If none matches, ask which project folder to use, or whether to stop. If I pick one, add the ID to its `tickets:` list with `update_frontmatter`. `set` replaces the whole list, so keep the IDs already there.
 
 ## Step 2: Check the PR
 
@@ -34,7 +32,7 @@ Early parts of a long session may be lost to compaction. Lean on the PR and revi
 
 ## Step 4: Write the task note
 
-Write `1_Projects/<Name>/Tasks/<ID>.md`. If it exists, show me the difference and ask before replacing it.
+Create `1_Projects/<Name>/Tasks/<ID>.md` with `create_note`. It fails if the note exists. Then read it, show me the difference, and ask before replacing it with `edit_note`.
 
 ```markdown
 ---
@@ -74,10 +72,10 @@ Rules for highlights:
 ## Step 5: Update the main file
 
 In `1_Projects/<Name>/<Name>.md`:
-- Find the `## Sessions` line for this ticket and add ` · done YYYY-MM-DD · [[Tasks/<ID>]]`. If there is no line, add `- YYYY-MM-DD · <ID> · <session name> · done YYYY-MM-DD · [[Tasks/<ID>]]`.
-- Set `last-touched` to today.
+- Read `## Sessions` with `get_section`. Find the line for this ticket and add ` · done YYYY-MM-DD · [[Tasks/<ID>]]`, with `edit_section` in `replace` mode and the version `get_section` returned. If there is no line, add `- YYYY-MM-DD · <ID> · <session name> · done YYYY-MM-DD · [[Tasks/<ID>]]` with `edit_section` in `append` mode.
+- Set `last-touched` to today with `update_frontmatter`.
 
-Edit the file in place. Keep everything else.
+Keep everything else.
 
 ## Step 6: Tell the planner
 

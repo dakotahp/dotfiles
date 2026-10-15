@@ -28,7 +28,7 @@ Not every working session needs a state update. Many sessions will log via `/log
 
 ## Requirements
 
-- Obsidian desktop app must be running
+- The obsidian-vault MCP server must be connected
 - Working directory must be inside a project folder with a matching summary file, or pass the name as argument
 
 ## Relationship to other skills

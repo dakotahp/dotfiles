@@ -21,13 +21,13 @@ Files are saved as `Session Logs/YYYY-MM-DD-HH_MM-topic-name.md` within the proj
 3. Suggests a topic name based on the conversation (you can override)
 4. Extracts keywords for future search via `/continue-project`
 5. Generates structured session log content
-6. Saves to `Session Logs/` via Obsidian CLI
+6. Saves to `Session Logs/` through the obsidian-vault MCP
 
 ## Requirements
 
-- Obsidian desktop app must be running
+- The obsidian-vault MCP server must be connected
 - Working directory must be inside a project (`1_Projects/<name>/`) or area (`2_Areas/<name>/`) folder, or pass the name as an argument (e.g. `/log-project-session "Resume Items"`)
-- Default vault: `ObsidianWork`
+- Vaults: `Work` and `Personal`. The skill finds which one holds the project.
 
 ## Relationship to other skills
 
