@@ -143,11 +143,13 @@ Remove debug output, dev TODOs, and commented-out code this branch added. Lint `
 
 ## Step 9: Draft PR
 
+Read `pr-template.md` in this skill's folder. Write the title and body by it, not by the repo's PR template.
+
 ```
-gh pr create --draft --title "<imperative title>" --body "<what changed, why, how to verify>"
+gh pr create --draft --title "<title>" --body "<body>"
 ```
 
-In stacked mode, use `git-spice branch submit --draft --no-prompt --title ... --body ...` instead, and say in the body which PR it builds on. The body cites the prove statements and their evidence. Open the URL (`open` or `xdg-open`) and report it. Never run `gh pr ready`, `gh pr merge`, `--add-reviewer`, `--reviewer`, or `--no-draft`.
+In stacked mode, use `git-spice branch submit --draft --no-prompt --title ... --body ...` instead. Open the URL (`open` or `xdg-open`) and report it. Never run `gh pr ready`, `gh pr merge`, `--add-reviewer`, `--reviewer`, or `--no-draft`.
 
 Step 10 uses the PR number from this command, never one found with `gh pr list`.
 
