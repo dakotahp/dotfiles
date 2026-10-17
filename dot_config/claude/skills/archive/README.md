@@ -22,4 +22,4 @@ Obsidian makes it easy to move a whole folder with a right-click, but archiving 
 
 This vault uses the [PARA method](https://fortelabs.com/blog/para/) (Projects, Areas, Resources, Archive). The skill mirrors that structure inside `4_Archive/` so archived content is findable by browsing, not just by search.
 
-When archiving a whole project folder, the skill also updates the project's `status` frontmatter property to `archived`.
+The skill does not change a project's `status` frontmatter property. The `4_Archive/` location marks it archived, and the existing status records how it ended.
