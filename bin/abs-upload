@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: abs-upload [-p podcast] [-t title] [-l library] file...
+
+Upload audio files to Audiobookshelf as podcast episodes.
+
+  -p  Podcast name. Created on first upload. Default: YouTube Videos
+  -t  Episode title. Default: the file name. Only valid with one file.
+  -l  Library name. Default: Podcasts
+
+Credentials come from 1Password. Set ABS_URL and ABS_TOKEN to skip `op`.
+EOF
+}
+
+podcast="YouTube Videos"
+library="Podcasts"
+title=""
+
+while getopts "p:t:l:h" opt; do
+  case "$opt" in
+    p) podcast=$OPTARG ;;
+    t) title=$OPTARG ;;
+    l) library=$OPTARG ;;
+    h) usage; exit 0 ;;
+    *) usage >&2; exit 2 ;;
+  esac
+done
+shift $((OPTIND - 1))
+
+if [ $# -eq 0 ]; then
+  usage >&2
+  exit 2
+fi
+
+if [ -n "$title" ] && [ $# -gt 1 ]; then
+  echo "abs-upload: -t works with a single file" >&2
+  exit 2
+fi
+
+for f in "$@"; do
+  [ -f "$f" ] || { echo "abs-upload: no such file: $f" >&2; exit 1; }
+done
+
+url=${ABS_URL:-$(op read "op://Private/Audiobookshelf/endpoint")}
+token=${ABS_TOKEN:-$(op read "op://Private/2ack3epof43ikdx4kla4ocu5oa/credential")}
+url=${url%/}
+
+lib=$(curl -fsS -H "Authorization: Bearer $token" "$url/api/libraries" \
+  | jq -c --arg name "$library" '.libraries[] | select(.name == $name)')
+if [ -z "$lib" ]; then
+  echo "abs-upload: no library named \"$library\"" >&2
+  exit 1
+fi
+library_id=$(jq -r .id <<<"$lib")
+folder_id=$(jq -r '.folders[0].id' <<<"$lib")
+
+for f in "$@"; do
+  name=$(basename "$f")
+  if [ -n "$title" ]; then
+    ext=${name##*.}
+    name="${title//\//-}.$ext"
+  fi
+  curl -fsS -H "Authorization: Bearer $token" \
+    -F "title=$podcast" -F "library=$library_id" -F "folder=$folder_id" \
+    -F "0=@$f;filename=$name" "$url/api/upload" >/dev/null
+  echo "uploaded \"$name\" to \"$podcast\""
+done
