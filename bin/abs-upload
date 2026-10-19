@@ -63,8 +63,13 @@ for f in "$@"; do
     ext=${name##*.}
     name="${title//\//-}.$ext"
   fi
+  quoted_path=${f//\\/\\\\}
+  quoted_path=${quoted_path//\"/\\\"}
+  quoted_name=${name//\\/\\\\}
+  quoted_name=${quoted_name//\"/\\\"}
   curl -fsS -H "Authorization: Bearer $token" \
-    -F "title=$podcast" -F "library=$library_id" -F "folder=$folder_id" \
-    -F "0=@$f;filename=$name" "$url/api/upload" >/dev/null
+    --form-string "title=$podcast" --form-string "library=$library_id" \
+    --form-string "folder=$folder_id" \
+    -F "0=@\"$quoted_path\";filename=\"$quoted_name\"" "$url/api/upload" >/dev/null
   echo "uploaded \"$name\" to \"$podcast\""
 done
