@@ -177,7 +177,14 @@ The `bin/` directory is on `$PATH` and contains:
 
 * **branch-manager**: lists git branches sorted by recency, detects merged branches, optional cleanup with `--clean`
 * **gday**: daily setup runner; reads `GDAY_STEPS` from a project-local `.env.gday` file and executes each step
+* **abs-upload**: uploads audio files to Audiobookshelf as podcast episodes (`-p` podcast, `-t` episode title, `-l` library); default podcast is "YouTube Videos"; reads the server URL and API key from 1Password, or `ABS_URL` and `ABS_TOKEN`; used by the `/video-to-podcast` skill
 * **signoff**: pre-commit CI validation; reads `SIGNOFF_CI_STEPS` from a project-local `.env.signoff`, runs them, and creates a signed git tag on success
+
+`dot_local/bin/` is deployed to `~/.local/bin` and contains:
+
+* **caffeinate-toggle**: toggles a one-hour `caffeinate` session that keeps the display awake, with a notification
+* **claude-vault-context**: links Claude sessions to their work project folder in the Obsidian vault; `--find KEY` prints the folder for a ticket or Linear project ID
+* **merge-window**: go/no-go check before merging to abodo-rails main; `-w` waits until it is safe
 
 ## Operating System Support
 

@@ -76,7 +76,7 @@ Source for `~/.config/claude/`: global `CLAUDE.md`, `settings.json.tmpl`, `skill
 
 ### Utility Scripts (`bin/`)
 
-Not deployed by chezmoi (listed in `.chezmoiignore`). Added to `$PATH` via `dot_zshrc.tmpl`. Notable: `branch-manager` (git branch lifecycle), `gday` (daily setup runner), `signoff` (CI validation + signed tag creation).
+Not deployed by chezmoi (listed in `.chezmoiignore`). Added to `$PATH` via `dot_zshrc.tmpl`. Notable: `branch-manager` (git branch lifecycle), `gday` (daily setup runner), `signoff` (CI validation + signed tag creation), `abs-upload` (upload audio to Audiobookshelf as podcast episodes). The README "Utility Scripts" section lists every script in `bin/` and `dot_local/bin/`; update it when you add one.
 
 `dot_local/bin/` is deployed to `~/.local/bin` (e.g. `merge-window`, `caffeinate-toggle`, `claude-vault-context`).
 
