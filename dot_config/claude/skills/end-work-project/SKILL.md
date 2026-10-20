@@ -1,19 +1,18 @@
 ---
 name: end-work-project
-description: Closes out a finished work project. Writes a project summary into the project's vault main file from its task notes and decision log, suggests resume candidates against my Resume Items note, then archives the project folder. Use when every ticket in a work project is done or deliberately left behind, when the planner reports no open tickets, or when the user runs /end-work-project.
+description: Closes out a finished work project. Writes a project summary into the project's vault main file from its task notes and decision log, then archives the project folder. Use when every ticket in a work project is done or deliberately left behind, when the planner reports no open tickets, or when the user runs /end-work-project.
 allowed-tools: Read, Glob, Grep, Bash, AskUserQuestion, ListAgents, Skill, mcp__linear-server__get_project, mcp__linear-server__list_issues, mcp__linear-server__get_issue, mcp__linear-server__list_comments, mcp__linear-server__get_status_updates, mcp__obsidian-vault
 ---
 
 Close out the work project in $ARGUMENTS (a name or Linear project ID), or the project this session plans.
 
-Act as a **supportive manager writing my end-of-project review**. Collect the facts that show ownership, initiative, risks caught, and judgment, while the work is still fresh. Do not rate my level or write a career story. A separate skill does that later, from these summaries. Every claim needs evidence, and nothing gets inflated.
+Act as a **supportive manager writing my end-of-project review**. Collect the facts that show ownership, initiative, risks caught, and judgment, while the work is still fresh. Do not rate my level or write a career story. `/track-record` does that later, from these summaries. Every claim needs evidence, and nothing gets inflated.
 
 The summary exists so that I mine one note per project later, not every task note. Write it to stand alone.
 
 ## Where things live
 
 - Vault: the Work vault. The project folder is `1_Projects/<Name>/`, with the main file `<Name>.md`, task notes in `Tasks/`, and drafts in `Plans/`.
-- Resume note: `2_Areas/Resume Items/Resume Items.md` in the Work vault. If it is not there, find it with `search_notes` for "Resume Items". It is my note, and its `## Resume items` section is my live resume. Never edit that section.
 - Nothing from this skill goes into Linear.
 
 ## Step 1: Find the project
@@ -25,7 +24,7 @@ In this order:
 
 If none matches, ask.
 
-If the folder is under `4_Archive/` and its main file has a `## Project summary`, stop and say the project is closed. Without a summary, an earlier run archived it but did not finish. Continue, and skip Step 7.
+If the folder is under `4_Archive/` and its main file has a `## Project summary`, stop and say the project is closed. Without a summary, an earlier run archived it but did not finish. Continue, and skip Step 6.
 
 ## Step 2: Check the tickets
 
@@ -92,43 +91,30 @@ Rules for highlights:
 
 Rules for resume bullets:
 - At most four, each one defensible from the highlights. Fewer defensible bullets beat more inflated ones. Zero is a valid result.
+- Claim results, not volume. A ticket count is not a result.
+- Never name a customer. Describe it by type, for example "a large property management customer".
 - State the real reach. If a beta flag, a feature switch, or a slow rollout limits who gets the result, the bullet says so, or it claims only what did happen.
 
-## Step 5: Suggest resume candidates
-
-Read the resume note's `## Resume items`, `## Candidate items (not yet on resume)`, and `## Retired items`. For each project resume bullet, pick one:
-
-- **New candidate:** nothing in the note covers it.
-- **Adds evidence to <item>:** an item or candidate already covers this ground, and the project is a concrete example or a sharper result. Quote the item.
-- **Skip:** it is covered already, it was retired for a reason that still applies, or it is routine.
-
-Show the list with a one-line reason for each. Ask with `AskUserQuestion`, `multiSelect: true`, which ones to write. Write only those, with `edit_section` in `append` mode on the candidate items heading. If the heading has changed, retry with the heading path the error lists.
-
-Follow the note's own rules for what it holds:
-- Each entry is a bold lead sentence, the detail, then `Source: [[<Name>]]`.
-- An "adds evidence" entry names the item it supports, and says whether it should replace that item or sit under it as an example.
-- If the result is not proven yet, or reaches only a few customers, mark the entry `NOT YET RESUME-READY` with a "promote when ..." condition.
-
-If you wrote anything, set the resume note's `last-touched` to today with `update_frontmatter`.
-
-## Step 6: Close the main file
+## Step 5: Close the main file
 
 - Set `status: done` and `last-touched` to today with `update_frontmatter`.
 - In `## Session Context`, read the section with `get_section`. Replace the `**Status:**` line with `**Status:** Done YYYY-MM-DD. See Project summary.`, and keep the rest. Use `edit_section` in `replace` mode with the version `get_section` returned.
 
-## Step 7: Archive
+## Step 6: Archive
 
-Run `/archive --folder "<Name>"` with the Skill tool. It asks me to confirm, then moves every note to `4_Archive/1_Projects/<Name>/` and updates links, including the `[[<Name>]]` source links in the resume note. If I decline, leave the folder in place.
+Run `/archive --folder "<Name>"` with the Skill tool. It asks me to confirm, then moves every note to `4_Archive/1_Projects/<Name>/` and updates links. If I decline, leave the folder in place.
 
-## Step 8: Report
+## Step 7: Report
 
 ```
 Project closed
   Project:     <Name>
   Tickets:     <done> done, <left> left behind, <moved> moved to other teams
   Highlights:  <count>
-  Resume:      <new> new, <evidence> adds evidence, <not written> not written
   Archived:    <4_Archive/1_Projects/<Name>/, or "not archived">
+
+Next:
+  /track-record "<Name>"   add this project to my track record
 ```
 
 If this session is the planner, say that its work is done and I can close it.
