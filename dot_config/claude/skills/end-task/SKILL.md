@@ -27,6 +27,7 @@ Find the PR for this branch with `gh pr view --json number,url,state,mergedAt,ti
 - This session's history: what I asked for, decisions I made, pushback I gave, problems I spotted.
 - PR commits, description, review threads (`gh api repos/{owner}/{repo}/pulls/<n>/comments` and `gh pr view <n> --json reviews,comments`), and CI results.
 - The Linear ticket and its comments.
+- `## Decision log` in the main file: lines that name this ticket. The planner wrote them, and they are the only record of my calls in the planner session, such as why a follow-up ticket exists. A ticket session cannot see those calls any other way.
 
 Early parts of a long session may be lost to compaction. Lean on the PR and review record for those.
 
@@ -52,7 +53,7 @@ merged: <YYYY-MM-DD, or "not merged">
 
 ## Highlights
 
-- **<short label>:** <what I did and why it mattered>. Evidence: <commit SHA, review comment link, test name, or the session moment in one line>.
+- **<short label>** (<lens>): <what I did and why it mattered>. Evidence: <commit SHA, review comment link, test name, "Decision log YYYY-MM-DD", or the session moment in one line>.
 
 ## Resume bullet
 
@@ -66,8 +67,18 @@ merged: <YYYY-MM-DD, or "not merged">
 Rules for highlights:
 - No evidence, no highlight.
 - Doing the ticket as written is the baseline, not a highlight.
+- Credit me only for what I asked for, decided, approved, or caught. Work this session did on its own is not mine, unless I directed it.
 - Name the specific thing. "Caught a race in the export job during review" beats "showed attention to detail".
 - Zero highlights is a valid result. Say so plainly.
+- Tag each highlight with the one lens it shows best:
+  - `initiative`: I did something nobody asked for.
+  - `ownership`: I carried the work past the edge of the ticket, such as QA, docs, or follow-through.
+  - `risk`: I caught or prevented a failure before it reached customers.
+  - `detail`: I found a subtle error that others missed.
+  - `scope`: I added, cut, or protected scope on purpose.
+  - `influence`: I set a rule or swayed a decision that others followed.
+  - `cross-team`: I worked across a team boundary.
+- The lens names what kind of fact it is. It is not praise, and it does not rate the work's level.
 
 ## Step 5: Update the main file
 

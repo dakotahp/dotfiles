@@ -64,6 +64,10 @@ tickets: [<existing ticket IDs, or empty>]
 **Status:** Starting. Brief written, open questions pending.
 **Last updated:** YYYY-MM-DD
 
+## Decision log
+
+My calls in the planner session, kept for `/end-task` and `/end-work-project`. Vault only, never Linear.
+
 ## Sessions
 
 - YYYY-MM-DD · planning · proj: <Name>
@@ -72,6 +76,24 @@ tickets: [<existing ticket IDs, or empty>]
 Write `tickets:` as an inline list, for example `tickets: [APP-101, APP-102]`. Other skills add to it.
 
 Ground the brief in the Linear text and, when the repo is at hand, the code. An open question is something I must answer or ask someone. Do not list questions the code answers; answer them.
+
+## The decision log
+
+This session is the planner for the life of the project. Ticket sessions see only their ticket, so the planner is the only record of how the work took shape. From this step on, add a line to `## Decision log` with `edit_section` in `append` mode each time I:
+
+- ask to dig into a problem instead of shipping around it
+- add scope, cut scope, or split work into new tickets
+- make a call that changes the plan, or set a rule other tickets follow
+- catch an error in the plan, a ticket, or a lane's work
+- get a stakeholder's approval, or push back on a stakeholder
+
+Answers the TRD or the code already gave do not count. Record facts, not praise:
+
+```markdown
+- YYYY-MM-DD · <ticket IDs, or "no ticket"> · Raised by <the planner, the lane for <ID>, me, or a person>. <What I decided, and why.> <Approved by <person>, if anyone.>
+```
+
+The log, and any framing of my contribution, stays in the vault. A Linear ticket, comment, or document states the work, never who thought of it.
 
 ## Step 5: Hand off
 

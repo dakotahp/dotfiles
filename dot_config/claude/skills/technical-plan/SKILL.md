@@ -118,6 +118,8 @@ Publishing does not need to wait for this session. The draft may sit in the vaul
 
 For a vault draft, after publishing, add `status: published` and `linear-url: <document URL>` to the draft's frontmatter with `update_frontmatter`. From then on the vault copy is a frozen snapshot. Make later edits in Linear, not in the draft.
 
+With a vault folder, add my planning calls to `## Decision log` in the main file, as `/start-work-project` describes. Examples: a Key Decision where I overrode your first proposal, a scope cut, or a falsifier finding I chose to act on. Never put the log or its framing in the Linear document.
+
 Offer `plan-falsifier` and `plan-rederiver` explicitly rather than assuming the user knows about them. The plan stage is where they pay off most, since an error here propagates into every ticket downstream. Dispatch both in one message so they run concurrently, and pass `plan-rederiver` only the original brief, never the plan.
 
 ---
