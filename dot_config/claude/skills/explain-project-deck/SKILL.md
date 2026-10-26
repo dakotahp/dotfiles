@@ -66,6 +66,7 @@ Slides 5 and 6 share one fixed layout, so the difference between them is visible
 ## Step 4: Build and publish
 
 - Load `artifact-design` before writing. The deck is HTML: stacked 16:9 slides with a sticky pager, arrow-key navigation, and a single-column layout on phones. If the project already has a live sequencing page, reuse its fonts and colors so the two read as a set.
+- Write the HTML by hand. Do not run the Artifact quickstart or start from the Slides type: it cannot switch traces on slide 6 or hide the answers on slide 14.
 - Write the source to this session's scratch directory as `<slug>-briefing.html`. Never put the HTML in the vault: the vault does not sync HTML files.
 - Publish it as an Artifact titled "<Project name> Briefing". Statuses never go into it, so it needs no `db` capability.
 - Save only the link in the project's main note. Add `**Briefing deck:** <Artifact URL>` under `## Brief` with `edit_section` in `append` mode, and set `briefing-url: <Artifact URL>` with `update_frontmatter`.
