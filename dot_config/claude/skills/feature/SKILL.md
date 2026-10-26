@@ -146,10 +146,12 @@ Remove debug output, dev TODOs, and commented-out code this branch added. Lint `
 Read `pr-template.md` in this skill's folder. Write the title and body by it, not by the repo's PR template.
 
 ```
-gh pr create --draft --title "<title>" --body "<body>"
+gh pr create --draft --label claude-review-inline --title "<title>" --body "<body>"
 ```
 
-In stacked mode, use `git-spice branch submit --draft --no-prompt --title ... --body ...` instead. Open the URL (`open` or `xdg-open`) and report it. Never run `gh pr ready`, `gh pr merge`, `--add-reviewer`, `--reviewer`, or `--no-draft`.
+The `claude-review-inline` label starts the automated Claude review. Without it, the PR gets no review.
+
+In stacked mode, use `git-spice branch submit --draft --no-prompt --label claude-review-inline --title ... --body ...` instead. Open the URL (`open` or `xdg-open`) and report it. Never run `gh pr ready`, `gh pr merge`, `--add-reviewer`, `--reviewer`, or `--no-draft`.
 
 Step 10 uses the PR number from this command, never one found with `gh pr list`.
 
