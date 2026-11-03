@@ -22,7 +22,23 @@
       ]
     },
     "filesystem": {
-      "allowWrite": ["{{ .xdgDataDir }}/gnupg"]
+      "allowWrite": ["{{ .xdgDataDir }}/gnupg"],
+      "denyWrite": [
+        "{{ .chezmoi.sourceDir }}/.git/hooks"
+{{- if .work_computer }},
+        "{{ .chezmoi.homeDir }}/Code/work/apartmentiq/abodo-rails/.git/hooks",
+        "{{ .chezmoi.homeDir }}/Code/work/apartmentiq/apartmentiq-js-app/.git/hooks",
+        "{{ .chezmoi.homeDir }}/Code/work/apartmentiq/lambdas/.git/hooks",
+        "{{ .chezmoi.homeDir }}/Code/work/apartmentiq/scripts/.git/hooks"
+{{- end }}
+      ],
+      "denyRead": [
+        "{{ .chezmoi.homeDir }}/.ssh",
+        "{{ .chezmoi.homeDir }}/.aws",
+        "{{ .chezmoi.homeDir }}/.env",
+        "{{ .chezmoi.homeDir }}/.config/gh",
+        "{{ .chezmoi.homeDir }}/.docker/config.json"
+      ]
     },
     "excludedCommands": ["git fetch", "git push *", "git ls-remote *", "git-spice *", "obsidian", "circleci", "yarn install", "gh *"]
   },
