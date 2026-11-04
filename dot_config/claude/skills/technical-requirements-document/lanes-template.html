@@ -1,0 +1,404 @@
+<title>Example Project Lanes</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root {
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --ink: #18212f;
+  --muted: #5d6879;
+  --line: #d5dbe4;
+  --accent: #2456c4;
+  --accent-soft: #e4ecfb;
+  --st-todo: #8a94a3;
+  --st-todo-bg: #eef1f5;
+  --st-prog: #b86e00;
+  --st-prog-bg: #fdf1dc;
+  --st-review: #7041c9;
+  --st-review-bg: #efe8fb;
+  --st-done: #1d7a4c;
+  --st-done-bg: #e2f3ea;
+  --ready: #2456c4;
+  --font-display: "Bricolage Grotesque", "Segoe UI", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #11161e; --surface: #19202b; --ink: #e6ebf2; --muted: #9aa5b5; --line: #2e3846;
+    --accent: #7ea2f2; --accent-soft: #1e2a42;
+    --st-todo: #98a2b2; --st-todo-bg: #232b37;
+    --st-prog: #f0b25a; --st-prog-bg: #33281a;
+    --st-review: #b79bf0; --st-review-bg: #2a2340;
+    --st-done: #5fcf94; --st-done-bg: #17302a;
+    --ready: #7ea2f2;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #11161e; --surface: #19202b; --ink: #e6ebf2; --muted: #9aa5b5; --line: #2e3846;
+  --accent: #7ea2f2; --accent-soft: #1e2a42;
+  --st-todo: #98a2b2; --st-todo-bg: #232b37;
+  --st-prog: #f0b25a; --st-prog-bg: #33281a;
+  --st-review: #b79bf0; --st-review-bg: #2a2340;
+  --st-done: #5fcf94; --st-done-bg: #17302a;
+  --ready: #7ea2f2;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.5; }
+.wrap {
+  max-width: 1280px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px; display: grid; gap: 24px;
+}
+a { color: var(--accent); }
+a:focus-visible, .card:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+header { display: grid; gap: 6px; }
+.eyebrow { font-family: var(--font-mono); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(26px, 4vw, 36px); line-height: 1.1; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); max-width: 72ch; margin: 0; }
+.links { display: flex; flex-wrap: wrap; gap: 14px; font-size: 14px; }
+
+.summary { display: grid; gap: 12px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px 18px; }
+.counts { display: flex; flex-wrap: wrap; gap: 8px 22px; align-items: baseline; }
+.count { display: flex; align-items: baseline; gap: 8px; font-size: 14px; color: var(--muted); }
+.count b { font-family: var(--font-display); font-size: 26px; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--st-todo-bg); }
+.bar span { display: block; height: 100%; transition: width .4s ease; }
+.sync { font-family: var(--font-mono); font-size: 12px; color: var(--muted); }
+
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 13px; color: var(--muted); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+
+.chip { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: .03em; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; white-space: nowrap; font-style: normal; }
+.chip::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.s-todo { color: var(--st-todo); background: var(--st-todo-bg); }
+.s-prog { color: var(--st-prog); background: var(--st-prog-bg); }
+.s-review { color: var(--st-review); background: var(--st-review-bg); }
+.s-done { color: var(--st-done); background: var(--st-done-bg); }
+
+.map-scroll { overflow-x: auto; }
+.map { --waves: 3; position: relative; display: grid; grid-template-columns: repeat(var(--waves), minmax(220px, 1fr)); gap: 0 56px; min-width: calc(var(--waves) * 276px); padding-bottom: 8px; }
+.map svg.edges { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.edges path { fill: none; stroke: var(--line); stroke-width: 1.5; transition: stroke .2s, opacity .2s; }
+.edges path.met { stroke: var(--st-done); opacity: .45; }
+.edges path.hot { stroke: var(--accent); stroke-width: 2.25; opacity: 1; }
+.map.focusing .edges path:not(.hot) { opacity: .15; }
+
+.col { display: flex; flex-direction: column; gap: 12px; position: relative; z-index: 1; min-width: 0; }
+.col-head { display: grid; gap: 2px; padding-bottom: 6px; border-bottom: 2px solid var(--ink); margin-bottom: 4px; }
+.col-head h2 { font-family: var(--font-display); font-weight: 600; font-size: 18px; margin: 0; }
+.col-head p { margin: 0; font-size: 13px; color: var(--muted); }
+
+.card { display: grid; gap: 6px; background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--st-todo); border-radius: 8px; padding: 10px 12px; text-decoration: none; color: inherit; transition: opacity .2s, transform .2s, box-shadow .2s; min-width: 0; }
+.card:hover { box-shadow: 0 2px 10px rgb(0 0 0 / .08); }
+.card[data-status="In Progress"] { border-left-color: var(--st-prog); }
+.card[data-status="In Review"] { border-left-color: var(--st-review); }
+.card[data-status="Done"] { border-left-color: var(--st-done); }
+.card[data-status="Done"] .title { color: var(--muted); }
+.card.external { border-style: dashed; border-left-style: solid; background: transparent; }
+.map.focusing .card:not(.hot) { opacity: .35; }
+.card.hot { transform: translateX(2px); }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.id { font-family: var(--font-mono); font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.id b { color: var(--ink); font-weight: 500; }
+.title { font-weight: 500; font-size: 14px; line-height: 1.35; }
+.meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; font-size: 12px; color: var(--muted); }
+.kind { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; }
+.kind.customer { color: var(--accent); font-weight: 500; }
+.needs { font-family: var(--font-mono); font-size: 11px; }
+.ready { font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--ready); background: var(--accent-soft); padding: 1px 6px; border-radius: 4px; font-style: normal; }
+
+.notes { display: grid; gap: 6px; font-size: 14px; color: var(--muted); max-width: 78ch; }
+.notes p { margin: 0; }
+
+@media (max-width: 760px) {
+  .map-scroll { overflow: visible; }
+  .map { grid-template-columns: 1fr; min-width: 0; gap: 28px; }
+  .map svg.edges { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card, .bar span, .edges path { transition: none; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow" id="eyebrow"></div>
+    <h1 id="title"></h1>
+    <p class="sub" id="intro"></p>
+    <div class="links" id="links"></div>
+  </header>
+
+  <section class="summary" aria-label="Progress">
+    <div class="counts" id="counts"></div>
+    <div class="bar" id="bar" aria-hidden="true"></div>
+    <div class="legend">
+      <span><i class="chip s-todo">Not started</i></span>
+      <span><i class="chip s-prog">In progress</i></span>
+      <span><i class="chip s-review">In review</i></span>
+      <span><i class="chip s-done">Done</i></span>
+      <span><i class="ready">ready</i> can start now</span>
+    </div>
+    <div class="sync" id="sync"></div>
+  </section>
+
+  <div class="map-scroll">
+    <div class="map" id="map">
+      <svg class="edges" id="edges" aria-hidden="true"></svg>
+    </div>
+  </div>
+
+  <section class="notes" id="notes"></section>
+</div>
+
+<script>
+const CONFIG = {
+  eyebrow: "PROJ-1 · 5 tickets · Example service",
+  title: "Example Project",
+  intro: "Each column is a wave. Every ticket in a wave can run at the same time. A ticket can start once the tickets it needs have an open PR (In review). Hover or focus a ticket to see what it needs and what it unblocks.",
+  links: [
+    { label: "TRD", href: "https://example.com/trd" },
+    { label: "Technical plan", href: "https://example.com/plan" },
+    { label: "Project", href: "https://example.com/project" }
+  ],
+  issueUrl: "https://example.com/issue/",
+  asOf: "4 Nov 2026",
+  notes: [
+    "Blue tags mark customer-facing tickets. Foundation tickets add code that customers do not see yet.",
+    "Ticket numbers match the TRD. Dashed cards are outside this project and count as met only when done. Each card opens its issue."
+  ],
+  waves: null
+};
+
+const TICKETS = [
+  { n: 0, id: "EX-1", title: "Endpoint exists and returns a fixed response", kind: "foundation", needs: [] },
+  { n: 1, id: "EX-2", title: "Price calculator", kind: "foundation", needs: [90] },
+  { n: 2, id: "EX-3", title: "Endpoint returns real prices", kind: "customer-facing", needs: [0, 1] },
+  { n: 3, id: "EX-4", title: "Price table in the app", kind: "frontend", needs: [0] },
+  { n: 4, id: "EX-5", title: "Remove the fixed response", kind: "customer-facing", needs: [2, 3] },
+  { n: 90, id: "OTHER-7", title: "Shared pricing module", kind: "external", needs: [], external: true, status: "In Review" }
+];
+
+const ORDER = [90, 0, 1, 3, 2, 4];
+
+const STATUS_CLASS = { "Not started": "s-todo", "In Progress": "s-prog", "In Review": "s-review", "Done": "s-done" };
+const STATUS_LABEL = { "Not started": "Not started", "In Progress": "In progress", "In Review": "In review", "Done": "Done" };
+
+const byN = new Map(TICKETS.map(t => [t.n, t]));
+const status = new Map(TICKETS.map(t => [t.id, t.status || "Not started"]));
+const dependents = new Map(TICKETS.map(t => [t.n, []]));
+TICKETS.forEach(t => t.needs.forEach(d => dependents.get(d).push(t.n)));
+
+const depthMemo = new Map();
+function depth(n) {
+  if (depthMemo.has(n)) return depthMemo.get(n);
+  const t = byN.get(n);
+  const d = t.needs.length ? 1 + Math.max(...t.needs.map(depth)) : 0;
+  depthMemo.set(n, d);
+  return d;
+}
+
+function isMetFor(t, depN) {
+  const dep = byN.get(depN);
+  const s = status.get(dep.id);
+  return (t.afterDeploy || dep.external) ? s === "Done" : (s === "In Review" || s === "Done");
+}
+function isReady(t) {
+  return !t.external && status.get(t.id) === "Not started" && t.needs.every(d => isMetFor(t, d));
+}
+
+const map = document.getElementById("map");
+const edges = document.getElementById("edges");
+const cards = new Map();
+
+function renderHeader() {
+  document.title = CONFIG.title + " Lanes";
+  document.getElementById("eyebrow").textContent = CONFIG.eyebrow;
+  document.getElementById("title").textContent = CONFIG.title;
+  document.getElementById("intro").textContent = CONFIG.intro;
+  const links = document.getElementById("links");
+  CONFIG.links.forEach(l => {
+    const a = document.createElement("a");
+    a.href = l.href; a.target = "_blank"; a.rel = "noopener"; a.textContent = l.label;
+    links.append(a);
+  });
+  const notes = document.getElementById("notes");
+  CONFIG.notes.forEach(text => {
+    const p = document.createElement("p"); p.textContent = text;
+    notes.append(p);
+  });
+}
+
+function waveCopy(count) {
+  if (CONFIG.waves) return CONFIG.waves;
+  return Array.from({ length: count }, (_, i) => {
+    if (i === 0) return ["Wave 1", "Start now, all in parallel"];
+    const inWave = TICKETS.filter(t => depth(t.n) === i);
+    const label = inWave.length && inWave.every(t => t.afterDeploy) ? "After deploy to production" : "After wave " + i + " PRs open";
+    return ["Wave " + (i + 1), label];
+  });
+}
+
+function buildColumns() {
+  const count = 1 + Math.max(...TICKETS.map(t => depth(t.n)));
+  map.style.setProperty("--waves", count);
+  const cols = waveCopy(count).map(([h, p]) => {
+    const col = document.createElement("div");
+    col.className = "col";
+    const head = document.createElement("div");
+    head.className = "col-head";
+    const h2 = document.createElement("h2"); h2.textContent = h;
+    const pp = document.createElement("p"); pp.textContent = p;
+    head.append(h2, pp);
+    col.append(head);
+    map.append(col);
+    return col;
+  });
+  const order = [...ORDER, ...TICKETS.map(t => t.n).filter(n => !ORDER.includes(n))];
+  order.forEach(n => {
+    const t = byN.get(n);
+    const a = document.createElement("a");
+    a.className = "card" + (t.external ? " external" : "");
+    a.href = CONFIG.issueUrl + t.id;
+    a.target = "_blank";
+    a.rel = "noopener";
+    a.dataset.n = String(n);
+    a.innerHTML =
+      '<div class="top"><span class="id"></span><span class="chip"></span></div>' +
+      '<div class="title"></div>' +
+      '<div class="meta"><span class="kind"></span><span class="needs"></span><span class="ready" hidden>ready</span></div>';
+    const idEl = a.querySelector(".id");
+    const lead = document.createElement("b");
+    lead.textContent = t.external ? "External" : "#" + t.n;
+    idEl.append(lead, document.createTextNode(" · " + t.id));
+    a.querySelector(".title").textContent = t.title;
+    const kind = a.querySelector(".kind");
+    kind.textContent = t.kind;
+    if (t.kind === "customer-facing") kind.classList.add("customer");
+    a.querySelector(".needs").textContent = t.needs.length
+      ? "needs " + t.needs.map(d => byN.get(d).external ? byN.get(d).id + " merged" : "#" + d).join(", ") + (t.afterDeploy ? " deployed" : "")
+      : "needs nothing";
+    a.addEventListener("mouseenter", () => focusOn(n));
+    a.addEventListener("mouseleave", clearFocus);
+    a.addEventListener("focus", () => focusOn(n));
+    a.addEventListener("blur", clearFocus);
+    cols[Math.min(depth(n), cols.length - 1)].append(a);
+    cards.set(n, a);
+  });
+}
+
+function renderStatuses() {
+  TICKETS.forEach(t => {
+    const a = cards.get(t.n);
+    const s = status.get(t.id);
+    a.dataset.status = s;
+    const chip = a.querySelector(".chip");
+    chip.className = "chip " + STATUS_CLASS[s];
+    chip.textContent = STATUS_LABEL[s];
+    a.querySelector(".ready").hidden = !isReady(t);
+    const label = (t.external ? "External " : "Ticket " + t.n + " ") + t.id + ", " + t.title + ", " + STATUS_LABEL[s];
+    a.setAttribute("aria-label", label);
+  });
+  const own = TICKETS.filter(t => !t.external);
+  const tally = { "Not started": 0, "In Progress": 0, "In Review": 0, "Done": 0 };
+  own.forEach(t => tally[status.get(t.id)]++);
+  const counts = document.getElementById("counts");
+  counts.replaceChildren();
+  [["Done", "done"], ["In Review", "in review"], ["In Progress", "in progress"], ["Not started", "not started"]].forEach(([k, label]) => {
+    const el = document.createElement("div");
+    el.className = "count";
+    const b = document.createElement("b"); b.textContent = tally[k];
+    el.append(b, document.createTextNode(label));
+    counts.append(el);
+  });
+  const rc = document.createElement("div");
+  rc.className = "count";
+  const rb = document.createElement("b"); rb.textContent = own.filter(isReady).length;
+  rc.append(rb, document.createTextNode("can start now"));
+  counts.append(rc);
+  const bar = document.getElementById("bar");
+  bar.replaceChildren();
+  [["Done", "var(--st-done)"], ["In Review", "var(--st-review)"], ["In Progress", "var(--st-prog)"]].forEach(([k, c]) => {
+    const s = document.createElement("span");
+    s.style.width = (100 * tally[k] / own.length) + "%";
+    s.style.background = c;
+    bar.append(s);
+  });
+  drawEdges();
+}
+
+function drawEdges() {
+  const box = map.getBoundingClientRect();
+  edges.setAttribute("viewBox", "0 0 " + box.width + " " + box.height);
+  edges.replaceChildren();
+  const ns = "http://www.w3.org/2000/svg";
+  TICKETS.forEach(t => {
+    t.needs.forEach(d => {
+      const from = cards.get(d).getBoundingClientRect();
+      const to = cards.get(t.n).getBoundingClientRect();
+      const x1 = from.right - box.left, y1 = from.top + from.height / 2 - box.top;
+      const x2 = to.left - box.left, y2 = to.top + to.height / 2 - box.top;
+      const dx = Math.max(28, (x2 - x1) / 2);
+      const p = document.createElementNS(ns, "path");
+      p.setAttribute("d", "M" + x1 + " " + y1 + " C" + (x1 + dx) + " " + y1 + " " + (x2 - dx) + " " + y2 + " " + x2 + " " + y2);
+      p.dataset.from = String(d);
+      p.dataset.to = String(t.n);
+      if (isMetFor(t, d)) p.classList.add("met");
+      edges.append(p);
+    });
+  });
+}
+
+function collect(n, graph, seen) {
+  graph(n).forEach(m => { if (!seen.has(m)) { seen.add(m); collect(m, graph, seen); } });
+  return seen;
+}
+function focusOn(n) {
+  const up = collect(n, m => byN.get(m).needs, new Set());
+  const down = collect(n, m => dependents.get(m), new Set());
+  const hot = new Set([n, ...up, ...down]);
+  map.classList.add("focusing");
+  cards.forEach((el, k) => el.classList.toggle("hot", hot.has(k)));
+  edges.querySelectorAll("path").forEach(p => {
+    const f = Number(p.dataset.from), t = Number(p.dataset.to);
+    p.classList.toggle("hot", hot.has(f) && hot.has(t) && (up.has(f) || f === n || down.has(t) || t === n));
+  });
+}
+function clearFocus() {
+  map.classList.remove("focusing");
+  cards.forEach(el => el.classList.remove("hot"));
+  edges.querySelectorAll("path.hot").forEach(p => p.classList.remove("hot"));
+}
+
+renderHeader();
+buildColumns();
+renderStatuses();
+if ("ResizeObserver" in window) new ResizeObserver(() => drawEdges()).observe(map);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(drawEdges);
+
+(async () => {
+  const sync = document.getElementById("sync");
+  sync.textContent = "Statuses as of " + CONFIG.asOf + ". Loading live statuses…";
+  const db = await (window.claude?.use?.("db") ?? Promise.resolve(null));
+  if (!db) { sync.textContent = "Showing statuses as of " + CONFIG.asOf + ". Live statuses are not available in this view."; return; }
+  db.collection("tickets").onSnapshot(snap => {
+    let latest = "";
+    snap.docs.forEach(doc => {
+      const d = doc.data() || {};
+      if (!status.has(doc.id) || !STATUS_CLASS[d.status]) return;
+      status.set(doc.id, d.status);
+      if (typeof d.updated_at === "string" && d.updated_at > latest) latest = d.updated_at;
+    });
+    sync.textContent = snap.empty
+      ? "No live statuses yet. Showing statuses as of " + CONFIG.asOf + "."
+      : "Live statuses" + (latest ? ", last updated " + latest.slice(0, 10) : "") + ".";
+    renderStatuses();
+  }, () => { sync.textContent = "Live statuses stopped updating. Reload to try again."; });
+})();
+</script>

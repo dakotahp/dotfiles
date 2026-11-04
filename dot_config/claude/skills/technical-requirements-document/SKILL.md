@@ -1,7 +1,7 @@
 ---
 name: technical-requirements-document
 description: Writes a detailed technical requirements document (TRD) with a ticket-by-ticket breakdown, normally run straight after /technical-plan in the same session so it can build on the approach and decisions already established. Use when a technical plan needs to become implementable specs, when someone asks for a TRD or detailed technical requirements, or when work needs breaking into tickets that separate sessions will pick up.
-allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, AskUserQuestion, Task, ListAgents, SendMessage, mcp__linear-server__save_comment, mcp__linear-server__list_comments, mcp__linear-server__get_project, mcp__linear-server__get_issue, mcp__linear-server__list_issues, mcp__linear-server__get_document, mcp__linear-server__save_issue, mcp__linear-server__save_document, mcp__linear-server__list_teams, mcp__linear-server__list_projects, mcp__obsidian-vault
+allowed-tools: Read, Write, Edit, Glob, Grep, Bash, WebFetch, AskUserQuestion, Task, ListAgents, SendMessage, Skill, Artifact, ArtifactData, mcp__linear-server__save_comment, mcp__linear-server__list_comments, mcp__linear-server__get_project, mcp__linear-server__get_issue, mcp__linear-server__list_issues, mcp__linear-server__get_document, mcp__linear-server__save_issue, mcp__linear-server__save_document, mcp__linear-server__list_teams, mcp__linear-server__list_projects, mcp__obsidian-vault
 ---
 
 Write a technical requirements document for the work in $ARGUMENTS, or for the work already established in this session.
@@ -143,6 +143,18 @@ A layer ticket that needs the layer below it depends on it as `implementation (t
 
 ---
 
+## Check the sequence
+
+With 3 or more tickets, prove the sequence before the summary. Skip this for a two-ticket project.
+
+1. Write each ticket as `{ n, title, needs: [direct dependencies] }`. This becomes the `TICKETS` data for the lanes page later.
+2. Remove any transitive need. If 3 needs 1 and 2, and 2 already needs 1, then 3 needs 2 only.
+3. Work out each ticket's wave: 0 with no needs, otherwise 1 + its deepest need. A cycle means the breakdown is wrong. Fix it.
+4. Compare the waves to the **Lanes** line. They must be the same sets. If not, fix the Depends on lines or the Lanes line.
+5. For each `implementation` need, confirm its ticket's What says why the shape alone is not enough. If it cannot say why, make it a `contract` need.
+
+---
+
 ## Step 2: Print a summary
 
 ```
@@ -159,7 +171,7 @@ Next steps:
   build <ticket>      implement one ticket in a fresh session
 ```
 
-Then offer to publish the TRD and create the tickets in the tracker, and **wait for explicit confirmation before creating or editing anything.** Creating issues and documents is visible to other people and tedious to undo, so never do it as a side effect of writing the document.
+Then offer to publish the TRD, create the tickets in the tracker, and build the lanes page when there are 3 or more tickets. Then **wait for explicit confirmation before creating or editing anything.** Creating issues and documents is visible to other people and tedious to undo, so never do it as a side effect of writing the document.
 
 ### Publish the TRD
 
@@ -203,6 +215,10 @@ With a vault folder, also:
 - Add every created and adopted ticket ID to `tickets:` in the vault main file with `update_frontmatter`. `set` replaces the whole list, so keep the IDs already there. The session-start hook and `find_notes` find the project by this list.
 - Add `status: published` and `linear-url: <TRD document URL>` to the draft's frontmatter with `update_frontmatter`. From then on the draft is a frozen snapshot. Make later TRD edits in Linear.
 
+### Build the lanes page
+
+With 3 or more tickets, build a lanes page: a private artifact that shows which tickets can start now and what each one waits for. Read `lanes-page.md` in this skill's directory and follow it. Use the `TICKETS` data from "Check the sequence", now with the tracker IDs.
+
 ### Act as the planner
 
 After the tickets exist, stay in this session as the planner. Lane sessions message you here with `SendMessage`. Reply to the `from` name on each message.
@@ -210,6 +226,7 @@ After the tickets exist, stay in this session as the planner. Lane sessions mess
 - **Spec questions:** answer from the TRD, the plan, and the code. If the answer changes or adds to the spec, update the TRD, the Linear document, and the ticket's "Read first" block before you reply, so later sessions get it too. If the question needs a decision the user has not made, ask the user, then relay the answer.
 - **`<ID> PR open: <url>`:** tell the user, and ask whether to run `/run-lanes <TRD document URL>` now. Run it only when the user says so.
 - **`<ID> merged: <url>` or `<ID> closed without merge: <url>`:** `/end-task` sends this when a ticket session closes. Re-read the project's tickets and their states from Linear. Tell the user which ticket closed, any note the message carried, and which tickets are now unblocked. Then ask whether to run `/run-lanes <TRD document URL>`. Run it only when the user says so. When no ticket in the project is still open, suggest `/end-work-project` instead.
+- **Lanes page:** when there is one, update its `tickets` status each time you learn a ticket's state changed: `/run-lanes` started it (In Progress), a PR opened (In Review), it merged (Done), or it closed without merge (back to its tracker state). Use `ArtifactData`, and never republish for a status change. If the ticket set or its dependencies change, update the page as `lanes-page.md` says.
 - **Reaching an implementer:** with a vault folder, each lane session adds a line with its name under `## Sessions` in the vault main file. Otherwise, it comments `Implementer: <name> [ref]` on its ticket. Use that name to send a correction or a question down to it.
 - **Decision log:** with a vault folder, keep adding to `## Decision log` in the vault main file, as `/start-work-project` describes. If the section is missing, insert the heading above `## Sessions` with `edit_note`. Add a line with `edit_section` in `append` mode each time the user asks to dig into a problem, adds or cuts scope, makes a call that changes the plan, catches an error, or gets or pushes back on a stakeholder's approval. Every follow-up ticket created after the TRD is published gets a line that says why it exists. The format is `- YYYY-MM-DD · <ticket IDs, or "no ticket"> · Raised by <who>. <What the user decided, and why.> <Approved by <person>, if anyone.>` The log stays in the vault. The new ticket's Linear text states the work, never who thought of it.
 
