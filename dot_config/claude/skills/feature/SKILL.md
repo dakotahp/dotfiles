@@ -121,6 +121,8 @@ Write `.claude/prove_statements.md`: one falsifiable statement per significant b
 
 ## Step 4: Failing tests
 
+Test behavior a user or caller relies on, not how the code is built. Before you write a test, ask: "If this fails, did something that matters break?" If not, skip it. Do not test styling, classes, or exact copy, unless they carry logic or a contract. Do not write snapshot tests, re-test framework behavior, or test one rule at several layers. A repo's own testing rules win where they conflict.
+
 Write tests for each prove statement. Run only those files and confirm they fail because the feature is missing.
 
 ## Step 5: Implement
