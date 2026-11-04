@@ -128,6 +128,21 @@ Apply this whenever tickets meet across a boundary: backend and frontend, servic
 
 ---
 
+## Split tickets by layer
+
+Give each layer of a feature its own ticket, so each PR is small and reviews fast. Split aggressively. Use these layers as the default cut, in this order, and skip a layer the work does not touch:
+
+- **Backend:** feature flag, migration, models, worker, service object or calculator, presenter, serializer, controller and routes.
+- **Frontend:** feature flag wiring, hooks and stores, component UI, component behavior and API wiring, larger integration tests.
+
+Combine two adjacent layers only when one of them is trivial, such as a single route line. Say which layers a combined ticket covers in its What.
+
+A layer ticket that needs the layer below it depends on it as `implementation (ticket N)` and stacks on its branch. Each one still starts as soon as the one below has an open PR. Contract-first still applies across the backend and frontend boundary, so the two stacks run in parallel.
+
+**Tripwires.** Reconsider the split for any ticket that is Size L or that you expect to change more than about 500 lines, tests included. Split it along a layer or behavior line if one exists. If it cannot split cleanly, keep it and say why in its What. Add this acceptance criterion to every ticket: "If the diff passes about 500 lines, stop and tell the planner before continuing."
+
+---
+
 ## Step 2: Print a summary
 
 ```
