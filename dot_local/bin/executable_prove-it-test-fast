@@ -1,0 +1,56 @@
+#!/bin/sh
+set -eu
+
+export RAILS_ENV=test
+MAX_FILES=${TEST_FAST_MAX_FILES:-20}
+
+cd "$(git rev-parse --show-toplevel)"
+
+# Worktrees have no vendor/bundle of their own, so borrow the main checkout's.
+if [ ! -d vendor/bundle ]; then
+  main_root=$(cd "$(git rev-parse --git-common-dir)/.." && pwd)
+  if [ -d "$main_root/vendor/bundle" ]; then
+    export BUNDLE_PATH="$main_root/vendor/bundle"
+  fi
+fi
+
+changed=$(
+  { git diff --name-only --diff-filter=d HEAD; git ls-files --others --exclude-standard; } |
+    grep -E '^(test/|engines/apartmentiq/test/).*_test\.rb$' |
+    sort -u
+) || true
+
+main_files=$(printf '%s\n' "$changed" | grep '^test/' || true)
+seed_files=$(printf '%s\n' "$changed" | grep '^engines/apartmentiq/test/seed_dependent/' || true)
+engine_files=$(printf '%s\n' "$changed" | grep '^engines/apartmentiq/test/' | grep -v '^engines/apartmentiq/test/seed_dependent/' || true)
+
+count=$(printf '%s\n' "$main_files" "$engine_files" | grep -c . || true)
+
+if [ "$count" -eq 0 ] && [ -z "$seed_files" ]; then
+  echo "test_fast: no changed test files"
+  exit 0
+fi
+
+if [ "$count" -gt "$MAX_FILES" ]; then
+  echo "test_fast: $count changed test files is over the limit of $MAX_FILES; skipping. Set TEST_FAST_MAX_FILES to raise it."
+  exit 0
+fi
+
+if [ -n "$seed_files" ]; then
+  echo "test_fast: skipping seed-dependent files (they need a seeded DB; run task test-iq-seed-dependent):"
+  printf '%s\n' "$seed_files" | sed 's/^/  /'
+fi
+
+status=0
+
+if [ -n "$main_files" ]; then
+  # shellcheck disable=SC2086
+  bin/rails test $main_files || status=1
+fi
+
+if [ -n "$engine_files" ]; then
+  # shellcheck disable=SC2086
+  bin/rake test:apartmentiq:isolated $engine_files || status=1
+fi
+
+exit "$status"

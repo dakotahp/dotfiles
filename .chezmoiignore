@@ -6,3 +6,8 @@ README.md
 script/
 setup-macos.sh
 setup.sh
+{{ range list "abodo-rails" "apartmentiq-js-app" }}
+{{-   if not (stat (joinPath $.chezmoi.homeDir "Code/work/apartmentiq" . ".git")) }}
+Code/work/apartmentiq/{{ . }}
+{{-   end }}
+{{ end }}
